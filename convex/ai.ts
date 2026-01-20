@@ -502,6 +502,155 @@ export const getTeamAiConfig = query({
   },
 });
 
+// =============================================================================
+// Solution Suggestions
+// =============================================================================
+
+/**
+ * Store solution suggestions (internal mutation)
+ */
+export const storeSolutionSuggestions = internalMutation({
+  args: {
+    feedbackId: v.id("feedback"),
+    suggestions: v.array(
+      v.object({
+        title: v.string(),
+        description: v.string(),
+        type: v.union(
+          v.literal("investigation"),
+          v.literal("fix"),
+          v.literal("workaround"),
+          v.literal("implementation"),
+          v.literal("consideration")
+        ),
+        effort: v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
+        impact: v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
+      })
+    ),
+    summary: v.string(),
+    nextSteps: v.array(v.string()),
+    provider: v.union(v.literal("openai"), v.literal("anthropic")),
+    model: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const feedback = await ctx.db.get(args.feedbackId);
+    if (!feedback) {
+      throw new Error("Feedback not found");
+    }
+
+    const now = Date.now();
+
+    // Check if there's an existing solution for this feedback
+    const existingSolution = await ctx.db
+      .query("solutionSuggestions")
+      .withIndex("by_feedback", (q) => q.eq("feedbackId", args.feedbackId))
+      .first();
+
+    if (existingSolution) {
+      // Update existing
+      await ctx.db.patch(existingSolution._id, {
+        suggestions: args.suggestions,
+        summary: args.summary,
+        nextSteps: args.nextSteps,
+        provider: args.provider,
+        model: args.model,
+        createdAt: now,
+      });
+    } else {
+      // Create new
+      await ctx.db.insert("solutionSuggestions", {
+        feedbackId: args.feedbackId,
+        suggestions: args.suggestions,
+        summary: args.summary,
+        nextSteps: args.nextSteps,
+        provider: args.provider,
+        model: args.model,
+        createdAt: now,
+      });
+    }
+
+    // Log activity
+    await ctx.db.insert("activityLog", {
+      feedbackId: args.feedbackId,
+      action: "ai_analyzed",
+      details: {
+        extra: `Generated solution suggestions using ${args.provider} (${args.model})`,
+      },
+      createdAt: now,
+    });
+
+    // Update usage tracking
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+
+    const usageRecord = await ctx.db
+      .query("usageTracking")
+      .withIndex("by_team", (q) => q.eq("teamId", feedback.teamId))
+      .filter((q) =>
+        q.and(q.eq(q.field("year"), year), q.eq(q.field("month"), month))
+      )
+      .first();
+
+    if (usageRecord) {
+      await ctx.db.patch(usageRecord._id, {
+        aiCallCount: usageRecord.aiCallCount + 1,
+        updatedAt: now,
+      });
+    }
+
+    return { success: true };
+  },
+});
+
+/**
+ * Get solution suggestions for a feedback item
+ */
+export const getSolutionSuggestions = query({
+  args: {
+    feedbackId: v.id("feedback"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return null;
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) {
+      return null;
+    }
+
+    const feedback = await ctx.db.get(args.feedbackId);
+    if (!feedback) {
+      return null;
+    }
+
+    // Check if user is a member of the team
+    const membership = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .filter((q) => q.eq(q.field("teamId"), feedback.teamId))
+      .first();
+
+    if (!membership) {
+      return null;
+    }
+
+    // Get the solution suggestions
+    const solutions = await ctx.db
+      .query("solutionSuggestions")
+      .withIndex("by_feedback", (q) => q.eq("feedbackId", args.feedbackId))
+      .first();
+
+    return solutions;
+  },
+});
+
 /**
  * Internal query to get decrypted API key for server-side use
  */

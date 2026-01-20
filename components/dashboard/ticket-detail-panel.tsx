@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils";
 import { Id } from "@/convex/_generated/dataModel";
 import { CommentsAndActivity } from "./comments-activity";
 import { AIAnalysisSection } from "./ai-analysis-section";
+import { SolutionSuggestionsSection } from "./solution-suggestions-section";
 
 type FeedbackStatus = "new" | "triaging" | "drafted" | "exported" | "resolved";
 type FeedbackPriority = "low" | "medium" | "high" | "critical";
@@ -889,6 +890,13 @@ export function TicketDetailPanel() {
           currentType={feedback.type}
           currentPriority={feedback.priority}
           currentTags={feedback.tags}
+        />
+
+        {/* Solution Suggestions Section */}
+        <SolutionSuggestionsSection
+          feedbackId={selectedFeedbackId}
+          teamId={feedback.teamId}
+          feedbackType={feedback.type}
         />
       </div>
 

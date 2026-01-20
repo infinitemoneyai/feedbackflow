@@ -255,6 +255,39 @@ export default defineSchema({
     .index("by_feedback_and_created", ["feedbackId", "createdAt"]),
 
   /**
+   * AI solution suggestions for feedback
+   */
+  solutionSuggestions: defineTable({
+    feedbackId: v.id("feedback"),
+
+    // Suggestions array
+    suggestions: v.array(
+      v.object({
+        title: v.string(),
+        description: v.string(),
+        type: v.union(
+          v.literal("investigation"),
+          v.literal("fix"),
+          v.literal("workaround"),
+          v.literal("implementation"),
+          v.literal("consideration")
+        ),
+        effort: v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
+        impact: v.union(v.literal("low"), v.literal("medium"), v.literal("high")),
+      })
+    ),
+
+    // Summary and next steps
+    summary: v.string(),
+    nextSteps: v.array(v.string()),
+
+    // Metadata
+    provider: v.union(v.literal("openai"), v.literal("anthropic")),
+    model: v.string(),
+    createdAt: v.number(),
+  }).index("by_feedback", ["feedbackId"]),
+
+  /**
    * Drafted tickets from AI
    */
   ticketDrafts: defineTable({
