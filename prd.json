@@ -185,7 +185,7 @@
         "Typecheck passes"
       ],
       "priority": 10,
-      "passes": false,
+      "passes": true,
       "notes": "Use MediaRecorder API. Format: webm with vp9 codec. Show clear recording indicator so users know it's active."
     },
     {

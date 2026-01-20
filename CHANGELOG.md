@@ -51,6 +51,18 @@ All notable changes to FeedbackFlow will be documented in this file.
   - Touch support for tablet/mobile annotation
   - Widget size: ~30KB minified (still well under 50KB target)
   - New files: `capture.ts`, `annotate.ts`, `screenshot-ui.ts`
+- **FF-010: Screen Recording with Audio** - Full screen recording with microphone narration:
+  - Uses getDisplayMedia API for screen capture + getUserMedia for microphone
+  - MediaRecorder API with WebM/VP9 codec for good compression
+  - Fixed-position recording indicator with pulsing red dot
+  - Live duration timer showing elapsed time and 2-minute max
+  - Stop button to end recording, auto-stops at 2 minutes
+  - Preview UI with video player and playback controls
+  - Shows recording duration and file size in preview
+  - Retake and Use Recording action buttons
+  - 2.5 Mbps video bitrate for good quality at reasonable size
+  - Widget size: ~44KB minified (still under 50KB target)
+  - New files: `record.ts`, `record-ui.ts`
 
 ---
 
@@ -70,7 +82,7 @@ All notable changes to FeedbackFlow will be documented in this file.
 - [x] FF-007: Project & widget management
 - [x] FF-008: Widget script structure
 - [x] FF-009: Screenshot capture
-- [ ] FF-010: Screen recording with audio
+- [x] FF-010: Screen recording with audio
 - [ ] FF-011: Submission form & offline queue
 - [ ] FF-012: Widget API endpoint
 

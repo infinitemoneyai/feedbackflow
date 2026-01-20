@@ -9,7 +9,9 @@ import {
   createWidgetRoot,
 } from "./dom";
 import { ScreenshotUI } from "./screenshot-ui";
+import { RecordUI } from "./record-ui";
 import type { CaptureResult } from "./capture";
+import type { RecordingResult } from "./record";
 
 /**
  * FeedbackFlow Widget Class
@@ -22,7 +24,9 @@ export class FeedbackFlowWidget {
   private triggerButton: HTMLElement | null = null;
   private modalOverlay: HTMLElement | null = null;
   private screenshotUI: ScreenshotUI | null = null;
+  private recordUI: RecordUI | null = null;
   private capturedScreenshot: CaptureResult | null = null;
+  private capturedRecording: RecordingResult | null = null;
 
   constructor(config: Partial<WidgetConfig> & { widgetKey: string }) {
     this.config = {
@@ -293,10 +297,7 @@ export class FeedbackFlowWidget {
     if (mode === "screenshot") {
       this.startScreenshotCapture();
     } else if (mode === "record") {
-      // Recording will be implemented in FF-010
-      console.log("FeedbackFlow: Screen recording - coming soon");
-      this.state.isCapturing = false;
-      this.state.captureMode = null;
+      this.startRecordingCapture();
     }
   }
 
@@ -357,10 +358,76 @@ export class FeedbackFlowWidget {
   }
 
   /**
+   * Start recording capture flow
+   */
+  private startRecordingCapture(): void {
+    this.recordUI = new RecordUI(this.config, {
+      onConfirm: (result) => {
+        this.handleRecordingConfirm(result);
+      },
+      onCancel: () => {
+        this.handleRecordingCancel();
+      },
+    });
+
+    this.recordUI.start();
+  }
+
+  /**
+   * Handle recording confirmation
+   */
+  private handleRecordingConfirm(result: RecordingResult): void {
+    this.capturedRecording = result;
+    this.state.isCapturing = false;
+
+    // Dispatch event with captured recording
+    const event = new CustomEvent("ff:recording-captured", {
+      detail: {
+        widgetKey: this.config.widgetKey,
+        recording: {
+          duration: result.duration,
+          mimeType: result.mimeType,
+          size: result.blob.size,
+        },
+      },
+    });
+    window.dispatchEvent(event);
+
+    // For now, log the result (submission form will be added in FF-011)
+    console.log("FeedbackFlow: Recording captured", {
+      duration: `${(result.duration / 1000).toFixed(1)}s`,
+      size: `${(result.blob.size / (1024 * 1024)).toFixed(2)}MB`,
+      mimeType: result.mimeType,
+    });
+
+    // Clean up
+    this.recordUI?.destroy();
+    this.recordUI = null;
+  }
+
+  /**
+   * Handle recording cancellation
+   */
+  private handleRecordingCancel(): void {
+    this.state.isCapturing = false;
+    this.state.captureMode = null;
+    this.capturedRecording = null;
+    this.recordUI?.destroy();
+    this.recordUI = null;
+  }
+
+  /**
    * Get captured screenshot
    */
   public getCapturedScreenshot(): CaptureResult | null {
     return this.capturedScreenshot;
+  }
+
+  /**
+   * Get captured recording
+   */
+  public getCapturedRecording(): RecordingResult | null {
+    return this.capturedRecording;
   }
 
   /**
@@ -383,8 +450,11 @@ export class FeedbackFlowWidget {
   public destroy(): void {
     this.screenshotUI?.destroy();
     this.screenshotUI = null;
+    this.recordUI?.destroy();
+    this.recordUI = null;
     this.root?.remove();
     document.getElementById("ff-widget-styles")?.remove();
     document.getElementById("ff-screenshot-styles")?.remove();
+    document.getElementById("ff-recording-styles")?.remove();
   }
 }
