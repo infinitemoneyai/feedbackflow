@@ -6,6 +6,22 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Added
 
+- **FF-037: Widget Installation Documentation** - Comprehensive installation guide and inline code snippets:
+  - Docs page at `/docs/installation` with complete installation instructions
+  - Quick start section with copy-paste script tag
+  - Framework-specific guides for HTML/Vanilla JS, React, Vue.js, and Next.js
+  - React custom hook example with cleanup
+  - Vue 3 composable example
+  - Next.js App Router and Pages Router examples using Script component
+  - Configuration options table documenting all data attributes
+  - JavaScript API documentation (open, close, identify, destroy methods)
+  - Troubleshooting section with 5 common issues and solutions
+  - Inline code snippets in dashboard widget settings with copy button
+  - Installation code auto-updates with selected position
+  - Links from dashboard to full documentation
+  - Retro design aesthetic matching the app theme
+  - Typecheck passes with no errors
+
 - **FF-036: Widget Customization UI** - Complete widget customization interface:
   - Widget settings tab in project settings page
   - Project and widget selector for managing multiple widgets
