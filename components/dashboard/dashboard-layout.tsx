@@ -17,6 +17,8 @@ interface DashboardContextType {
   setCurrentView: (view: "inbox" | "backlog" | "resolved") => void;
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
 }
 
 const DashboardContext = createContext<DashboardContextType | null>(null);
@@ -39,6 +41,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [selectedFeedbackId, setSelectedFeedbackId] = useState<Id<"feedback"> | null>(null);
   const [currentView, setCurrentView] = useState<"inbox" | "backlog" | "resolved">("inbox");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   return (
     <DashboardContext.Provider
@@ -53,6 +56,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         setCurrentView,
         sidebarOpen,
         setSidebarOpen,
+        searchQuery,
+        setSearchQuery,
       }}
     >
       <div className="flex h-screen bg-stone-100">
