@@ -41,6 +41,16 @@ All notable changes to FeedbackFlow will be documented in this file.
   - No external dependencies - all vanilla JS/CSS
   - Programmatic API: `FeedbackFlow.open()`, `FeedbackFlow.close()`, `FeedbackFlow.init(config)`
   - Widget files: `widget/src/index.ts`, `widget.ts`, `styles.ts`, `icons.ts`, `dom.ts`, `types.ts`
+- **FF-009: Screenshot Capture & Annotation** - Full screenshot capture with annotation tools:
+  - Uses getDisplayMedia API for reliable cross-origin capture
+  - Fullscreen annotation UI with retro design aesthetic
+  - Annotation tools: Pen (red), Highlighter (semi-transparent yellow), Arrow, Circle/Ellipse
+  - Canvas-based drawing with undo support and history management
+  - Clear all and Retake screenshot options
+  - Image compression for upload (JPEG, max 1920px width, 85% quality)
+  - Touch support for tablet/mobile annotation
+  - Widget size: ~30KB minified (still well under 50KB target)
+  - New files: `capture.ts`, `annotate.ts`, `screenshot-ui.ts`
 
 ---
 
@@ -59,7 +69,7 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 - [x] FF-007: Project & widget management
 - [x] FF-008: Widget script structure
-- [ ] FF-009: Screenshot capture
+- [x] FF-009: Screenshot capture
 - [ ] FF-010: Screen recording with audio
 - [ ] FF-011: Submission form & offline queue
 - [ ] FF-012: Widget API endpoint

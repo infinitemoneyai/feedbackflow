@@ -8,6 +8,8 @@ import {
   injectStyles,
   createWidgetRoot,
 } from "./dom";
+import { ScreenshotUI } from "./screenshot-ui";
+import type { CaptureResult } from "./capture";
 
 /**
  * FeedbackFlow Widget Class
@@ -19,6 +21,8 @@ export class FeedbackFlowWidget {
   private root: HTMLElement | null = null;
   private triggerButton: HTMLElement | null = null;
   private modalOverlay: HTMLElement | null = null;
+  private screenshotUI: ScreenshotUI | null = null;
+  private capturedScreenshot: CaptureResult | null = null;
 
   constructor(config: Partial<WidgetConfig> & { widgetKey: string }) {
     this.config = {
@@ -272,7 +276,6 @@ export class FeedbackFlowWidget {
 
   /**
    * Start capture (screenshot or recording)
-   * Note: Actual capture implementation will be in FF-009 and FF-010
    */
   private startCapture(mode: "screenshot" | "record"): void {
     this.state.captureMode = mode;
@@ -281,14 +284,83 @@ export class FeedbackFlowWidget {
     // Close modal to allow capture
     this.close();
 
-    // Dispatch event for capture handlers (to be implemented)
+    // Dispatch event for capture handlers
     const event = new CustomEvent("ff:capture-start", {
       detail: { mode, widgetKey: this.config.widgetKey },
     });
     window.dispatchEvent(event);
 
-    // Placeholder: Log for now (will be replaced with actual capture)
-    console.log(`FeedbackFlow: Starting ${mode} capture...`);
+    if (mode === "screenshot") {
+      this.startScreenshotCapture();
+    } else if (mode === "record") {
+      // Recording will be implemented in FF-010
+      console.log("FeedbackFlow: Screen recording - coming soon");
+      this.state.isCapturing = false;
+      this.state.captureMode = null;
+    }
+  }
+
+  /**
+   * Start screenshot capture flow
+   */
+  private startScreenshotCapture(): void {
+    this.screenshotUI = new ScreenshotUI(this.config, {
+      onConfirm: (result) => {
+        this.handleScreenshotConfirm(result);
+      },
+      onCancel: () => {
+        this.handleScreenshotCancel();
+      },
+    });
+
+    this.screenshotUI.start();
+  }
+
+  /**
+   * Handle screenshot confirmation
+   */
+  private handleScreenshotConfirm(result: CaptureResult): void {
+    this.capturedScreenshot = result;
+    this.state.isCapturing = false;
+
+    // Dispatch event with captured screenshot
+    const event = new CustomEvent("ff:screenshot-captured", {
+      detail: {
+        widgetKey: this.config.widgetKey,
+        screenshot: result,
+      },
+    });
+    window.dispatchEvent(event);
+
+    // For now, log the result (submission form will be added in FF-011)
+    console.log("FeedbackFlow: Screenshot captured", {
+      width: result.width,
+      height: result.height,
+      size: result.blob ? `${(result.blob.size / 1024).toFixed(2)}KB` : "unknown",
+    });
+
+    // Re-open modal to show submission form (will be implemented in FF-011)
+    // For now, just clean up
+    this.screenshotUI?.destroy();
+    this.screenshotUI = null;
+  }
+
+  /**
+   * Handle screenshot cancellation
+   */
+  private handleScreenshotCancel(): void {
+    this.state.isCapturing = false;
+    this.state.captureMode = null;
+    this.capturedScreenshot = null;
+    this.screenshotUI?.destroy();
+    this.screenshotUI = null;
+  }
+
+  /**
+   * Get captured screenshot
+   */
+  public getCapturedScreenshot(): CaptureResult | null {
+    return this.capturedScreenshot;
   }
 
   /**
@@ -309,7 +381,10 @@ export class FeedbackFlowWidget {
    * Destroy the widget
    */
   public destroy(): void {
+    this.screenshotUI?.destroy();
+    this.screenshotUI = null;
     this.root?.remove();
     document.getElementById("ff-widget-styles")?.remove();
+    document.getElementById("ff-screenshot-styles")?.remove();
   }
 }
