@@ -6,6 +6,39 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Added
 
+- **FF-026: REST API for External Access** - Complete REST API with Bearer token authentication:
+  - API key management in Settings with dedicated "API Keys" tab
+  - Create API keys with custom names and scoped permissions (read:feedback, write:feedback, read:projects, write:projects)
+  - Keys use `ff_` prefix format with secure hashing for storage
+  - One-time key display on creation - not retrievable after
+  - List keys showing prefix, permissions, creation date, last used time
+  - Revoke keys (deactivates) or delete keys permanently
+  - Creator info displayed for each key
+  - GET /api/v1/feedback - List feedback with filters (projectId, status, type, priority)
+  - GET /api/v1/feedback/:id - Get single feedback detail with assignee info
+  - PATCH /api/v1/feedback/:id - Update status, priority, and tags
+  - POST /api/v1/feedback/:id/comments - Add comments via API
+  - GET /api/v1/projects - List all projects with feedback counts
+  - Bearer token authentication via Authorization header
+  - Permission-based access control per endpoint
+  - Rate limiting: 100 requests per minute per API key
+  - Rate limit headers: X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset
+  - Pagination support with limit/offset and hasMore indicator
+  - API documentation page at /docs/api with:
+    - Authentication guide with code examples
+    - Rate limiting documentation
+    - Full endpoint reference with request/response examples
+    - Error handling reference with status codes
+    - Node.js integration example
+  - Convex mutations/queries: createApiKey, listApiKeys, revokeApiKey, deleteApiKey, validateApiKeyPublic, updateApiKeyLastUsed
+  - Internal queries for API access: getFeedbackForApi, getFeedbackByIdForApi, getProjectsForApi
+  - Internal mutations for API writes: updateFeedbackForApi, addCommentForApi
+  - RestApiKeysSection component with retro design aesthetic
+  - Security best practices section with guidance
+  - Middleware updated to allow /api/v1/* routes with API auth
+  - lib/api-auth.ts utilities for validation and response helpers
+  - Typecheck passes with no errors
+
 - **FF-025: Webhook System** - Complete webhook configuration and delivery system:
   - Settings page with dedicated Webhooks tab in navigation
   - Add webhook form with URL input (HTTPS required) and event selection

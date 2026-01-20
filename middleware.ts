@@ -10,6 +10,7 @@ const isPublicRoute = createRouteMatcher([
   "/sign-up(.*)",
   "/api/widget/(.*)",
   "/api/webhooks/(.*)",
+  "/api/v1/(.*)", // REST API uses Bearer token auth, not Clerk
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
