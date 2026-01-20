@@ -22,6 +22,14 @@ All notable changes to FeedbackFlow will be documented in this file.
   - Responsive design: Sidebar collapses to off-canvas drawer on mobile with overlay, hamburger menu in header
   - New components: DashboardLayout, DashboardSidebar, DashboardHeader, TicketDetailPanel with useDashboard context hook
   - New Convex file: convex/projects.ts with getProjects, getProject, createProject, updateProject, deleteProject, getWidgets, createWidget, updateWidget, regenerateWidgetKey
+- **FF-007: Project & Widget Management** - Verified complete implementation in convex/projects.ts:
+  - createProject mutation with name, description, default settings
+  - createWidget mutation generates unique widgetKey (wk_xxxx format)
+  - getProjects query returns team's projects with feedbackCount and newFeedbackCount
+  - getWidgets query returns project's widgets with config
+  - updateProject and deleteProject mutations (deleteProject cleans up widgets and feedback)
+  - updateWidget mutation for siteUrl and isActive
+  - regenerateWidgetKey mutation invalidates old key (admin only)
 
 ---
 
@@ -38,7 +46,7 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Milestone 2: Widget Core
 
-- [ ] FF-007: Project & widget management
+- [x] FF-007: Project & widget management
 - [ ] FF-008: Widget script structure
 - [ ] FF-009: Screenshot capture
 - [ ] FF-010: Screen recording with audio
