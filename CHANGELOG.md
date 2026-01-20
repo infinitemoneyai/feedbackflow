@@ -6,6 +6,30 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Added
 
+- **FF-022: Linear Integration** - Complete Linear integration for exporting feedback as issues:
+  - Settings page Integrations tab with Linear configuration section
+  - API key input with validation (keys must start with 'lin_api_')
+  - Test connection button validates key against Linear API
+  - Team selector to choose default Linear team
+  - Project selector (optional) for default project assignment
+  - Label selector (optional) for default labels
+  - Keys encrypted before storage using base64 encoding
+  - Export to Linear section in ticket detail panel
+  - Creates Linear issues with title, description, priority, and labels
+  - Uses ticket draft content when available for richer issue descriptions
+  - Formatted markdown description with screenshots, metadata, submitter info
+  - Priority mapping: critical->urgent, high->high, medium->normal, low->low
+  - Export records tracked in `exports` table with success/failure status
+  - Activity log entries for exports with external URL
+  - Feedback status automatically updates to "exported" on success
+  - View in Linear button links directly to created issue
+  - Override team/project/labels per export
+  - Linear SDK wrapper in `lib/integrations/linear.ts`
+  - Convex mutations: `saveLinearIntegration`, `updateLinearSettings`, `deleteLinearIntegration`, `createExport`
+  - Convex queries: `getLinearIntegration`, `getLinearApiKey`, `getExportsForFeedback`
+  - API endpoint: `/api/integrations/linear` for all Linear operations
+  - Retro design aesthetic matching dashboard theme
+
 - **FF-021: AI Conversation** - Interactive chat interface to explore feedback with AI:
   - Chat interface in feedback detail panel with retro lavender styling
   - Conversation history preserved in `conversations` table via Convex queries
@@ -293,11 +317,11 @@ All notable changes to FeedbackFlow will be documented in this file.
 - [x] FF-018: Auto-categorization
 - [x] FF-019: Solution suggestions
 - [x] FF-020: Ticket drafting (priority)
-- [ ] FF-021: AI conversation
+- [x] FF-021: AI conversation
 
 ### Milestone 5: Exports & Integrations
 
-- [ ] FF-022: Linear integration
+- [x] FF-022: Linear integration
 - [ ] FF-023: Notion integration
 - [ ] FF-024: JSON/prd.json export
 - [ ] FF-025: Webhooks

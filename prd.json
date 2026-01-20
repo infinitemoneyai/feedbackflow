@@ -402,7 +402,7 @@
         "Typecheck passes"
       ],
       "priority": 22,
-      "passes": false,
+      "passes": true,
       "notes": "Use Linear SDK. Support both OAuth and API key auth."
     },
     {

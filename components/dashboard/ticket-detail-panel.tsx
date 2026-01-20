@@ -34,6 +34,7 @@ import { AIAnalysisSection } from "./ai-analysis-section";
 import { SolutionSuggestionsSection } from "./solution-suggestions-section";
 import { TicketDraftSection } from "./ticket-draft-section";
 import { AIConversationSection } from "./ai-conversation-section";
+import { LinearExportSection } from "./linear-export-section";
 
 type FeedbackStatus = "new" | "triaging" | "drafted" | "exported" | "resolved";
 type FeedbackPriority = "low" | "medium" | "high" | "critical";
@@ -935,6 +936,12 @@ export function TicketDetailPanel() {
           feedbackId={selectedFeedbackId}
           teamId={feedback.teamId}
           feedbackType={feedback.type}
+        />
+
+        {/* Linear Export Section */}
+        <LinearExportSection
+          feedbackId={selectedFeedbackId}
+          teamId={feedback.teamId}
         />
 
         {/* AI Conversation Section */}
