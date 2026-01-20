@@ -10,7 +10,10 @@
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "widget:build": "node widget/build.mjs",
+    "widget:dev": "node widget/build.mjs --watch",
+    "widget:typecheck": "tsc --project widget/tsconfig.json --noEmit"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.36.8",
@@ -29,6 +32,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "esbuild": "^0.27.2",
     "eslint": "^9",
     "eslint-config-next": "16.1.4",
     "eslint-config-prettier": "^10.1.8",
