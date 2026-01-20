@@ -29,13 +29,22 @@ export const upsertUser = mutation({
       return existingUser._id;
     }
 
+    // Check for pending invites
+    const pendingInvite = await ctx.db
+      .query("teamInvites")
+      .withIndex("by_email", (q) => q.eq("email", args.email))
+      .filter((q) => q.gt(q.field("expiresAt"), Date.now()))
+      .first();
+
     // Create new user
+    // Start onboarding only if no pending invites (they'll join existing team)
     const userId = await ctx.db.insert("users", {
       clerkId: args.clerkId,
       email: args.email,
       name: args.name,
       avatar: args.avatar,
       createdAt: Date.now(),
+      onboardingStep: pendingInvite ? undefined : 1,
     });
 
     return userId;
