@@ -70,6 +70,11 @@ function parseConfigFromScript(): Partial<WidgetConfig> | null {
     config.apiUrl = script.dataset.apiUrl;
   }
 
+  // Privacy policy URL (for GDPR compliance)
+  if (script.dataset.privacyPolicyUrl) {
+    config.privacyPolicyUrl = script.dataset.privacyPolicyUrl;
+  }
+
   return config;
 }
 

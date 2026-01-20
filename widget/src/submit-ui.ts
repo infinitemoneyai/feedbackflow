@@ -31,6 +31,7 @@ interface FormState {
   type: FeedbackType;
   email: string;
   name: string;
+  privacyConsent: boolean;
 }
 
 type SubmitState = "form" | "loading" | "success" | "error";
@@ -51,6 +52,7 @@ export class SubmitUI {
     type: "bug",
     email: "",
     name: "",
+    privacyConsent: false,
   };
   private feedbackId: string = "";
   private errorMessage: string = "";
@@ -219,6 +221,40 @@ export class SubmitUI {
     optionalSection.appendChild(nameGroup);
 
     content.appendChild(optionalSection);
+
+    // Privacy consent section (only shown if privacy policy URL is configured)
+    if (this.config.privacyPolicyUrl) {
+      const consentSection = createElement("div", { className: "ff-consent-section" });
+
+      const consentCheckbox = createElement("input", {
+        type: "checkbox",
+        className: "ff-consent-checkbox",
+        id: "ff-privacy-consent",
+      }) as HTMLInputElement;
+      consentCheckbox.checked = this.formState.privacyConsent;
+      consentCheckbox.addEventListener("change", (e) => {
+        this.formState.privacyConsent = (e.target as HTMLInputElement).checked;
+      });
+
+      const consentLabel = createElement("label", {
+        className: "ff-consent-label",
+        for: "ff-privacy-consent",
+      }, [
+        consentCheckbox,
+        createElement("span", { className: "ff-consent-text" }, [
+          "I acknowledge that my feedback may include personal information and agree to the ",
+          createElement("a", {
+            href: this.config.privacyPolicyUrl,
+            target: "_blank",
+            className: "ff-consent-link",
+          }, ["privacy policy"]),
+          ".",
+        ]),
+      ]);
+
+      consentSection.appendChild(consentLabel);
+      content.appendChild(consentSection);
+    }
 
     // Actions
     const actions = createElement("div", { className: "ff-submit-actions" }, [
@@ -476,6 +512,12 @@ export class SubmitUI {
     // Validate required fields
     if (!this.formState.title.trim()) {
       alert("Please enter a title for your feedback.");
+      return;
+    }
+
+    // Validate privacy consent if privacy policy URL is configured
+    if (this.config.privacyPolicyUrl && !this.formState.privacyConsent) {
+      alert("Please acknowledge the privacy policy to submit feedback.");
       return;
     }
 
@@ -1048,6 +1090,44 @@ export class SubmitUI {
       .ff-error-actions {
         display: flex;
         gap: 12px;
+      }
+
+      /* Privacy Consent Section */
+      .ff-consent-section {
+        margin-top: 16px;
+        padding-top: 12px;
+        border-top: 1px solid #e5e5e5;
+      }
+
+      .ff-consent-label {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        cursor: pointer;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .ff-consent-checkbox {
+        flex-shrink: 0;
+        width: 16px;
+        height: 16px;
+        margin-top: 2px;
+        cursor: pointer;
+        accent-color: ${this.config.primaryColor};
+      }
+
+      .ff-consent-text {
+        color: #666;
+      }
+
+      .ff-consent-link {
+        color: #6B9AC4;
+        text-decoration: underline;
+      }
+
+      .ff-consent-link:hover {
+        color: #4a7ba0;
       }
     `;
 

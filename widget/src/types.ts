@@ -18,6 +18,7 @@ export interface WidgetConfig {
   textColor: string;
   buttonText: string;
   apiUrl: string;
+  privacyPolicyUrl?: string;
 }
 
 /**

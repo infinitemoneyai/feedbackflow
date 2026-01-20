@@ -115,13 +115,27 @@ export class FeedbackFlowWidget {
     ]);
 
     // Create footer
-    const footer = createElement("div", { className: "ff-modal-footer" }, [
-      createElement("div", { className: "ff-powered-by" }, [
-        "Powered by ",
-        createElement("a", { href: "https://feedbackflow.dev", target: "_blank" }, [
-          "FeedbackFlow",
-        ]),
+    const footerContent: (string | HTMLElement)[] = [
+      "Powered by ",
+      createElement("a", { href: "https://feedbackflow.dev", target: "_blank" }, [
+        "FeedbackFlow",
       ]),
+    ];
+
+    // Add privacy policy link if configured
+    if (this.config.privacyPolicyUrl) {
+      footerContent.push(
+        " · ",
+        createElement(
+          "a",
+          { href: this.config.privacyPolicyUrl, target: "_blank" },
+          ["Privacy Policy"]
+        )
+      );
+    }
+
+    const footer = createElement("div", { className: "ff-modal-footer" }, [
+      createElement("div", { className: "ff-powered-by" }, footerContent),
     ]);
 
     // Assemble modal

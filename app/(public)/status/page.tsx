@@ -14,6 +14,9 @@ import {
   Loader2,
   Send,
   Image as ImageIcon,
+  Download,
+  Trash2,
+  Shield,
 } from "lucide-react";
 import Link from "next/link";
 import { Id } from "@/convex/_generated/dataModel";
@@ -134,6 +137,14 @@ function StatusPageContent() {
     text: string;
   } | null>(null);
   const [showScreenshot, setShowScreenshot] = useState(false);
+  const [showGdprSection, setShowGdprSection] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [gdprMessage, setGdprMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   // Validate token and get status
   const tokenValidation = useQuery(
@@ -147,6 +158,89 @@ function StatusPageContent() {
   );
 
   const addUpdateMutation = useMutation(api.submitterPortal.addSubmitterUpdate);
+
+  // GDPR data queries
+  const canDeleteData = useQuery(
+    api.submitterPortal.canDeleteData,
+    token ? { token } : "skip"
+  );
+
+  // Handle exporting data
+  const handleExportData = async () => {
+    if (!token) return;
+
+    setIsExporting(true);
+    setGdprMessage(null);
+
+    try {
+      const response = await fetch(`/api/submitter/export-data?token=${token}`);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to export data");
+      }
+
+      const data = await response.json();
+
+      // Create and download the file
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `feedbackflow_data_export_${new Date().toISOString().split("T")[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      setGdprMessage({
+        type: "success",
+        text: "Your data has been exported successfully.",
+      });
+    } catch (error) {
+      setGdprMessage({
+        type: "error",
+        text: error instanceof Error ? error.message : "Failed to export data",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // Handle deleting data
+  const handleDeleteData = async () => {
+    if (!token) return;
+
+    setIsDeleting(true);
+    setGdprMessage(null);
+
+    try {
+      const response = await fetch("/api/submitter/delete-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, confirmDeletion: true }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to delete data");
+      }
+
+      const result = await response.json();
+
+      setShowDeleteConfirm(false);
+      setGdprMessage({
+        type: "success",
+        text: result.message || "Your personal data has been deleted.",
+      });
+    } catch (error) {
+      setGdprMessage({
+        type: "error",
+        text: error instanceof Error ? error.message : "Failed to delete data",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // Handle submitting additional context
   const handleSubmitContext = async () => {
@@ -520,6 +614,150 @@ function StatusPageContent() {
                   Submit Update
                 </button>
               </div>
+            </div>
+          )}
+        </div>
+
+        {/* GDPR Data Rights Section */}
+        <div className="mt-6 rounded border-2 border-stone-200 bg-white">
+          <button
+            onClick={() => setShowGdprSection(!showGdprSection)}
+            className="flex w-full items-center justify-between px-6 py-4 text-left hover:bg-stone-50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <Shield className="h-5 w-5 text-stone-400" />
+              <span className="font-medium text-stone-700">Your Data Rights</span>
+            </div>
+            <span className="text-sm text-stone-400">
+              {showGdprSection ? "Hide" : "Show"}
+            </span>
+          </button>
+
+          {showGdprSection && (
+            <div className="border-t border-stone-200 p-6">
+              <p className="text-sm text-stone-600 mb-4">
+                Under GDPR and similar privacy regulations, you have the right to access,
+                export, and request deletion of your personal data.
+              </p>
+
+              {gdprMessage && (
+                <div
+                  className={`rounded border p-3 mb-4 ${
+                    gdprMessage.type === "success"
+                      ? "border-green-500 bg-green-50 text-green-700"
+                      : "border-retro-red bg-red-50 text-retro-red"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    {gdprMessage.type === "success" ? (
+                      <CheckCircle className="h-4 w-4" />
+                    ) : (
+                      <AlertCircle className="h-4 w-4" />
+                    )}
+                    <p className="text-sm">{gdprMessage.text}</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                {/* Export Data */}
+                <div className="rounded border border-stone-200 p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="font-medium text-stone-800">Export Your Data</h3>
+                      <p className="text-sm text-stone-500 mt-1">
+                        Download a JSON file containing all data associated with this feedback.
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleExportData}
+                      disabled={isExporting}
+                      className="inline-flex items-center gap-2 rounded border-2 border-retro-blue bg-white px-4 py-2 text-sm font-medium text-retro-blue hover:bg-retro-blue/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isExporting ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Download className="h-4 w-4" />
+                      )}
+                      Export
+                    </button>
+                  </div>
+                </div>
+
+                {/* Delete Data */}
+                <div className="rounded border border-stone-200 p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="font-medium text-stone-800">Delete Your Personal Data</h3>
+                      <p className="text-sm text-stone-500 mt-1">
+                        Remove your email and name from this feedback. The anonymized feedback
+                        record will be retained.
+                      </p>
+                    </div>
+                    {canDeleteData?.canDelete ? (
+                      <button
+                        onClick={() => setShowDeleteConfirm(true)}
+                        className="inline-flex items-center gap-2 rounded border-2 border-retro-red bg-white px-4 py-2 text-sm font-medium text-retro-red hover:bg-retro-red/10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Delete
+                      </button>
+                    ) : (
+                      <span className="text-sm text-stone-400 italic">
+                        {canDeleteData?.reason || "Already deleted"}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Delete Confirmation Dialog */}
+              {showDeleteConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                  <div className="w-full max-w-md rounded border-2 border-retro-black bg-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
+                    <div className="border-b-2 border-retro-black bg-retro-red/10 px-6 py-4">
+                      <h2 className="text-lg font-semibold text-retro-red">
+                        Confirm Data Deletion
+                      </h2>
+                    </div>
+                    <div className="p-6">
+                      <p className="text-stone-600 mb-4">
+                        Are you sure you want to delete your personal data? This action will:
+                      </p>
+                      <ul className="list-disc list-inside text-sm text-stone-600 space-y-1 mb-6">
+                        <li>Remove your email address from this feedback</li>
+                        <li>Remove your name from this feedback</li>
+                        <li>Delete any additional context you&apos;ve provided</li>
+                        <li>Invalidate this status link</li>
+                      </ul>
+                      <p className="text-sm text-stone-500 mb-6">
+                        <strong>Note:</strong> The anonymized feedback record will be retained
+                        for historical purposes.
+                      </p>
+                      <div className="flex justify-end gap-3">
+                        <button
+                          onClick={() => setShowDeleteConfirm(false)}
+                          className="rounded border-2 border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleDeleteData}
+                          disabled={isDeleting}
+                          className="inline-flex items-center gap-2 rounded border-2 border-retro-red bg-retro-red px-4 py-2 text-sm font-medium text-white hover:bg-red-600 disabled:opacity-50"
+                        >
+                          {isDeleting ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                          Yes, Delete My Data
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

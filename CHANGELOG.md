@@ -6,6 +6,34 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Added
 
+- **FF-032: GDPR Compliance Features** - Complete GDPR compliance implementation:
+  - **Widget Privacy Enhancements:**
+    - Privacy policy link support in widget modal footer (`data-privacy-policy-url` attribute)
+    - Cookie consent checkbox in submission form (shown when privacy policy URL configured)
+    - Consent validation before submission when privacy policy is configured
+    - Updated widget types and config parsing for new options
+  - **Submitter Data Rights (via magic link token):**
+    - Data export endpoint `POST/GET /api/submitter/export-data` - downloads JSON with all submitter feedback data
+    - Data deletion endpoint `POST /api/submitter/delete-data` - anonymizes PII while keeping feedback
+    - Deletion removes: submitterEmail, submitterName, submitterUpdates, magic link tokens
+    - Keeps anonymized: feedback title, description, type, status, metadata (browser/OS info)
+    - Activity logging for GDPR deletion requests (audit trail)
+    - `canDeleteData` query checks if data hasn't already been deleted
+  - **Admin GDPR Functions (convex/gdpr.ts):**
+    - `exportTeamData` query - comprehensive team data export (projects, feedback, members, integrations, usage)
+    - Sensitive data redacted (submitter PII, API keys) in admin exports
+    - `deleteProjectData` mutation - cascading delete of project and all related records
+    - `deleteTeamData` mutation - complete team deletion with confirmation safeguards
+    - Deletion cascade handles: feedback, AI analysis, conversations, comments, activity logs, exports, widgets, automation rules, tokens, etc.
+    - Subscription marked as cancelled (not deleted) for billing audit
+  - **Submitter Status Page GDPR Section:**
+    - Collapsible "Your Data Rights" section with Shield icon
+    - Export Data button - downloads JSON file with feedback data
+    - Delete Data button with confirmation dialog
+    - Clear warnings about what deletion will remove
+    - Success/error message handling for both operations
+  - Typecheck passes with no errors
+
 - **FF-031: Submitter Status Page** - Public status tracking page for feedback submitters:
   - Public page at `/status?token=xxx` with magic link authentication
   - Magic link token system for secure submitter access (7-day expiration)
