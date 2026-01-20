@@ -270,6 +270,7 @@ export default function SettingsPage() {
                 {selectedWidgetId ? (
                   <WidgetCustomizationSection
                     widgetId={selectedWidgetId}
+                    widgetKey={widgets?.find((w: { _id: Id<"widgets"> }) => w._id === selectedWidgetId)?.widgetKey}
                     projectName={projects?.find((p: { _id: Id<"projects"> }) => p._id === selectedProjectId)?.name}
                     hideHeader={true}
                   />

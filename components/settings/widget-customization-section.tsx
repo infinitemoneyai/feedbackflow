@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
+import Link from "next/link";
 import {
   Palette,
   Loader2,
@@ -12,12 +13,16 @@ import {
   MessageSquare,
   Camera,
   Mic,
+  Copy,
+  Code,
+  ExternalLink,
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 
 interface WidgetCustomizationSectionProps {
   widgetId: Id<"widgets">;
+  widgetKey?: string;
   projectName?: string;
   hideHeader?: boolean;
 }
@@ -39,6 +44,7 @@ const DEFAULT_COLORS = {
 
 export function WidgetCustomizationSection({
   widgetId,
+  widgetKey,
   projectName,
   hideHeader = false,
 }: WidgetCustomizationSectionProps) {
@@ -62,6 +68,23 @@ export function WidgetCustomizationSection({
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [codeCopied, setCodeCopied] = useState(false);
+
+  const installationCode = widgetKey
+    ? `<script
+  src="https://cdn.feedbackflow.dev/widget.js"
+  data-widget-key="${widgetKey}"
+  data-position="${position}"
+  async
+></script>`
+    : "";
+
+  const handleCopyCode = useCallback(async () => {
+    if (!installationCode) return;
+    await navigator.clipboard.writeText(installationCode);
+    setCodeCopied(true);
+    setTimeout(() => setCodeCopied(false), 2000);
+  }, [installationCode]);
 
   // Sync local state with fetched config
   useEffect(() => {
@@ -451,6 +474,73 @@ export function WidgetCustomizationSection({
           </div>
         </div>
       </div>
+
+      {/* Installation Code Snippet */}
+      {widgetKey && (
+        <div className="mt-6 rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
+          <div className="flex items-start gap-4">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-retro-blue/20">
+              <Code className="h-5 w-5 text-retro-blue" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-retro-black">Installation Code</h3>
+                <Link
+                  href="/docs/installation"
+                  className="flex items-center gap-1 text-sm text-retro-blue hover:underline"
+                >
+                  Full docs
+                  <ExternalLink className="h-3 w-3" />
+                </Link>
+              </div>
+              <p className="mt-1 text-sm text-stone-600">
+                Add this script to your website before the closing{" "}
+                <code className="rounded bg-stone-100 px-1 text-xs">&lt;/body&gt;</code> tag.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <div className="flex items-center justify-between rounded-t border-2 border-b-0 border-stone-200 bg-stone-50 px-4 py-2">
+              <span className="font-mono text-xs text-stone-500">HTML</span>
+              <button
+                onClick={handleCopyCode}
+                className="flex items-center gap-1.5 rounded border border-stone-200 bg-white px-2.5 py-1 text-xs font-medium text-stone-600 transition-colors hover:border-stone-300 hover:bg-stone-50"
+              >
+                {codeCopied ? (
+                  <>
+                    <Check className="h-3 w-3 text-green-600" />
+                    <span className="text-green-600">Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-3 w-3" />
+                    Copy code
+                  </>
+                )}
+              </button>
+            </div>
+            <pre className="overflow-x-auto rounded-b border-2 border-stone-200 bg-stone-900 p-4 text-sm text-stone-100">
+              <code>{installationCode}</code>
+            </pre>
+          </div>
+
+          <div className="mt-4 flex items-start gap-2 rounded border border-retro-blue/30 bg-retro-blue/5 p-3">
+            <div className="mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-retro-blue/20">
+              <span className="text-xs font-bold text-retro-blue">i</span>
+            </div>
+            <p className="text-xs text-stone-600">
+              Your widget key is{" "}
+              <code className="rounded bg-stone-100 px-1 font-mono">{widgetKey}</code>.
+              See the{" "}
+              <Link href="/docs/installation" className="text-retro-blue hover:underline">
+                installation docs
+              </Link>{" "}
+              for React, Vue, and Next.js examples.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
