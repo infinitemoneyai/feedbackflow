@@ -367,7 +367,7 @@
         "Typecheck passes"
       ],
       "priority": 20,
-      "passes": false,
+      "passes": true,
       "notes": "This is the highest priority AI feature. Output should be clean, actionable tickets ready for Linear/Notion."
     },
     {
