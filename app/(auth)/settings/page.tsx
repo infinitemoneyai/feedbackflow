@@ -3,14 +3,15 @@
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import Link from "next/link";
-import { ArrowLeft, Bot, Settings as SettingsIcon, Users, CreditCard, Plug } from "lucide-react";
+import { ArrowLeft, Bot, Settings as SettingsIcon, Users, CreditCard, Plug, Webhook } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { AiConfigSection } from "@/components/settings/ai-config-section";
 import { LinearConfigSection } from "@/components/settings/linear-config-section";
 import { NotionConfigSection } from "@/components/settings/notion-config-section";
+import { WebhookConfigSection } from "@/components/settings/webhook-config-section";
 
-type SettingsTab = "ai" | "integrations" | "team" | "billing";
+type SettingsTab = "ai" | "integrations" | "webhooks" | "team" | "billing";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("ai");
@@ -32,6 +33,12 @@ export default function SettingsPage() {
       label: "Integrations",
       icon: Plug,
       description: "Connect Linear, Notion, and more",
+    },
+    {
+      id: "webhooks" as const,
+      label: "Webhooks",
+      icon: Webhook,
+      description: "Configure webhook notifications",
     },
     {
       id: "team" as const,
@@ -162,6 +169,10 @@ export default function SettingsPage() {
                 {/* Notion Integration */}
                 <NotionConfigSection teamId={selectedTeamId} />
               </div>
+            )}
+
+            {activeTab === "webhooks" && selectedTeamId && (
+              <WebhookConfigSection teamId={selectedTeamId} />
             )}
 
             {activeTab === "team" && (

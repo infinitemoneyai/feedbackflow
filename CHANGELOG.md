@@ -6,6 +6,32 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Added
 
+- **FF-025: Webhook System** - Complete webhook configuration and delivery system:
+  - Settings page with dedicated Webhooks tab in navigation
+  - Add webhook form with URL input (HTTPS required) and event selection
+  - Events supported: new_feedback, status_changed, exported
+  - Auto-generated signing secrets (whsec_xxx format) shown once on creation
+  - HMAC-SHA256 signatures on all webhook payloads
+  - Custom headers: X-FeedbackFlow-Signature, X-FeedbackFlow-Event, X-FeedbackFlow-Timestamp, X-FeedbackFlow-Delivery
+  - Automatic retry with exponential backoff (3 attempts at 1min, 2min, 4min intervals)
+  - Convex scheduled functions for reliable retry handling
+  - Webhook logs showing delivery status, response codes, error messages, and attempt counts
+  - Status indicators: success (green), pending (yellow), failed (red)
+  - Test webhook button sends sample payload to verify endpoint
+  - Enable/disable individual webhooks without deleting
+  - Regenerate secret with confirmation (invalidates old secret immediately)
+  - Delete webhook with cascade cleanup of logs
+  - Expandable webhook items showing full details and recent deliveries
+  - Copy secret to clipboard functionality
+  - Show/hide secret toggle for security
+  - WebhookConfigSection component with retro design aesthetic
+  - Convex mutations: createWebhook, updateWebhook, deleteWebhook, regenerateSecret
+  - Convex queries: getWebhooks, getWebhookLogs
+  - Convex internal functions: createWebhookLog, updateWebhookLog, getWebhooksForEvent, getWebhookById
+  - Convex actions: sendWebhook (internal), triggerWebhooks (internal), testWebhook (public)
+  - Admin-only access control for webhook configuration
+  - Typecheck passes with no errors
+
 - **FF-024: JSON Export in prd.json Format** - Export feedback as JSON for AI dev workflows:
   - JSON export utility functions in `lib/exports/json.ts`
   - Converts feedback to prd.json userStories structure with id, title, acceptanceCriteria, priority, notes
@@ -377,8 +403,8 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 - [x] FF-022: Linear integration
 - [x] FF-023: Notion integration
-- [ ] FF-024: JSON/prd.json export
-- [ ] FF-025: Webhooks
+- [x] FF-024: JSON/prd.json export
+- [x] FF-025: Webhooks
 - [ ] FF-026: REST API
 - [ ] FF-027: Automation rules
 

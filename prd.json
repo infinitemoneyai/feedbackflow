@@ -453,7 +453,7 @@
         "Typecheck passes"
       ],
       "priority": 25,
-      "passes": false,
+      "passes": true,
       "notes": "Use Convex scheduled functions for retries. Log all attempts."
     },
     {
