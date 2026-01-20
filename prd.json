@@ -508,7 +508,7 @@
         "Typecheck passes"
       ],
       "priority": 28,
-      "passes": false,
+      "passes": true,
       "notes": "Keep charts simple. Use recharts or similar. Focus on actionable insights."
     },
     {

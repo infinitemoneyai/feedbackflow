@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery } from "convex/react";
 import { useUser, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import {
@@ -12,6 +12,7 @@ import {
   Plus,
   Settings,
   FolderKanban,
+  BarChart3,
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { useDashboard } from "./dashboard-layout";
@@ -192,6 +193,16 @@ export function DashboardSidebar() {
               </button>
             );
           })}
+
+          {/* Analytics link */}
+          <Link
+            href="/analytics"
+            onClick={() => setSidebarOpen(false)}
+            className="flex w-full items-center gap-3 rounded px-3 py-2 text-sm font-medium text-stone-500 transition-colors hover:bg-stone-100 hover:text-retro-black"
+          >
+            <BarChart3 className="h-[18px] w-[18px]" />
+            Analytics
+          </Link>
         </nav>
       </div>
 

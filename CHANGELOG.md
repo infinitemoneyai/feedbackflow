@@ -6,6 +6,29 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Added
 
+- **FF-028: Analytics Dashboard** - Complete analytics dashboard with charts and metrics:
+  - Analytics page accessible from sidebar navigation with BarChart3 icon
+  - Feedback volume line chart (daily/weekly/monthly granularity)
+  - Type breakdown pie chart showing bugs vs features distribution
+  - Status breakdown horizontal bar chart showing all status categories
+  - Average time to resolution metric card
+  - Average time to first response metric card (calculates from first activity or comment)
+  - Top 10 tags horizontal bar chart visualization
+  - Date range filter with preset options (7 days, 30 days, 90 days, custom)
+  - Custom date range picker for specific date selection
+  - Granularity selector (daily, weekly, monthly) for volume chart
+  - CSV export button downloads complete feedback data with all fields
+  - Summary metric cards: Total Feedback, Bugs count (with %), Features count (with %)
+  - Time metrics displayed with smart formatting (minutes, hours, days)
+  - Recharts library for all chart visualizations
+  - Retro design aesthetic matching dashboard theme with thick borders and offset shadows
+  - Loading states and empty states for all components
+  - Responsive layout with grid-based metric cards
+  - Convex queries: `getAnalytics` (aggregates all data), `exportAnalytics` (CSV export data)
+  - New components: `AnalyticsDashboard`, `VolumeChart`, `TypeBreakdownChart`, `StatusBreakdownChart`, `TopTagsChart`, `MetricCard`, `ChartCard`
+  - Added analytics route at `/analytics`
+  - Typecheck passes with no errors
+
 - **FF-027: Automation Rules** - Complete automation rules system for automatic feedback processing:
   - Automation Rules section in project Settings with dedicated tab
   - Create rules with trigger, conditions, and action configuration
@@ -467,7 +490,7 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Milestone 6: Analytics & Notifications
 
-- [ ] FF-028: Analytics dashboard
+- [x] FF-028: Analytics dashboard
 - [ ] FF-029: Email notifications
 - [ ] FF-030: In-app notifications
 
