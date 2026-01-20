@@ -6,6 +6,24 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Added
 
+- **FF-019: AI Solution Suggestions** - Dedicated AI-powered solution suggestions feature:
+  - New `solutionSuggestions` table in Convex schema for storing rich suggestion data
+  - `generateSolutionsAction` internal action in convex/aiActions.ts with dedicated prompt engineering
+  - `triggerSolutionGeneration` public action for triggering solution generation
+  - `storeSolutionSuggestions` internal mutation and `getSolutionSuggestions` query in convex/ai.ts
+  - SolutionSuggestionsSection component with expandable UI in ticket detail panel
+  - Suggestions include: title, description, type (investigation/fix/workaround/implementation/consideration), effort level, impact level
+  - Each suggestion shows effort/impact badges with color coding
+  - Copy individual suggestions to clipboard
+  - Copy all suggestions as formatted markdown
+  - "Add to ticket draft" button for each suggestion (ready for FF-020 integration)
+  - Regenerate button to get fresh suggestions
+  - Summary and next steps sections
+  - Leverages existing AI analysis data when available
+  - Works with both OpenAI (GPT-4o) and Anthropic (Claude) via vision APIs
+  - Screenshot analysis included when available
+  - Retro design aesthetic matching dashboard theme
+
 - **Project Initialized** - Created project structure with prd.json, CLAUDE.md, DESIGN.md
 - **45 User Stories** - Comprehensive PRD covering all features from foundation to polish
 - **Design System** - Retro-modern aesthetic with colors, typography, components documented
