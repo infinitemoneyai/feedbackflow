@@ -31,6 +31,13 @@ All notable changes to FeedbackFlow will be documented in this file.
   - Updated DESIGN.md with new Dashboard Layout pattern and Filter Pills component
   - Consistent styling between public pages and dashboard
 
+### Fixed
+
+- **Dashboard Sidebar Icons** - Removed unused Lucide icon references (`Inbox`, `Bookmark`, `CheckCircle2`) from navItems; Solar icons already used via Icon component
+- **Stripe Import Error** - Separated client-safe config (`PLANS`, `STRIPE_PRICES`) into `lib/stripe-config.ts` so pricing page can import without triggering server-side Stripe client initialization
+
+### Changed
+
 - **Documentation Pages Redesign** - Complete redesign of all docs pages to match retro-modern design system:
   - New docs index page (`/docs`) with documentation hub, feature highlights, and resource links
   - Redesigned API documentation page with retro styling, EndpointCard components, and syntax-highlighted code blocks
