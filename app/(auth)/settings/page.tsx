@@ -13,6 +13,7 @@ import { WebhookConfigSection } from "@/components/settings/webhook-config-secti
 import { RestApiKeysSection } from "@/components/settings/rest-api-keys-section";
 import { AutomationRulesSection } from "@/components/settings/automation-rules-section";
 import { NotificationPreferencesSection } from "@/components/settings/notification-preferences-section";
+import { BillingSection } from "@/components/settings/billing-section";
 
 type SettingsTab = "ai" | "integrations" | "webhooks" | "automation" | "api-keys" | "notifications" | "team" | "billing";
 
@@ -219,15 +220,8 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {activeTab === "billing" && (
-              <div className="rounded border-2 border-retro-black bg-white p-8 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
-                <h2 className="mb-4 text-xl font-semibold text-retro-black">
-                  Billing
-                </h2>
-                <p className="text-stone-500">
-                  Billing features coming soon.
-                </p>
-              </div>
+            {activeTab === "billing" && selectedTeamId && (
+              <BillingSection teamId={selectedTeamId} />
             )}
           </main>
         </div>
