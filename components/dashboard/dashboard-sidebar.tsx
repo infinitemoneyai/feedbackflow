@@ -18,6 +18,7 @@ import { api } from "@/convex/_generated/api";
 import { useDashboard } from "./dashboard-layout";
 import { cn } from "@/lib/utils";
 import { Id } from "@/convex/_generated/dataModel";
+import { UsageIndicator } from "./usage-indicator";
 
 export function DashboardSidebar() {
   const { user } = useUser();
@@ -206,8 +207,11 @@ export function DashboardSidebar() {
         </nav>
       </div>
 
+      {/* Usage indicator */}
+      {selectedTeamId && <UsageIndicator teamId={selectedTeamId} />}
+
       {/* User footer */}
-      <div className="border-t-2 border-retro-black bg-white p-4">
+      <div className="border-t border-stone-200 bg-white p-4">
         <div className="flex items-center gap-3">
           <UserButton
             afterSignOutUrl="/"

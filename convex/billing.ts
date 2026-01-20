@@ -69,6 +69,91 @@ export const getSubscriptionPublic = query({
 });
 
 /**
+ * Check if a team can submit feedback (public, for widget API)
+ * This is used by the API route to check limits before submission
+ */
+export const checkCanSubmitFeedback = query({
+  args: { teamId: v.id("teams") },
+  handler: async (ctx, args) => {
+    const subscription = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+      .first();
+
+    if (!subscription) {
+      return {
+        allowed: false,
+        reason: "No subscription found for this team",
+        plan: "free" as const,
+        currentCount: 0,
+        limit: 25,
+        percentUsed: 0,
+      };
+    }
+
+    // Pro plan has unlimited feedback
+    if (subscription.plan === "pro" && subscription.status === "active") {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1;
+
+      const usage = await ctx.db
+        .query("usageTracking")
+        .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+        .filter((q) =>
+          q.and(q.eq(q.field("year"), year), q.eq(q.field("month"), month))
+        )
+        .first();
+
+      return {
+        allowed: true,
+        plan: "pro" as const,
+        currentCount: usage?.feedbackCount ?? 0,
+        limit: null,
+        percentUsed: 0,
+      };
+    }
+
+    // Free plan: check current month's feedback count
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+
+    const usage = await ctx.db
+      .query("usageTracking")
+      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+      .filter((q) =>
+        q.and(q.eq(q.field("year"), year), q.eq(q.field("month"), month))
+      )
+      .first();
+
+    const currentCount = usage?.feedbackCount ?? 0;
+    const limit = 25;
+    const percentUsed = Math.round((currentCount / limit) * 100);
+
+    if (currentCount >= limit) {
+      return {
+        allowed: false,
+        reason: `Monthly feedback limit reached (${limit}). Upgrade to Pro for unlimited feedback.`,
+        plan: "free" as const,
+        currentCount,
+        limit,
+        percentUsed: 100,
+      };
+    }
+
+    return {
+      allowed: true,
+      plan: "free" as const,
+      currentCount,
+      limit,
+      percentUsed,
+      nearLimit: percentUsed >= 80,
+    };
+  },
+});
+
+/**
  * Get current usage for a team
  */
 export const getUsage = query({
@@ -377,6 +462,151 @@ export const updateSubscriptionStatus = internalMutation({
 // ============================================================================
 // Internal Queries
 // ============================================================================
+
+/**
+ * Check if a team can submit more feedback (for API routes)
+ * Returns usage status and limit info
+ */
+export const checkUsageLimit = internalQuery({
+  args: { teamId: v.id("teams") },
+  handler: async (ctx, args) => {
+    const subscription = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+      .first();
+
+    if (!subscription) {
+      return {
+        allowed: false,
+        reason: "No subscription found",
+        plan: "free" as const,
+        currentCount: 0,
+        limit: 25,
+        percentUsed: 0,
+      };
+    }
+
+    // Pro plan has unlimited feedback
+    if (subscription.plan === "pro" && subscription.status === "active") {
+      // Get current count for display purposes
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1;
+
+      const usage = await ctx.db
+        .query("usageTracking")
+        .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+        .filter((q) =>
+          q.and(q.eq(q.field("year"), year), q.eq(q.field("month"), month))
+        )
+        .first();
+
+      return {
+        allowed: true,
+        plan: "pro" as const,
+        currentCount: usage?.feedbackCount ?? 0,
+        limit: null, // Unlimited
+        percentUsed: 0,
+      };
+    }
+
+    // Free plan: check current month's feedback count
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+
+    const usage = await ctx.db
+      .query("usageTracking")
+      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+      .filter((q) =>
+        q.and(q.eq(q.field("year"), year), q.eq(q.field("month"), month))
+      )
+      .first();
+
+    const currentCount = usage?.feedbackCount ?? 0;
+    const limit = 25; // Free tier limit
+    const percentUsed = Math.round((currentCount / limit) * 100);
+
+    if (currentCount >= limit) {
+      return {
+        allowed: false,
+        reason: `Free plan is limited to ${limit} feedback submissions per month. Upgrade to Pro for unlimited feedback.`,
+        plan: "free" as const,
+        currentCount,
+        limit,
+        percentUsed: 100,
+      };
+    }
+
+    return {
+      allowed: true,
+      plan: "free" as const,
+      currentCount,
+      limit,
+      percentUsed,
+      nearLimit: percentUsed >= 80,
+    };
+  },
+});
+
+/**
+ * Check if a team can add more seats (for API routes)
+ */
+export const checkSeatLimit = internalQuery({
+  args: { teamId: v.id("teams") },
+  handler: async (ctx, args) => {
+    const subscription = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+      .first();
+
+    if (!subscription) {
+      return {
+        allowed: false,
+        reason: "No subscription found",
+        plan: "free" as const,
+        currentSeats: 0,
+        maxSeats: 1,
+      };
+    }
+
+    // Pro plan - check against purchased seats
+    if (subscription.plan === "pro" && subscription.status === "active") {
+      const members = await ctx.db
+        .query("teamMembers")
+        .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+        .collect();
+
+      return {
+        allowed: members.length < subscription.seats,
+        plan: "pro" as const,
+        currentSeats: members.length,
+        maxSeats: subscription.seats,
+        reason:
+          members.length >= subscription.seats
+            ? `You've used all ${subscription.seats} seats. Add more seats in billing settings.`
+            : undefined,
+      };
+    }
+
+    // Free plan: 1 seat only
+    const members = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+      .collect();
+
+    return {
+      allowed: members.length < 1,
+      reason:
+        members.length >= 1
+          ? "Free plan is limited to 1 seat. Upgrade to Pro for unlimited seats."
+          : undefined,
+      plan: "free" as const,
+      currentSeats: members.length,
+      maxSeats: 1,
+    };
+  },
+});
 
 /**
  * Get subscription by Stripe customer ID (for webhook handling)
