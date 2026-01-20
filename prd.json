@@ -697,7 +697,7 @@
         "Typecheck passes"
       ],
       "priority": 39,
-      "passes": false,
+      "passes": true,
       "notes": "n8n-style self-hosting: truly open, no artificial limits"
     },
     {
