@@ -33,6 +33,7 @@ import { CommentsAndActivity } from "./comments-activity";
 import { AIAnalysisSection } from "./ai-analysis-section";
 import { SolutionSuggestionsSection } from "./solution-suggestions-section";
 import { TicketDraftSection } from "./ticket-draft-section";
+import { AIConversationSection } from "./ai-conversation-section";
 
 type FeedbackStatus = "new" | "triaging" | "drafted" | "exported" | "resolved";
 type FeedbackPriority = "low" | "medium" | "high" | "critical";
@@ -649,6 +650,9 @@ export function TicketDetailPanel() {
   // Mutation to update feedback
   const updateFeedback = useMutation(api.feedback.updateFeedback);
 
+  // Mutation to add comments
+  const addComment = useMutation(api.feedback.addComment);
+
   // Loading and updating states
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -711,6 +715,32 @@ export function TicketDetailPanel() {
     },
     [selectedFeedbackId, updateFeedback]
   );
+
+  // Handler for copying AI response to comments
+  const handleCopyToComment = useCallback(
+    async (content: string) => {
+      if (!selectedFeedbackId) return;
+      try {
+        await addComment({
+          feedbackId: selectedFeedbackId,
+          content: `[AI Response]\n${content}`,
+        });
+      } catch (error) {
+        console.error("Failed to add comment:", error);
+      }
+    },
+    [selectedFeedbackId, addComment]
+  );
+
+  // Handler for copying AI response to ticket draft notes (via clipboard)
+  const handleCopyToTicketDraft = useCallback(async (content: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      // The user can then paste this into the ticket draft notes
+    } catch (error) {
+      console.error("Failed to copy to clipboard:", error);
+    }
+  }, []);
 
   // If no feedback selected, show empty state
   if (!selectedFeedbackId) {
@@ -905,6 +935,14 @@ export function TicketDetailPanel() {
           feedbackId={selectedFeedbackId}
           teamId={feedback.teamId}
           feedbackType={feedback.type}
+        />
+
+        {/* AI Conversation Section */}
+        <AIConversationSection
+          feedbackId={selectedFeedbackId}
+          teamId={feedback.teamId}
+          onCopyToComment={handleCopyToComment}
+          onCopyToTicketDraft={handleCopyToTicketDraft}
         />
       </div>
 

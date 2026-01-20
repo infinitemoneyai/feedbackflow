@@ -6,6 +6,25 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Added
 
+- **FF-021: AI Conversation** - Interactive chat interface to explore feedback with AI:
+  - Chat interface in feedback detail panel with retro lavender styling
+  - Conversation history preserved in `conversations` table via Convex queries
+  - Full context support: AI has access to feedback title, description, screenshot, metadata
+  - Existing AI analysis (summary, potential causes, solutions) included in context
+  - Works with both OpenAI (GPT-4o) and Anthropic (Claude) via vision APIs
+  - Real-time message display with user/assistant role styling
+  - Copy responses to clipboard functionality
+  - "Add to Comment" button copies AI response as a comment on the feedback
+  - "Copy to Draft" button copies content for pasting into ticket draft
+  - Clear conversation history with confirmation
+  - Auto-scroll to latest messages
+  - Loading state with "Thinking..." indicator
+  - Error handling with user-friendly messages
+  - AIConversationSection component integrated into ticket-detail-panel
+  - Convex functions: `getConversationHistory`, `addUserMessage`, `storeAssistantMessage`, `clearConversationHistory`
+  - Actions: `sendConversationMessage` (public), `processConversationMessage` (internal)
+  - Usage tracking updated when AI responses are generated
+
 - **FF-020: AI Ticket Drafting** - Priority AI feature for generating actionable tickets from feedback:
   - "Draft Ticket" button in feedback detail panel with retro lavender styling
   - AI generates structured tickets using feedback content, AI analysis, and solution suggestions
