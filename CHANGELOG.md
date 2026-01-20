@@ -4,6 +4,85 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- **Global Design System** - Established shared layout components as single source of truth:
+  - Created `components/layout/site-header.tsx` - Shared navigation with correct logo icon (`solar:infinite-linear`), active state highlighting, and auth-aware CTA (Dashboard vs Get Access)
+  - Created `components/layout/site-footer.tsx` - Shared footer with copyright, attribution, and social links
+  - Created `components/layout/page-layout.tsx` - Main wrapper providing consistent container structure (`bg-bg-page` outer, bordered paper container with offset shadow)
+  - Created `components/layout/docs-layout.tsx` - Extends PageLayout for docs pages with breadcrumb navigation
+  - Updated landing page (`/`) to use PageLayout
+  - Updated pricing page (`/pricing`) to use PageLayout
+  - Updated manifesto page (`/manifesto`) to use PageLayout
+  - Updated docs index (`/docs`) to use PageLayout
+  - Updated all docs subpages (`/docs/api`, `/docs/installation`, `/docs/self-hosting`) to use DocsLayout
+  - Fixed icon inconsistency: all pages now use `solar:infinite-linear` (not `solar:infinity-linear`)
+  - Design changes now propagate automatically from shared components to all pages
+
+- **Dashboard Redesign** - Complete redesign to match retro-modern design system:
+  - New outer wrapper with `bg-[#e8e6e1]` background, padding, and max-w-[1800px] container
+  - Main application shell with thick borders and 8px offset shadow
+  - Updated `DashboardLayout` component with three-panel structure
+  - Restyled `DashboardSidebar` with brand header (yellow background + infinity icon), projects list with retro active states, views section, and user footer with thick borders
+  - Updated `DashboardHeader` with filter pills (All/Bugs/Features) for quick filtering
+  - Restyled `FeedbackList` ticket items with status indicators, priority badges, hover states (`shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]`), and selected states (blue border + shadow)
+  - Redesigned `TicketDetailPanel` with retro header, device tags, screenshot viewer, and action footer with export buttons
+  - Switched from Lucide icons to Solar icons throughout dashboard
+  - Updated DESIGN.md with new Dashboard Layout pattern and Filter Pills component
+  - Consistent styling between public pages and dashboard
+
+- **Documentation Pages Redesign** - Complete redesign of all docs pages to match retro-modern design system:
+  - New docs index page (`/docs`) with documentation hub, feature highlights, and resource links
+  - Redesigned API documentation page with retro styling, EndpointCard components, and syntax-highlighted code blocks
+  - Redesigned Installation guide with framework tabs (HTML, React, Vue, Next.js), copy-to-clipboard functionality, and configuration table
+  - Redesigned Self-hosting guide with Docker Compose examples, environment variables table, and provider options
+  - Consistent sticky navigation with yellow logo area across all docs pages
+  - Breadcrumb navigation showing current location
+  - Retro-styled code blocks with dark theme and copy buttons
+  - Expandable troubleshooting sections with details/summary elements
+  - Jump-to navigation for quick section access
+  - Switched from Lucide icons to Solar icons via @iconify/react
+  - Consistent footer across all pages
+
+- **Manifesto Page** - New brand manifesto page with retro design:
+  - Five chapters: The Feedback Gap, What We Believe, Who This Is For, The Uncomfortable Truth, Why We Built This
+  - Brand-aligned copy: direct, slightly irreverent, developer-focused
+  - Grid-based layout with thick borders and color sections
+  - Quote blocks with red accent borders
+  - "Our Promise" section: Open Source, Privacy-First, Fair Pricing, No Lock-In
+  - Consistent navigation and footer with other pages
+  - SEO metadata for manifesto page
+
+- **Pricing Page Redesign** - Complete redesign to match retro-modern design system:
+  - Grid-based layout with thick borders and dividers
+  - New bold copywriting: "Pay for Seats. Not for Feedback."
+  - Switched from Lucide icons to Solar icons via @iconify/react
+  - Yellow-branded logo area with sticky navigation
+  - Side-by-side plan comparison with Free and Pro
+  - Seat selector with retro styling and shadow effects
+  - Feature comparison table with grid layout
+  - Self-host section with dark background
+  - FAQ section in two-column grid
+  - Colored shadow CTA buttons
+  - Consistent footer with landing page
+
+- **Landing Page Redesign** - Complete redesign to match retro-modern design system:
+  - Grid-based layout with thick borders (2px) and offset shadows
+  - New bold copywriting: "Your Users Are Talking. You're Just Not Listening."
+  - Switched from Lucide icons to Solar icons via @iconify/react
+  - Yellow-branded logo area with sticky navigation
+  - Interactive ticket preview card in hero section
+  - Colored shadow buttons (yellow, red, blue accents)
+  - Problem/solution sections with dot pattern backgrounds
+  - Bento-style feature grid with hover animations
+  - Timeline workflow visualization
+  - Open source section with dark background
+  - "InfiniteMoney Built This" section
+  - CTA footer with three action buttons
+  - New Icon component (`components/ui/icon.tsx`) using Iconify
+  - Enhanced globals.css with retro utilities (btn-retro-*, bg-dots, animate-spin-slow)
+  - Updated metadata for better SEO/OpenGraph
+
 ### Added
 
 - **FF-045: Performance Optimization and Polish** - Final performance pass for production readiness:

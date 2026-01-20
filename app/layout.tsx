@@ -6,17 +6,25 @@ import { ConvexClientProvider } from "@/lib/convex-provider";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "FeedbackFlow",
+  title: "FeedbackFlow - Turn Screenshots into Tickets",
   description:
-    "Feedback collection system with screenshot capture, screen recording, and AI-powered triage",
+    "A feedback widget for people shipping faster than their attention span allows. Screenshot capture, screen recording with audio, and AI-powered triage.",
+  openGraph: {
+    title: "FeedbackFlow - Turn Screenshots into Tickets",
+    description:
+      "A feedback widget for people shipping faster than their attention span allows.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -26,7 +34,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}>
+      <body
+        className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}
+      >
         <ConvexClientProvider>{children}</ConvexClientProvider>
       </body>
     </html>

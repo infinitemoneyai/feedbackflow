@@ -1,432 +1,588 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Camera,
-  Video,
-  Wand2,
-  Ticket,
-  ArrowRight,
-  Github,
-  Layers,
-  Zap,
-  MessageSquare,
-  Settings,
-  ExternalLink,
-  FileJson,
-  Check,
-} from "lucide-react";
+import { Icon } from "@/components/ui/icon";
+import { PageLayout } from "@/components/layout";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-bg-page">
-      {/* Navigation */}
-      <nav className="border-b-2 border-retro-black bg-retro-paper">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
-          <Link href="/" className="font-mono text-xl font-bold tracking-tight text-retro-black">
-            FeedbackFlow
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link
-              href="/docs"
-              className="text-sm text-stone-600 transition-colors hover:text-retro-black"
-            >
-              Docs
-            </Link>
-            <Link
-              href="/pricing"
-              className="text-sm text-stone-600 transition-colors hover:text-retro-black"
-            >
-              Pricing
-            </Link>
-            <Link
-              href="https://github.com/feedbackflow/feedbackflow"
-              className="text-sm text-stone-600 transition-colors hover:text-retro-black"
-            >
-              GitHub
-            </Link>
-            <Link href="/sign-in">
-              <Button
-                variant="outline"
-                className="border-2 border-retro-black bg-white text-retro-black hover:bg-stone-50"
-              >
-                Sign In
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
-
+    <PageLayout>
       {/* Hero Section */}
-      <section className="border-b-2 border-retro-black bg-retro-paper">
-        <div className="mx-auto max-w-7xl px-4 py-16 md:py-24">
-          <div className="flex flex-col items-center text-center">
-            <Badge className="mb-6 border border-retro-yellow/30 bg-retro-yellow/10 text-retro-black">
-              Open Source
-            </Badge>
-            <h1 className="mb-6 max-w-4xl text-4xl font-medium tracking-tighter text-retro-black md:text-6xl lg:text-7xl">
-              Turn messy feedback into
-              <span className="relative mx-2 inline-block">
-                <span className="relative z-10">actionable tickets</span>
-                <span className="absolute bottom-1 left-0 h-3 w-full bg-retro-yellow/50"></span>
-              </span>
-              automatically
+        <div className="grid grid-cols-1 divide-y-2 divide-retro-black border-b-2 border-retro-black lg:grid-cols-12 lg:divide-x-2 lg:divide-y-0">
+          {/* Hero Content */}
+          <div className="flex flex-col justify-center gap-10 p-8 md:p-16 lg:col-span-8">
+            <div className="inline-flex w-fit items-center gap-3 rounded border border-retro-red/30 bg-retro-red/5 px-3 py-1 font-mono text-xs uppercase tracking-widest text-retro-red">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-retro-red"></span>
+              System Online v2.0
+            </div>
+
+            <h1 className="-ml-1 text-5xl font-medium leading-[0.9] tracking-tighter md:text-7xl lg:text-8xl">
+              Your Users <br />
+              <span className="text-stone-400">Are Talking.</span>
+              <br />
+              You&apos;re Just Not <br />
+              Listening.
             </h1>
-            <p className="mb-8 max-w-2xl text-lg text-stone-600 md:text-xl">
-              Screenshot capture, screen recording with audio, and AI-powered triage. Export to
-              Linear, Notion, or JSON for your AI workflows.
-            </p>
-            <div className="flex flex-col gap-4 sm:flex-row">
-              <Link href="/sign-up">
-                <Button className="border-2 border-retro-black bg-retro-black px-8 py-6 text-lg text-white shadow-[4px_4px_0px_0px_#888] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#888]">
-                  Get Started Free
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
-              <Link href="https://github.com/feedbackflow/feedbackflow">
-                <Button
-                  variant="outline"
-                  className="border-2 border-retro-black bg-white px-8 py-6 text-lg text-retro-black hover:bg-stone-50"
-                >
-                  <Github className="mr-2 h-5 w-5" />
-                  Star on GitHub
-                </Button>
-              </Link>
-            </div>
-            <p className="mt-6 font-mono text-xs text-stone-400">
-              Free tier: 1 seat, 25 feedback/month. Self-host for unlimited.
-            </p>
-          </div>
-        </div>
-      </section>
 
-      {/* Problem Section */}
-      <section className="border-b-2 border-retro-black bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-16">
-          <div className="mb-12 text-center">
-            <h2 className="mb-4 text-3xl font-medium tracking-tight text-retro-black md:text-4xl">
-              We see everything. Even the bugs you hid.
-            </h2>
-            <p className="mx-auto max-w-2xl text-stone-600">
-              Feedback comes in scattered across Slack, email, and support tickets. Context is lost.
-              Screenshots are blurry. &ldquo;Can you record what happened?&rdquo; leads nowhere.
+            <p className="max-w-2xl text-xl font-light leading-relaxed tracking-tight text-stone-600 md:text-2xl">
+              Turn screenshots into tickets. Automatically. <br />
+              A feedback widget for people shipping faster than their attention
+              span allows.
             </p>
-          </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {[
-              {
-                title: "Context Gets Lost",
-                description:
-                  "Screenshots without URLs. Videos without narration. Hours wasted trying to reproduce.",
-              },
-              {
-                title: "Manual Ticket Writing",
-                description:
-                  "Translate vague feedback into clear tickets. Over and over. Every single day.",
-              },
-              {
-                title: "Scattered Feedback",
-                description:
-                  "Slack DMs, email threads, support tickets. Which one has that bug report from last week?",
-              },
-            ].map((item, i) => (
-              <div
-                key={i}
-                className="border-2 border-retro-black bg-retro-paper p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]"
+
+            <div className="flex flex-col gap-4 pt-6 sm:flex-row">
+              <Link
+                href="/sign-up"
+                className="group flex items-center justify-center gap-3 border-2 border-retro-black bg-retro-black px-8 py-4 text-lg font-medium text-white shadow-[4px_4px_0px_0px_#888] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-retro-blue hover:text-retro-black hover:shadow-[2px_2px_0px_0px_#000]"
               >
-                <h3 className="mb-2 text-lg font-medium text-retro-black">{item.title}</h3>
-                <p className="text-sm text-stone-600">{item.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Features Grid (Bento Style) */}
-      <section className="border-b-2 border-retro-black bg-retro-paper">
-        <div className="mx-auto max-w-7xl px-4 py-16">
-          <div className="mb-12 text-center">
-            <h2 className="mb-4 text-3xl font-medium tracking-tight text-retro-black md:text-4xl">
-              Everything you need to capture feedback
-            </h2>
-            <p className="mx-auto max-w-2xl text-stone-600">
-              One widget. Complete context. AI-powered processing.
-            </p>
+                <span>Install the Script</span>
+                <Icon
+                  name="solar:code-square-linear"
+                  size={20}
+                  className="transition-transform group-hover:rotate-90"
+                />
+              </Link>
+              <Link
+                href="/docs"
+                className="flex items-center justify-center gap-3 border-2 border-retro-black bg-transparent px-8 py-4 text-lg font-medium text-retro-black transition-all hover:bg-stone-200"
+              >
+                <span>Read the README</span>
+                <Icon name="solar:book-2-linear" size={20} />
+              </Link>
+            </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {/* Screenshot Capture */}
-            <div className="group border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-retro-blue bg-retro-blue/20 text-retro-blue">
-                <Camera className="h-6 w-6" />
+          {/* Hero Graphic/Sidebar */}
+          <div className="relative flex flex-col justify-between overflow-hidden bg-retro-blue lg:col-span-4">
+            {/* Abstract UI Representation */}
+            <div className="flex h-full flex-col border-b-2 border-retro-black bg-white/20 p-8 backdrop-blur-sm">
+              <div className="mb-6 flex items-center justify-between">
+                <span className="border border-retro-black bg-white px-2 py-1 font-mono text-[10px] uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                  New Ticket #402
+                </span>
+                <Icon
+                  name="solar:close-square-linear"
+                  size={20}
+                  className="cursor-pointer transition-transform hover:rotate-90"
+                />
               </div>
-              <h3 className="mb-2 text-lg font-medium text-retro-black">Screenshot Capture</h3>
-              <p className="text-sm text-stone-600">
-                Capture the visible viewport with one click. Annotate with pen, highlighter, and
-                shapes.
-              </p>
+
+              <div className="relative transform space-y-4 border-2 border-retro-black bg-white p-5 font-mono text-sm shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-transform duration-300 hover:-translate-y-1">
+                <div className="flex items-center gap-2 border-b border-stone-100 pb-2 text-xs text-stone-500">
+                  <Icon name="solar:user-circle-linear" size={14} />
+                  <span>@user_209</span>
+                  <span className="ml-auto text-[10px]">2m ago</span>
+                </div>
+                <p className="text-base font-semibold leading-snug tracking-tight">
+                  &ldquo;The checkout button is broken on mobile&rdquo;
+                </p>
+
+                {/* Mock Screenshot */}
+                <div className="group relative flex aspect-video flex-col items-center justify-center gap-2 overflow-hidden border border-stone-300 bg-stone-100 text-stone-400">
+                  <div className="absolute inset-0 flex items-center justify-center bg-stone-50 opacity-0 transition-opacity group-hover:opacity-100">
+                    <Icon
+                      name="solar:magnifer-zoom-in-linear"
+                      size={24}
+                      className="text-retro-black"
+                    />
+                  </div>
+                  <Icon name="solar:gallery-wide-linear" size={24} />
+                  <span className="text-xs">[Screenshot.png]</span>
+                </div>
+
+                <div className="mt-2 flex gap-2 pt-2">
+                  <span className="border border-retro-red/30 bg-retro-red/10 px-2 py-1 text-[10px] font-bold uppercase text-retro-red">
+                    High Priority
+                  </span>
+                  <span className="border border-stone-300 bg-stone-100 px-2 py-1 text-[10px] font-bold uppercase text-stone-600">
+                    Bug
+                  </span>
+                </div>
+              </div>
+
+              {/* AI Processing Indicator */}
+              <div className="mt-6 flex items-center gap-3 rounded border border-retro-black/20 bg-retro-black/10 p-3 font-mono text-xs">
+                <Icon
+                  name="solar:magic-stick-3-linear"
+                  size={16}
+                  className="animate-spin-slow"
+                />
+                <span>AI Generating reproduction steps...</span>
+              </div>
             </div>
 
-            {/* Screen Recording */}
-            <div className="group border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-retro-red bg-retro-red/20 text-retro-red">
-                <Video className="h-6 w-6" />
-              </div>
-              <h3 className="mb-2 text-lg font-medium text-retro-black">Screen Recording + Audio</h3>
-              <p className="text-sm text-stone-600">
-                Record your screen with voice narration. Show exactly what happened, in context.
-              </p>
-            </div>
-
-            {/* AI Triage */}
-            <div className="group border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-retro-lavender bg-retro-lavender/20 text-retro-lavender">
-                <Wand2 className="h-6 w-6" />
-              </div>
-              <h3 className="mb-2 text-lg font-medium text-retro-black">AI Auto-Triage</h3>
-              <p className="text-sm text-stone-600">
-                Automatically categorize, prioritize, and suggest tags. Analyze screenshots with
-                vision AI.
-              </p>
-            </div>
-
-            {/* Ticket Drafting - Featured */}
-            <div className="group border-2 border-retro-black bg-retro-yellow p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] md:col-span-2">
-              <div className="flex items-start gap-6">
-                <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full border-2 border-retro-black bg-white">
-                  <Ticket className="h-8 w-8 text-retro-black" />
+            <div className="border-t-2 border-retro-black bg-retro-yellow/90 p-6 backdrop-blur">
+              <div className="flex items-center gap-4">
+                <div className="rounded-full border-2 border-retro-black bg-retro-black p-3 text-retro-yellow">
+                  <Icon name="solar:eye-linear" size={24} />
                 </div>
                 <div>
-                  <Badge className="mb-2 bg-retro-black text-white">Priority Feature</Badge>
-                  <h3 className="mb-2 text-xl font-medium text-retro-black">AI Ticket Drafting</h3>
-                  <p className="text-stone-700">
-                    Transform feedback into formatted tickets automatically. Clear title,
-                    description, repro steps, acceptance criteria. Ready to export.
+                  <p className="text-sm font-semibold leading-tight">
+                    We see everything.
+                  </p>
+                  <p className="text-xs opacity-70">Even the bugs you hid.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* The Problem Section */}
+        <div className="grid grid-cols-1 divide-y-2 divide-retro-black border-b-2 border-retro-black md:grid-cols-2 md:divide-x-2 md:divide-y-0">
+          <div className="relative flex flex-col justify-center overflow-hidden bg-retro-red p-10 text-white md:p-16">
+            {/* Background Pattern */}
+            <div
+              className="absolute inset-0 opacity-10"
+              style={{
+                backgroundImage: "radial-gradient(#fff 1px, transparent 1px)",
+                backgroundSize: "20px 20px",
+              }}
+            ></div>
+
+            <h2 className="relative z-10 mb-6 text-4xl font-medium tracking-tighter lg:text-5xl">
+              The Real Problem
+            </h2>
+            <p className="relative z-10 text-xl font-light leading-relaxed opacity-90 md:text-2xl">
+              You can ship a feature in an afternoon. <br />
+              <br />
+              Then you spend a week playing detective with vague user feedback.
+            </p>
+          </div>
+          <div className="flex flex-col justify-center bg-white p-10 md:p-16">
+            <div className="space-y-8">
+              <div className="group flex items-start gap-5">
+                <div className="rounded border border-stone-200 bg-stone-100 p-2 transition-colors group-hover:border-retro-black">
+                  <Icon
+                    name="solar:chat-round-dots-linear"
+                    size={24}
+                    className="text-stone-600"
+                  />
+                </div>
+                <div>
+                  <p className="text-lg font-medium">Screenshots in Slack.</p>
+                  <p className="text-sm text-stone-500">
+                    &ldquo;Hey, is this supposed to look like this?&rdquo;
+                  </p>
+                </div>
+              </div>
+              <div className="group flex items-start gap-5">
+                <div className="rounded border border-stone-200 bg-stone-100 p-2 transition-colors group-hover:border-retro-black">
+                  <Icon
+                    name="solar:letter-linear"
+                    size={24}
+                    className="text-stone-600"
+                  />
+                </div>
+                <div>
+                  <p className="text-lg font-medium">Thoughts in DMs.</p>
+                  <p className="text-sm text-stone-500">
+                    Lost in the void of history.
+                  </p>
+                </div>
+              </div>
+              <div className="group flex items-start gap-5">
+                <div className="rounded border border-stone-200 bg-stone-100 p-2 transition-colors group-hover:border-retro-black">
+                  <Icon
+                    name="solar:sleeping-linear"
+                    size={24}
+                    className="text-stone-600"
+                  />
+                </div>
+                <div>
+                  <p className="text-lg font-medium">
+                    Half-formed ideas at 2am.
+                  </p>
+                  <p className="text-sm text-stone-500">
+                    You won&apos;t remember them tomorrow.
                   </p>
                 </div>
               </div>
             </div>
-
-            {/* AI Conversation */}
-            <div className="group border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-retro-peach bg-retro-peach/20 text-retro-peach">
-                <MessageSquare className="h-6 w-6" />
+            <div className="relative mt-12 border border-stone-200 bg-stone-50 p-4 text-center">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 border border-stone-200 bg-white px-2 font-mono text-xs text-stone-400">
+                DIAGNOSIS
               </div>
-              <h3 className="mb-2 text-lg font-medium text-retro-black">AI Conversation</h3>
-              <p className="text-sm text-stone-600">
-                Chat with AI about the issue. Explore deeper before deciding on action.
+              <p className="text-lg font-medium tracking-tight">
+                AI didn&apos;t break development. It broke the feedback loop.
               </p>
             </div>
           </div>
         </div>
-      </section>
 
-      {/* Workflow Section */}
-      <section className="border-b-2 border-retro-black bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-16">
-          <div className="mb-12 text-center">
-            <h2 className="mb-4 text-3xl font-medium tracking-tight text-retro-black md:text-4xl">
-              Feedback to ticket in minutes, not hours
-            </h2>
-            <p className="mx-auto max-w-2xl text-stone-600">Simple workflow. Powerful automation.</p>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-4">
-            {[
-              { step: 1, title: "Capture", description: "Screenshot or record with the widget" },
-              { step: 2, title: "Process", description: "AI categorizes and suggests solutions" },
-              { step: 3, title: "Draft", description: "Generate formatted ticket with one click" },
-              { step: 4, title: "Export", description: "Send to Linear, Notion, or JSON" },
-            ].map((item, i) => (
-              <div key={i} className="relative text-center">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center border-2 border-retro-black bg-retro-paper font-mono text-2xl font-bold shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
-                  {item.step}
-                </div>
-                <h3 className="mb-1 font-medium text-retro-black">{item.title}</h3>
-                <p className="text-sm text-stone-600">{item.description}</p>
-                {i < 3 && (
-                  <div className="absolute right-0 top-8 hidden -translate-x-1/2 lg:block">
-                    <ArrowRight className="h-6 w-6 text-stone-300" />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Exports Section */}
-      <section className="border-b-2 border-retro-black bg-retro-paper">
-        <div className="mx-auto max-w-7xl px-4 py-16">
-          <div className="mb-12 text-center">
-            <h2 className="mb-4 text-3xl font-medium tracking-tight text-retro-black md:text-4xl">
-              Export anywhere
-            </h2>
-            <p className="mx-auto max-w-2xl text-stone-600">
-              Integrations for your existing workflow. Or use the API for custom solutions.
-            </p>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
-              <ExternalLink className="mb-4 h-8 w-8 text-retro-blue" />
-              <h3 className="mb-2 font-medium text-retro-black">Linear</h3>
-              <p className="text-sm text-stone-600">
-                Create issues with labels. Attach media. Sync status back.
-              </p>
-            </div>
-            <div className="border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
-              <Layers className="mb-4 h-8 w-8 text-retro-lavender" />
-              <h3 className="mb-2 font-medium text-retro-black">Notion</h3>
-              <p className="text-sm text-stone-600">
-                Create pages in your database. Map properties. Embed screenshots.
-              </p>
-            </div>
-            <div className="border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
-              <FileJson className="mb-4 h-8 w-8 text-retro-peach" />
-              <h3 className="mb-2 font-medium text-retro-black">JSON (prd.json)</h3>
-              <p className="text-sm text-stone-600">
-                Export for AI dev workflows. Perfect for Ralph and similar tools.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Multi-Project Section */}
-      <section className="border-b-2 border-retro-black bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-16">
-          <div className="grid gap-12 md:grid-cols-2">
+        {/* Features Grid (Bento Style) */}
+        <div className="border-b-2 border-retro-black bg-retro-paper">
+          <div className="flex flex-col items-start justify-between gap-4 border-b-2 border-retro-black p-8 md:flex-row md:items-center md:p-10">
             <div>
-              <h2 className="mb-4 text-3xl font-medium tracking-tight text-retro-black">
-                One dashboard. Multiple projects.
+              <h2 className="text-3xl font-medium tracking-tight">
+                What This Actually Is
               </h2>
-              <p className="mb-6 text-stone-600">
-                Create widgets for each project or site. Route feedback automatically. Keep
-                everything organized.
+              <p className="mt-1 text-lg text-stone-500">
+                A tiny script. A massive improvement.
               </p>
-              <ul className="space-y-3">
-                {[
-                  "Unique widget keys for each project",
-                  "Real-time feedback notifications",
-                  "Team roles: Admin and Member",
-                  "Usage tracking and limits",
-                ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 text-sm text-stone-600">
-                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-retro-blue/20">
-                      <Check className="h-3 w-3 text-retro-blue" />
-                    </div>
-                    {item}
-                  </li>
-                ))}
+            </div>
+            <div className="rounded-full bg-retro-black px-3 py-1 font-mono text-xs text-white">
+              &lt;script src=&quot;...&quot;&gt;
+            </div>
+          </div>
+
+          <div className="grid h-auto grid-cols-1 divide-y-2 divide-retro-black md:h-80 md:grid-cols-2 md:divide-x-2 md:divide-y-0 lg:grid-cols-4">
+            {/* Feature 1 */}
+            <div className="group flex cursor-default flex-col justify-between p-8 transition-colors hover:bg-stone-50">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-retro-blue bg-retro-blue/20 text-retro-blue transition-transform group-hover:scale-110">
+                <Icon name="solar:camera-linear" size={24} />
+              </div>
+              <div>
+                <h3 className="mb-2 text-xl font-medium tracking-tight">
+                  Screenshot DOM
+                </h3>
+                <p className="text-sm leading-relaxed text-stone-600">
+                  Capture the state, console logs, and network errors. Not just
+                  pixels.
+                </p>
+              </div>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="group flex cursor-default flex-col justify-between p-8 transition-colors hover:bg-stone-50">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-retro-red bg-retro-red/20 text-retro-red transition-transform group-hover:-rotate-12">
+                <Icon name="solar:pen-new-square-linear" size={24} />
+              </div>
+              <div>
+                <h3 className="mb-2 text-xl font-medium tracking-tight">
+                  Scribble on it
+                </h3>
+                <p className="text-sm leading-relaxed text-stone-600">
+                  Like a maniac. Draw circles around the bugs so we can&apos;t
+                  miss them.
+                </p>
+              </div>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="group flex cursor-default flex-col justify-between p-8 transition-colors hover:bg-stone-50">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-amber-600 bg-retro-yellow/20 transition-transform group-hover:-translate-y-1">
+                <Icon
+                  name="solar:robot-2-linear"
+                  size={24}
+                  className="text-amber-600"
+                />
+              </div>
+              <div>
+                <h3 className="mb-2 text-xl font-medium tracking-tight">
+                  AI Rubber Duck
+                </h3>
+                <p className="text-sm leading-relaxed text-stone-600">
+                  Talk to the agent before bothering a human. It usually solves
+                  it.
+                </p>
+              </div>
+            </div>
+
+            {/* Feature 4 */}
+            <div className="group relative flex cursor-default flex-col justify-between overflow-hidden bg-stone-100 p-8">
+              <div className="absolute right-0 top-0 p-2 opacity-10 transition-opacity group-hover:opacity-20">
+                <Icon name="solar:ticket-linear" size={100} />
+              </div>
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-retro-black bg-retro-black text-white">
+                <Icon name="solar:ticket-linear" size={24} />
+              </div>
+              <div className="relative z-10">
+                <h3 className="mb-2 text-xl font-medium tracking-tight">
+                  Real Tickets
+                </h3>
+                <p className="text-sm leading-relaxed text-stone-600">
+                  No meetings. No &ldquo;can you write this up?&rdquo;. Just
+                  clean JSON.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Workflow Section */}
+        <div className="grid grid-cols-1 divide-y-2 divide-retro-black border-b-2 border-retro-black lg:grid-cols-2 lg:divide-x-2 lg:divide-y-0">
+          <div className="p-10 md:p-16">
+            <h2 className="mb-10 text-3xl font-medium tracking-tight">
+              What Happens Next{" "}
+              <span className="text-stone-400">(Without You Involved)</span>
+            </h2>
+
+            <div className="relative space-y-12 pl-8 before:absolute before:bottom-2 before:left-[11px] before:top-2 before:w-[2px] before:bg-stone-200">
+              <div className="group relative">
+                <span className="absolute -left-[39px] h-6 w-6 rounded-full border-4 border-white bg-retro-black transition-transform group-hover:scale-110"></span>
+                <h4 className="text-lg font-medium">
+                  User captures a screenshot
+                </h4>
+              </div>
+              <div className="group relative">
+                <span className="absolute -left-[39px] h-6 w-6 rounded-full border-4 border-white bg-stone-300 transition-colors group-hover:bg-retro-yellow"></span>
+                <h4 className="text-lg font-medium">
+                  AI asks annoying but useful questions
+                </h4>
+              </div>
+              <div className="group relative">
+                <span className="absolute -left-[39px] h-6 w-6 rounded-full border-4 border-white bg-stone-300 transition-colors group-hover:bg-retro-yellow"></span>
+                <h4 className="text-lg font-medium">
+                  The mess becomes structure
+                </h4>
+              </div>
+              <div className="group relative">
+                <span className="absolute -left-[39px] h-6 w-6 rounded-full border-4 border-white bg-retro-blue transition-transform group-hover:scale-110"></span>
+                <h4 className="text-lg font-medium">
+                  A ticket appears where you already work
+                </h4>
+                <div className="mt-3 flex gap-2">
+                  <span className="rounded border border-stone-200 bg-stone-100 px-2 py-1 font-mono text-[10px] uppercase text-stone-500">
+                    Linear
+                  </span>
+                  <span className="rounded border border-stone-200 bg-stone-100 px-2 py-1 font-mono text-[10px] uppercase text-stone-500">
+                    Notion
+                  </span>
+                  <span className="rounded border border-stone-200 bg-stone-100 px-2 py-1 font-mono text-[10px] uppercase text-stone-500">
+                    JSON
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-12 -rotate-1 transform border-2 border-retro-black bg-retro-lavender p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-transform hover:rotate-0">
+              <p className="text-center font-serif text-lg font-medium italic">
+                &ldquo;You never had to ask &apos;can you clarify this?&apos;
+                again.&rdquo;
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col bg-stone-100">
+            <div className="border-b-2 border-retro-black bg-white p-10 md:p-16">
+              <h3 className="mb-6 text-2xl font-medium tracking-tight">
+                Built for People Who Ship Too Much
+              </h3>
+              <p className="mb-8 text-xl font-light text-stone-600">
+                This is not &ldquo;enterprise feedback software.&rdquo;
+                It&apos;s for:
+              </p>
+
+              <ul className="space-y-5 text-lg">
+                <li className="flex items-center gap-4">
+                  <Icon
+                    name="solar:check-square-linear"
+                    size={24}
+                    className="text-retro-blue"
+                  />
+                  Solo founders
+                </li>
+                <li className="flex items-center gap-4">
+                  <Icon
+                    name="solar:check-square-linear"
+                    size={24}
+                    className="text-retro-blue"
+                  />
+                  Small teams (2–10 humans, unlimited AI)
+                </li>
+                <li className="flex items-center gap-4">
+                  <Icon
+                    name="solar:check-square-linear"
+                    size={24}
+                    className="text-retro-blue"
+                  />
+                  People shipping to prod on vibes &amp; caffeine
+                </li>
               </ul>
             </div>
-            <div className="border-2 border-retro-black bg-retro-paper p-8 shadow-[8px_8px_0px_0px_rgba(26,26,26,1)]">
-              <div className="mb-4 flex items-center gap-3">
-                <Settings className="h-5 w-5 text-stone-400" />
-                <span className="font-mono text-xs text-stone-400 uppercase">Widget Config</span>
+            <div className="relative flex flex-grow items-center justify-center overflow-hidden p-10 md:p-16">
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.03]">
+                <Icon name="solar:target-linear" size={300} />
               </div>
-              <pre className="overflow-x-auto font-mono text-sm text-stone-600">
-                {`<script
-  src="cdn.feedbackflow.dev/widget.js"
-  data-widget-key="wk_xxx"
-  data-position="bottom-right"
-></script>`}
-              </pre>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Open Source Section */}
-      <section className="border-b-2 border-retro-black bg-retro-yellow">
-        <div className="mx-auto max-w-7xl px-4 py-16">
-          <div className="flex flex-col items-center text-center">
-            <Github className="mb-6 h-16 w-16 text-retro-black" />
-            <h2 className="mb-4 text-3xl font-medium tracking-tight text-retro-black md:text-4xl">
-              Open source. Self-host friendly.
-            </h2>
-            <p className="mb-8 max-w-2xl text-stone-700">
-              No vendor lock-in. Run FeedbackFlow on your own infrastructure. No artificial limits,
-              no phone-home. Your data stays yours.
-            </p>
-            <div className="flex flex-col gap-4 sm:flex-row">
-              <Link href="https://github.com/feedbackflow/feedbackflow">
-                <Button className="border-2 border-retro-black bg-retro-black px-8 py-4 text-white shadow-[4px_4px_0px_0px_#888] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#888]">
-                  <Github className="mr-2 h-5 w-5" />
-                  View on GitHub
-                </Button>
-              </Link>
-              <Link href="/docs/self-host">
-                <Button
-                  variant="outline"
-                  className="border-2 border-retro-black bg-white px-8 py-4 text-retro-black hover:bg-stone-50"
-                >
-                  Self-Hosting Guide
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Footer */}
-      <section className="bg-retro-black">
-        <div className="mx-auto max-w-7xl px-4 py-16">
-          <div className="flex flex-col items-center text-center">
-            <h2 className="mb-4 text-3xl font-medium tracking-tight text-white md:text-4xl">
-              Ready to stop chasing context?
-            </h2>
-            <p className="mb-8 max-w-xl text-stone-400">
-              Start capturing feedback with full context today. Free tier available, or self-host
-              for unlimited.
-            </p>
-            <div className="flex flex-col gap-4 sm:flex-row">
-              <Link href="/sign-up">
-                <Button className="border-2 border-retro-yellow bg-retro-yellow px-8 py-4 text-retro-black shadow-[4px_4px_0px_0px_#888] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#888]">
-                  Get Started Free
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
-              <Link href="https://github.com/feedbackflow/feedbackflow">
-                <Button
-                  variant="outline"
-                  className="border-2 border-white bg-transparent px-8 py-4 text-white hover:bg-white/10"
-                >
-                  <Github className="mr-2 h-5 w-5" />
-                  Star on GitHub
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer Links */}
-        <div className="border-t border-stone-800">
-          <div className="mx-auto max-w-7xl px-4 py-8">
-            <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-              <div className="flex items-center gap-6">
-                <span className="font-mono text-sm text-stone-500">FeedbackFlow</span>
-                <Link href="/docs" className="text-sm text-stone-500 hover:text-stone-300">
-                  Docs
-                </Link>
-                <Link href="/pricing" className="text-sm text-stone-500 hover:text-stone-300">
-                  Pricing
-                </Link>
-                <Link
-                  href="https://github.com/feedbackflow/feedbackflow"
-                  className="text-sm text-stone-500 hover:text-stone-300"
-                >
-                  GitHub
-                </Link>
+              <div className="relative z-10 space-y-3 text-center">
+                <p className="font-mono text-xs uppercase tracking-widest text-stone-400">
+                  TARGET AUDIENCE
+                </p>
+                <p className="text-2xl font-medium tracking-tight">
+                  If your roadmap lives in your head, this is for you.
+                </p>
               </div>
-              <p className="font-mono text-xs text-stone-600">
-                Open source under MIT License
+            </div>
+          </div>
+        </div>
+
+        {/* Technical / Speed Section */}
+        <div className="border-b-2 border-retro-black bg-retro-yellow p-10 md:p-16">
+          <div className="max-w-4xl">
+            <h2 className="mb-8 text-4xl font-medium tracking-tight md:text-5xl">
+              One Script. Many Projects. Mildly Concerning Speed.
+            </h2>
+            <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3">
+              <div className="border-2 border-retro-black bg-white p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                <Icon
+                  name="solar:graph-up-linear"
+                  size={32}
+                  className="mb-4"
+                />
+                <h4 className="mb-2 text-lg font-bold">Feedback Pipeline</h4>
+                <p className="text-base text-stone-600">
+                  Each project gets its own isolated stream. Don&apos;t cross
+                  the streams.
+                </p>
+              </div>
+              <div className="border-2 border-retro-black bg-white p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                <Icon
+                  name="solar:server-square-linear"
+                  size={32}
+                  className="mb-4"
+                />
+                <h4 className="mb-2 text-lg font-bold">Central Hub</h4>
+                <p className="text-base text-stone-600">
+                  Feeds into one dashboard. Monitor multiple startups at once.
+                </p>
+              </div>
+              <div className="border-2 border-retro-black bg-white p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                <Icon name="solar:routing-2-linear" size={32} className="mb-4" />
+                <h4 className="mb-2 text-lg font-bold">Ticket Routing</h4>
+                <p className="text-base text-stone-600">
+                  Pipes tickets out wherever that specific project lives.
+                </p>
+              </div>
+            </div>
+            <p className="mt-10 text-xl font-medium tracking-tight">
+              Yes, you can monitor multiple startups. No, we won&apos;t judge
+              your lack of sleep.
+            </p>
+          </div>
+        </div>
+
+        {/* Open Source / Trust */}
+        <div className="grid grid-cols-1 divide-y-2 divide-retro-black border-b-2 border-retro-black md:grid-cols-2 md:divide-x-2 md:divide-y-0">
+          <div className="bg-retro-black p-10 text-white md:p-16">
+            <h2 className="mb-8 text-3xl font-medium tracking-tight">
+              Open Source Because Obviously
+            </h2>
+            <div className="space-y-4">
+              <div className="group flex cursor-pointer items-center gap-3 text-lg transition-colors hover:text-retro-yellow">
+                <Icon
+                  name="solar:arrow-right-linear"
+                  size={20}
+                  className="text-retro-yellow"
+                />
+                Self-host it
+              </div>
+              <div className="group flex cursor-pointer items-center gap-3 text-lg transition-colors hover:text-retro-yellow">
+                <Icon
+                  name="solar:arrow-right-linear"
+                  size={20}
+                  className="text-retro-yellow"
+                />
+                Read the code
+              </div>
+              <div className="group flex cursor-pointer items-center gap-3 text-lg transition-colors hover:text-retro-yellow">
+                <Icon
+                  name="solar:arrow-right-linear"
+                  size={20}
+                  className="text-retro-yellow"
+                />
+                Fork it
+              </div>
+              <div className="group flex cursor-pointer items-center gap-3 text-lg transition-colors hover:text-retro-yellow">
+                <Icon
+                  name="solar:arrow-right-linear"
+                  size={20}
+                  className="text-retro-yellow"
+                />
+                Break it
+              </div>
+            </div>
+            <p className="mt-10 text-lg leading-relaxed text-stone-400">
+              Or don&apos;t think at all and use our hosted version.
+              <br />
+              Your data stays yours. Export everything. Walk away anytime.
+              <br />
+              <span className="text-white">
+                We&apos;re not trying to trap you. That&apos;s weird.
+              </span>
+            </p>
+          </div>
+
+          <div className="flex flex-col">
+            <div className="flex-grow bg-retro-paper p-10 md:p-16">
+              <h3 className="mb-6 inline-block border-b-2 border-retro-black pb-2 text-xl font-bold uppercase tracking-wider">
+                Why InfiniteMoney Built This
+              </h3>
+              <p className="mb-6 text-xl leading-relaxed">
+                Because we kept shipping things that technically worked and
+                emotionally did not.
+              </p>
+              <div className="rounded border border-retro-black/10 bg-white p-4">
+                <p className="text-lg font-medium">
+                  AI made building faster. This makes understanding what you
+                  built faster.
+                </p>
+              </div>
+              <p className="mt-6 text-sm text-stone-500">
+                That&apos;s the whole thing.
               </p>
             </div>
+            <div className="border-t-2 border-retro-black bg-stone-200 p-8">
+              <div className="mb-3 flex items-center gap-2 font-mono text-xs uppercase tracking-wider">
+                <div className="h-2 w-2 animate-pulse rounded-full bg-green-500"></div>
+                Current Status
+              </div>
+              <ul className="space-y-2 font-mono text-sm text-stone-600">
+                <li className="flex items-center gap-2">
+                  <Icon name="solar:arrow-right-linear" size={12} /> Shipping
+                  now
+                </li>
+                <li className="flex items-center gap-2">
+                  <Icon name="solar:arrow-right-linear" size={12} /> Actively
+                  being used
+                </li>
+                <li className="flex items-center gap-2">
+                  <Icon name="solar:arrow-right-linear" size={12} /> Slightly
+                  under-documented (on purpose)
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
-      </section>
-    </div>
+
+        {/* CTA / Footer */}
+        <div className="flex flex-col items-center gap-8 bg-white p-10 text-center md:p-24">
+          <h2 className="text-6xl font-medium tracking-tighter md:text-9xl">
+            Get It
+          </h2>
+
+          <div className="flex flex-col items-center justify-center gap-8 text-xl font-light text-stone-500 md:flex-row">
+            <span className="flex items-center gap-2">
+              <Icon name="solar:file-download-linear" size={20} /> Install
+              script
+            </span>
+            <span className="hidden h-8 w-px bg-stone-300 md:block"></span>
+            <span className="flex items-center gap-2">
+              <Icon name="solar:book-bookmark-linear" size={20} /> Read README
+            </span>
+            <span className="hidden h-8 w-px bg-stone-300 md:block"></span>
+            <span>Or just stare at the code and nod</span>
+          </div>
+
+          <div className="mt-8 flex w-full flex-col gap-4 md:w-auto md:flex-row">
+            <Link
+              href="/sign-up"
+              className="border-2 border-retro-black bg-retro-black px-8 py-4 text-lg font-medium text-white shadow-[6px_6px_0px_0px_#F3C952] transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:bg-stone-800 hover:shadow-[3px_3px_0px_0px_#F3C952]"
+            >
+              [ Install Script ]
+            </Link>
+            <Link
+              href="https://github.com/Mlock/feedbackflow"
+              className="border-2 border-retro-black bg-white px-8 py-4 text-lg font-medium text-retro-black shadow-[6px_6px_0px_0px_#E85D52] transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:bg-stone-50 hover:shadow-[3px_3px_0px_0px_#E85D52]"
+            >
+              [ View GitHub ]
+            </Link>
+            <Link
+              href="/sign-up"
+              className="border-2 border-retro-black bg-white px-8 py-4 text-lg font-medium text-retro-black shadow-[6px_6px_0px_0px_#6B9AC4] transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:bg-stone-50 hover:shadow-[3px_3px_0px_0px_#6B9AC4]"
+            >
+              [ Use Hosted Version ]
+            </Link>
+          </div>
+        </div>
+
+    </PageLayout>
   );
 }

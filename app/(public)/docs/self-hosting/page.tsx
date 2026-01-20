@@ -2,25 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  Book,
-  Copy,
-  Check,
-  Server,
-  Database,
-  Key,
-  Cloud,
-  HardDrive,
-  Users,
-  Lock,
-  ChevronRight,
-  ExternalLink,
-  Terminal,
-  FileCode,
-  Settings,
-  Shield,
-} from "lucide-react";
+import { Icon } from "@/components/ui/icon";
+import { DocsLayout } from "@/components/layout";
 
 export default function SelfHostingDocsPage() {
   const [copiedSnippet, setCopiedSnippet] = useState<string | null>(null);
@@ -32,34 +15,17 @@ export default function SelfHostingDocsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-retro-paper">
-      {/* Header */}
-      <header className="border-b-2 border-retro-black bg-white">
-        <div className="mx-auto flex h-16 max-w-4xl items-center gap-4 px-6">
-          <Link
-            href="/"
-            className="flex items-center gap-2 rounded p-2 text-stone-500 transition-colors hover:bg-stone-100 hover:text-retro-black"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded border-2 border-retro-black bg-retro-peach shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]">
-              <Server className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold text-retro-black">
-                Self-Hosting Guide
-              </h1>
-              <p className="text-xs text-stone-500">Run FeedbackFlow on your own infrastructure</p>
-            </div>
-          </div>
-        </div>
-      </header>
+    <DocsLayout
+      title="Self-Hosting Guide"
+      description="Run FeedbackFlow on your own infrastructure"
+      breadcrumb="Self-Hosting"
+      iconName="solar:server-bold"
+      iconBgColor="bg-retro-peach"
+    >
 
-      <div className="mx-auto max-w-4xl px-6 py-8">
         {/* Quick Navigation */}
-        <nav className="mb-8 rounded border-2 border-stone-200 bg-white p-4">
-          <div className="flex flex-wrap items-center gap-2 text-sm">
+        <nav className="mb-8 rounded border-2 border-retro-black bg-white p-4 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
+          <div className="flex flex-wrap items-center gap-3 text-sm">
             <span className="font-medium text-stone-600">Jump to:</span>
             <a href="#overview" className="text-retro-blue hover:underline">
               Overview
@@ -93,10 +59,10 @@ export default function SelfHostingDocsPage() {
 
         {/* Overview */}
         <section id="overview" className="mb-12">
-          <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
+          <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[6px_6px_0px_0px_rgba(26,26,26,1)]">
             <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-retro-green/20">
-                <Shield className="h-6 w-6 text-retro-green" />
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-green-100">
+                <Icon name="solar:shield-check-bold" size={24} className="text-green-600" />
               </div>
               <div>
                 <h2 className="mb-2 text-xl font-semibold text-retro-black">
@@ -111,22 +77,22 @@ export default function SelfHostingDocsPage() {
             </div>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-3">
-              <div className="rounded border border-stone-200 p-4">
-                <Lock className="mb-2 h-5 w-5 text-retro-blue" />
+              <div className="rounded border-2 border-stone-200 p-4">
+                <Icon name="solar:lock-keyhole-bold" size={20} className="mb-2 text-retro-blue" />
                 <h3 className="font-medium text-retro-black">Full Control</h3>
                 <p className="mt-1 text-sm text-stone-500">
                   Your data stays on your servers. No external dependencies required.
                 </p>
               </div>
-              <div className="rounded border border-stone-200 p-4">
-                <Key className="mb-2 h-5 w-5 text-retro-yellow" />
+              <div className="rounded border-2 border-stone-200 p-4">
+                <Icon name="solar:key-bold" size={20} className="mb-2 text-retro-yellow" />
                 <h3 className="font-medium text-retro-black">No License Keys</h3>
                 <p className="mt-1 text-sm text-stone-500">
                   No activation, no license servers. Just deploy and run.
                 </p>
               </div>
-              <div className="rounded border border-stone-200 p-4">
-                <Settings className="mb-2 h-5 w-5 text-retro-peach" />
+              <div className="rounded border-2 border-stone-200 p-4">
+                <Icon name="solar:settings-bold" size={20} className="mb-2 text-retro-peach" />
                 <h3 className="font-medium text-retro-black">Fully Configurable</h3>
                 <p className="mt-1 text-sm text-stone-500">
                   Swap out providers for auth, storage, and more.
@@ -144,7 +110,7 @@ export default function SelfHostingDocsPage() {
 
           <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
             <div className="flex items-start gap-3 mb-6">
-              <Terminal className="mt-1 h-5 w-5 text-retro-lavender" />
+              <Icon name="solar:terminal-bold" size={20} className="mt-1 text-retro-lavender" />
               <p className="text-stone-600">
                 Get FeedbackFlow running locally in under 5 minutes.
               </p>
@@ -203,10 +169,10 @@ cd feedbackflow"
                 />
               </div>
 
-              <div className="rounded border border-retro-green/30 bg-retro-green/5 p-4">
+              <div className="rounded border-2 border-green-300 bg-green-50 p-4">
                 <p className="text-sm text-stone-600">
-                  <strong className="text-retro-green">Done!</strong> Open{" "}
-                  <code className="rounded bg-stone-100 px-1">http://localhost:3000</code> in your browser.
+                  <strong className="text-green-700">Done!</strong> Open{" "}
+                  <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono">http://localhost:3000</code> in your browser.
                 </p>
               </div>
             </div>
@@ -221,7 +187,7 @@ cd feedbackflow"
 
           <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
             <div className="flex items-start gap-3 mb-6">
-              <FileCode className="mt-1 h-5 w-5 text-retro-blue" />
+              <Icon name="solar:file-text-bold" size={20} className="mt-1 text-retro-blue" />
               <p className="text-stone-600">
                 For production deployments, we recommend using Docker Compose.
               </p>
@@ -251,18 +217,7 @@ services:
       - STRIPE_WEBHOOK_SECRET=\${STRIPE_WEBHOOK_SECRET}
       - RESEND_API_KEY=\${RESEND_API_KEY}
       - ENCRYPTION_KEY=\${ENCRYPTION_KEY}
-    restart: unless-stopped
-
-  # Optional: Run Convex locally (requires self-hosted Convex)
-  # convex:
-  #   image: convex/convex:latest
-  #   ports:
-  #     - "3210:3210"
-  #   volumes:
-  #     - convex_data:/data
-
-# volumes:
-#   convex_data:`}
+    restart: unless-stopped`}
                   snippetId="docker-compose"
                   copiedSnippet={copiedSnippet}
                   onCopy={copyToClipboard}
@@ -287,22 +242,11 @@ services:
       - STRIPE_WEBHOOK_SECRET=\${STRIPE_WEBHOOK_SECRET}
       - RESEND_API_KEY=\${RESEND_API_KEY}
       - ENCRYPTION_KEY=\${ENCRYPTION_KEY}
-    restart: unless-stopped
-
-  # Optional: Run Convex locally (requires self-hosted Convex)
-  # convex:
-  #   image: convex/convex:latest
-  #   ports:
-  #     - "3210:3210"
-  #   volumes:
-  #     - convex_data:/data
-
-# volumes:
-#   convex_data:`}
+    restart: unless-stopped`}
                 snippetId="docker-compose-display"
                 copiedSnippet={copiedSnippet}
                 onCopy={copyToClipboard}
-                noButtons
+                hideButton
               />
             </div>
 
@@ -316,7 +260,7 @@ services:
               />
             </div>
 
-            <div className="mt-4">
+            <div className="mt-6">
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-xs font-semibold uppercase tracking-wide text-stone-500">
                   Dockerfile
@@ -413,7 +357,7 @@ CMD ["node", "server.js"]`}
                 snippetId="dockerfile-display"
                 copiedSnippet={copiedSnippet}
                 onCopy={copyToClipboard}
-                noButtons
+                hideButton
               />
             </div>
           </div>
@@ -427,10 +371,10 @@ CMD ["node", "server.js"]`}
 
           <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
             <div className="flex items-start gap-3 mb-6">
-              <Key className="mt-1 h-5 w-5 text-retro-yellow" />
+              <Icon name="solar:key-bold" size={20} className="mt-1 text-retro-yellow" />
               <p className="text-stone-600">
                 All configuration is done through environment variables. Create a{" "}
-                <code className="rounded bg-stone-100 px-1">.env.local</code> file or set them
+                <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono">.env.local</code> file or set them
                 in your hosting platform.
               </p>
             </div>
@@ -459,7 +403,7 @@ CMD ["node", "server.js"]`}
                   </tr>
                   <tr className="border-b border-stone-200">
                     <td className="py-3 pr-4">
-                      <code className="rounded bg-stone-100 px-1.5 py-0.5 text-xs">
+                      <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-xs">
                         CONVEX_DEPLOYMENT
                       </code>
                     </td>
@@ -470,7 +414,7 @@ CMD ["node", "server.js"]`}
                   </tr>
                   <tr className="border-b border-stone-200">
                     <td className="py-3 pr-4">
-                      <code className="rounded bg-stone-100 px-1.5 py-0.5 text-xs">
+                      <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-xs">
                         NEXT_PUBLIC_CONVEX_URL
                       </code>
                     </td>
@@ -488,7 +432,7 @@ CMD ["node", "server.js"]`}
                   </tr>
                   <tr className="border-b border-stone-200">
                     <td className="py-3 pr-4">
-                      <code className="rounded bg-stone-100 px-1.5 py-0.5 text-xs">
+                      <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-xs">
                         NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
                       </code>
                     </td>
@@ -499,7 +443,7 @@ CMD ["node", "server.js"]`}
                   </tr>
                   <tr className="border-b border-stone-200">
                     <td className="py-3 pr-4">
-                      <code className="rounded bg-stone-100 px-1.5 py-0.5 text-xs">
+                      <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-xs">
                         CLERK_SECRET_KEY
                       </code>
                     </td>
@@ -517,7 +461,7 @@ CMD ["node", "server.js"]`}
                   </tr>
                   <tr className="border-b border-stone-200">
                     <td className="py-3 pr-4">
-                      <code className="rounded bg-stone-100 px-1.5 py-0.5 text-xs">
+                      <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-xs">
                         STRIPE_SECRET_KEY
                       </code>
                     </td>
@@ -528,7 +472,7 @@ CMD ["node", "server.js"]`}
                   </tr>
                   <tr className="border-b border-stone-200">
                     <td className="py-3 pr-4">
-                      <code className="rounded bg-stone-100 px-1.5 py-0.5 text-xs">
+                      <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-xs">
                         STRIPE_PUBLISHABLE_KEY
                       </code>
                     </td>
@@ -539,7 +483,7 @@ CMD ["node", "server.js"]`}
                   </tr>
                   <tr className="border-b border-stone-200">
                     <td className="py-3 pr-4">
-                      <code className="rounded bg-stone-100 px-1.5 py-0.5 text-xs">
+                      <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-xs">
                         STRIPE_WEBHOOK_SECRET
                       </code>
                     </td>
@@ -557,7 +501,7 @@ CMD ["node", "server.js"]`}
                   </tr>
                   <tr className="border-b border-stone-200">
                     <td className="py-3 pr-4">
-                      <code className="rounded bg-stone-100 px-1.5 py-0.5 text-xs">
+                      <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-xs">
                         RESEND_API_KEY
                       </code>
                     </td>
@@ -575,14 +519,14 @@ CMD ["node", "server.js"]`}
                   </tr>
                   <tr>
                     <td className="py-3 pr-4">
-                      <code className="rounded bg-stone-100 px-1.5 py-0.5 text-xs">
+                      <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-xs">
                         ENCRYPTION_KEY
                       </code>
                     </td>
                     <td className="py-3 pr-4 text-green-600">Yes</td>
                     <td className="py-3 text-stone-600">
                       32-byte key for encrypting API keys (generate with{" "}
-                      <code className="rounded bg-stone-100 px-1">openssl rand -hex 32</code>)
+                      <code className="rounded bg-stone-100 px-1 font-mono">openssl rand -hex 32</code>)
                     </td>
                   </tr>
                 </tbody>
@@ -602,7 +546,7 @@ CMD ["node", "server.js"]`}
             <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
               <div className="flex items-start gap-4">
                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-retro-blue/20">
-                  <Cloud className="h-5 w-5 text-retro-blue" />
+                  <Icon name="solar:cloud-bold" size={20} className="text-retro-blue" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-retro-black">
@@ -625,12 +569,12 @@ CMD ["node", "server.js"]`}
                       </a>
                     </li>
                     <li>
-                      Run <code className="rounded bg-stone-100 px-1">npx convex dev</code> to
+                      Run <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono">npx convex dev</code> to
                       create a deployment
                     </li>
                     <li>Copy the deployment URL to your environment</li>
                   </ol>
-                  <div className="mt-4 rounded border border-retro-blue/30 bg-retro-blue/5 p-3">
+                  <div className="mt-4 rounded border-2 border-retro-blue/30 bg-retro-blue/5 p-3">
                     <p className="text-xs text-stone-600">
                       <strong className="text-retro-blue">Free tier includes:</strong> 1M function
                       calls/month, 1GB storage, real-time sync
@@ -644,7 +588,7 @@ CMD ["node", "server.js"]`}
             <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
               <div className="flex items-start gap-4">
                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-retro-peach/20">
-                  <Server className="h-5 w-5 text-retro-peach" />
+                  <Icon name="solar:server-bold" size={20} className="text-retro-peach" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-retro-black">
@@ -654,7 +598,7 @@ CMD ["node", "server.js"]`}
                     Convex is working on a self-hosted option. Check their documentation
                     for the latest status.
                   </p>
-                  <div className="mt-4 rounded border border-yellow-300 bg-yellow-50 p-3">
+                  <div className="mt-4 rounded border-2 border-yellow-300 bg-yellow-50 p-3">
                     <p className="text-xs text-yellow-700">
                       <strong>Note:</strong> Self-hosted Convex is not yet generally available.
                       For full self-hosting, you may need to wait for this feature or consider
@@ -678,7 +622,7 @@ CMD ["node", "server.js"]`}
             <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
               <div className="flex items-start gap-4">
                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-retro-lavender/20">
-                  <Users className="h-5 w-5 text-retro-lavender" />
+                  <Icon name="solar:users-group-rounded-bold" size={20} className="text-retro-lavender" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-retro-black">
@@ -711,7 +655,7 @@ CMD ["node", "server.js"]`}
             <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
               <div className="flex items-start gap-4">
                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-stone-100">
-                  <Settings className="h-5 w-5 text-stone-500" />
+                  <Icon name="solar:settings-bold" size={20} className="text-stone-500" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-retro-black">
@@ -722,7 +666,7 @@ CMD ["node", "server.js"]`}
                   </p>
                   <ul className="mt-4 space-y-3 text-sm">
                     <li className="flex items-start gap-2">
-                      <ChevronRight className="mt-0.5 h-4 w-4 text-stone-400" />
+                      <Icon name="solar:alt-arrow-right-bold" size={16} className="mt-0.5 text-stone-400" />
                       <div>
                         <strong className="text-retro-black">NextAuth.js</strong>
                         <span className="text-stone-600">
@@ -732,7 +676,7 @@ CMD ["node", "server.js"]`}
                       </div>
                     </li>
                     <li className="flex items-start gap-2">
-                      <ChevronRight className="mt-0.5 h-4 w-4 text-stone-400" />
+                      <Icon name="solar:alt-arrow-right-bold" size={16} className="mt-0.5 text-stone-400" />
                       <div>
                         <strong className="text-retro-black">Supabase Auth</strong>
                         <span className="text-stone-600">
@@ -742,7 +686,7 @@ CMD ["node", "server.js"]`}
                       </div>
                     </li>
                     <li className="flex items-start gap-2">
-                      <ChevronRight className="mt-0.5 h-4 w-4 text-stone-400" />
+                      <Icon name="solar:alt-arrow-right-bold" size={16} className="mt-0.5 text-stone-400" />
                       <div>
                         <strong className="text-retro-black">Keycloak</strong>
                         <span className="text-stone-600">
@@ -751,7 +695,7 @@ CMD ["node", "server.js"]`}
                       </div>
                     </li>
                     <li className="flex items-start gap-2">
-                      <ChevronRight className="mt-0.5 h-4 w-4 text-stone-400" />
+                      <Icon name="solar:alt-arrow-right-bold" size={16} className="mt-0.5 text-stone-400" />
                       <div>
                         <strong className="text-retro-black">Convex Auth</strong>
                         <span className="text-stone-600">
@@ -775,7 +719,7 @@ CMD ["node", "server.js"]`}
           <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
             <div className="flex items-start gap-4 mb-6">
               <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-retro-peach/20">
-                <HardDrive className="h-5 w-5 text-retro-peach" />
+                <Icon name="solar:server-square-bold" size={20} className="text-retro-peach" />
               </div>
               <div>
                 <h3 className="font-semibold text-retro-black">
@@ -789,7 +733,7 @@ CMD ["node", "server.js"]`}
             </div>
 
             <div className="space-y-4">
-              <div className="rounded border border-stone-200 p-4">
+              <div className="rounded border-2 border-stone-200 p-4">
                 <h4 className="font-medium text-retro-black">Supported Providers</h4>
                 <ul className="mt-2 space-y-2 text-sm text-stone-600">
                   <li>
@@ -807,7 +751,7 @@ CMD ["node", "server.js"]`}
                 </ul>
               </div>
 
-              <div className="rounded border border-stone-200 p-4">
+              <div className="rounded border-2 border-stone-200 p-4">
                 <h4 className="font-medium text-retro-black">Configuration</h4>
                 <p className="mt-2 text-sm text-stone-600">
                   Configure external storage in Settings &rarr; Storage. Enter your
@@ -819,7 +763,7 @@ CMD ["node", "server.js"]`}
                 </p>
               </div>
 
-              <div className="rounded border border-retro-blue/30 bg-retro-blue/5 p-4">
+              <div className="rounded border-2 border-retro-blue/30 bg-retro-blue/5 p-4">
                 <h4 className="font-medium text-retro-blue">Self-Hosted MinIO Example</h4>
                 <p className="mt-2 text-sm text-stone-600">
                   For fully self-hosted storage, set up MinIO:
@@ -848,7 +792,7 @@ volumes:
                 </div>
                 <p className="mt-3 text-sm text-stone-600">
                   Then configure with endpoint{" "}
-                  <code className="rounded bg-stone-100 px-1">http://minio:9000</code> in
+                  <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono">http://minio:9000</code> in
                   the storage settings.
                 </p>
               </div>
@@ -858,11 +802,11 @@ volumes:
 
         {/* No Phone Home */}
         <section id="privacy" className="mb-12">
-          <div className="rounded border-2 border-retro-green bg-retro-green/5 p-6">
+          <div className="rounded border-2 border-green-500 bg-green-50 p-6">
             <div className="flex items-start gap-4">
-              <Shield className="h-6 w-6 flex-shrink-0 text-retro-green" />
+              <Icon name="solar:shield-check-bold" size={24} className="flex-shrink-0 text-green-600" />
               <div>
-                <h3 className="font-semibold text-retro-green">
+                <h3 className="font-semibold text-green-700">
                   No Telemetry, No Phone Home
                 </h3>
                 <p className="mt-2 text-sm text-stone-600">
@@ -883,30 +827,16 @@ volumes:
             </div>
           </div>
         </section>
-
-        {/* Help Footer */}
-        <div className="rounded border-2 border-stone-200 bg-white p-6 text-center">
-          <p className="text-stone-600">
-            Need help?{" "}
-            <a
-              href="https://github.com/feedbackflow/feedbackflow/issues"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-retro-blue hover:underline"
-            >
-              Open an issue on GitHub
-              <ExternalLink className="h-4 w-4" />
-            </a>{" "}
-            or check the{" "}
-            <Link href="/docs/installation" className="text-retro-blue hover:underline">
-              widget installation docs
-            </Link>
-            .
-          </p>
-        </div>
-      </div>
-    </div>
+    </DocsLayout>
   );
+}
+
+interface CodeBlockProps {
+  code: string;
+  snippetId: string;
+  copiedSnippet: string | null;
+  onCopy: (text: string, snippetId: string) => void;
+  hideButton?: boolean;
 }
 
 function CodeBlock({
@@ -914,17 +844,11 @@ function CodeBlock({
   snippetId,
   copiedSnippet,
   onCopy,
-  noButtons = false,
-}: {
-  code: string;
-  snippetId: string;
-  copiedSnippet: string | null;
-  onCopy: (text: string, snippetId: string) => void;
-  noButtons?: boolean;
-}) {
+  hideButton = false,
+}: CodeBlockProps) {
   return (
     <div className="relative">
-      {!noButtons && (
+      {!hideButton && (
         <div className="absolute right-2 top-2">
           <CopyButton
             text={code}
@@ -934,7 +858,7 @@ function CodeBlock({
           />
         </div>
       )}
-      <pre className="overflow-x-auto rounded border border-stone-200 bg-stone-900 p-4 text-sm text-stone-100">
+      <pre className="overflow-x-auto rounded border-2 border-stone-800 bg-stone-900 p-4 font-mono text-sm text-stone-100">
         <code>{code}</code>
       </pre>
     </div>
@@ -954,16 +878,16 @@ function CopyButton({ text, snippetId, copiedSnippet, onCopy }: CopyButtonProps)
   return (
     <button
       onClick={() => onCopy(text, snippetId)}
-      className="flex items-center gap-1 rounded border border-stone-600 bg-stone-800 px-2 py-1 text-xs font-medium text-stone-300 transition-colors hover:bg-stone-700"
+      className="flex items-center gap-1.5 rounded border-2 border-stone-600 bg-stone-800 px-2.5 py-1 text-xs font-medium text-stone-300 transition-colors hover:bg-stone-700"
     >
       {isCopied ? (
         <>
-          <Check className="h-3 w-3 text-green-400" />
+          <Icon name="solar:check-circle-bold" size={14} className="text-green-400" />
           <span className="text-green-400">Copied!</span>
         </>
       ) : (
         <>
-          <Copy className="h-3 w-3" />
+          <Icon name="solar:copy-linear" size={14} />
           Copy
         </>
       )}

@@ -4,16 +4,8 @@ import { useEffect } from "react";
 import { useQuery } from "convex/react";
 import { useUser, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
-import {
-  Inbox,
-  Bookmark,
-  CheckCircle2,
-  ChevronDown,
-  Plus,
-  Settings,
-  FolderKanban,
-  BarChart3,
-} from "lucide-react";
+import { Plus, Settings, FolderKanban, BarChart3 } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { api } from "@/convex/_generated/api";
 import { useDashboard } from "./dashboard-layout";
 import { cn } from "@/lib/utils";
@@ -80,150 +72,161 @@ export function DashboardSidebar() {
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r-2 border-retro-black bg-stone-50 transition-transform lg:relative lg:translate-x-0",
+        "fixed inset-y-0 left-0 z-50 flex w-64 flex-shrink-0 flex-col border-b-2 border-retro-black bg-stone-50 transition-transform md:relative md:translate-x-0 md:border-b-0 md:border-r-2",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}
     >
       {/* Brand header */}
-      <div className="border-b-2 border-retro-black bg-retro-yellow p-4">
+      <div className="flex items-center gap-2 border-b-2 border-retro-black bg-retro-yellow p-4">
+        <Icon name="solar:infinite-linear" size={24} />
         <Link
           href="/dashboard"
-          className="font-mono text-lg font-bold tracking-tight text-retro-black"
+          className="text-sm font-bold uppercase tracking-tight text-retro-black"
           onClick={() => setSidebarOpen(false)}
         >
-          FeedbackFlow
+          Feedback Flow
         </Link>
       </div>
 
-      {/* Team selector */}
-      <div className="border-b-2 border-retro-black bg-white p-3">
-        <button className="flex w-full items-center justify-between rounded border-2 border-stone-200 bg-stone-50 px-3 py-2 text-sm font-medium text-retro-black transition-colors hover:border-retro-black">
-          <span className="truncate">{selectedTeam?.name || "Select Team"}</span>
-          <ChevronDown className="h-4 w-4 flex-shrink-0 text-stone-500" />
-        </button>
-      </div>
-
       {/* Projects section */}
-      <div className="flex-1 overflow-y-auto p-4">
-        {/* Projects header */}
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="font-mono text-xs font-semibold uppercase tracking-wider text-stone-500">
-            Projects
-          </h3>
-          <button
-            className="rounded p-1 text-stone-400 transition-colors hover:bg-stone-100 hover:text-retro-black"
-            title="Create project"
-          >
-            <Plus className="h-4 w-4" />
-          </button>
-        </div>
+      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        {/* Projects */}
+        <div>
+          <div className="mb-3 flex items-center justify-between px-2">
+            <span className="font-mono text-xs uppercase tracking-wider text-stone-500">
+              Projects
+            </span>
+            <button
+              className="rounded p-1 transition-colors hover:bg-stone-200"
+              title="Create project"
+            >
+              <Icon name="solar:add-circle-linear" size={16} />
+            </button>
+          </div>
 
-        {/* Projects list */}
-        <div className="mb-6 space-y-1">
-          {projects === undefined ? (
-            <div className="animate-pulse py-2 text-center font-mono text-xs text-stone-400">
-              Loading...
-            </div>
-          ) : projects.length === 0 ? (
-            <div className="rounded border border-dashed border-stone-300 py-4 text-center">
-              <FolderKanban className="mx-auto mb-2 h-6 w-6 text-stone-400" />
-              <p className="text-xs text-stone-500">No projects yet</p>
-            </div>
-          ) : (
-            projects.map((project: { _id: Id<"projects">; name: string; feedbackCount: number; newFeedbackCount: number }) => (
-              <button
-                key={project._id}
-                onClick={() => {
-                  setSelectedProjectId(project._id);
-                  setSidebarOpen(false);
-                }}
-                className={cn(
-                  "flex w-full items-center gap-3 rounded px-3 py-2 text-left text-sm transition-all",
-                  selectedProjectId === project._id
-                    ? "border-2 border-retro-black bg-white font-medium shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]"
-                    : "border-2 border-transparent hover:border-stone-200 hover:bg-white"
-                )}
-              >
-                <div
+          <div className="space-y-2">
+            {projects === undefined ? (
+              <div className="animate-pulse px-3 py-2 text-center font-mono text-xs text-stone-400">
+                Loading...
+              </div>
+            ) : projects.length === 0 ? (
+              <div className="rounded border border-dashed border-stone-300 py-4 text-center">
+                <FolderKanban className="mx-auto mb-2 h-6 w-6 text-stone-400" />
+                <p className="text-xs text-stone-500">No projects yet</p>
+              </div>
+            ) : (
+              projects.map((project: { _id: Id<"projects">; name: string; feedbackCount: number; newFeedbackCount: number }) => (
+                <button
+                  key={project._id}
+                  onClick={() => {
+                    setSelectedProjectId(project._id);
+                    setSidebarOpen(false);
+                  }}
                   className={cn(
-                    "h-2 w-2 rounded-full",
-                    project.newFeedbackCount > 0
-                      ? "animate-pulse bg-retro-blue"
-                      : "bg-stone-300"
+                    "group relative flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-all",
+                    selectedProjectId === project._id
+                      ? "border-2 border-retro-black bg-white font-medium shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                      : "border-2 border-transparent text-stone-500 hover:border-stone-200 hover:bg-white hover:text-retro-black hover:shadow-sm"
                   )}
-                />
-                <span className="truncate">{project.name}</span>
-                {project.feedbackCount > 0 && (
-                  <span className="ml-auto rounded border border-stone-200 bg-stone-100 px-1.5 font-mono text-xs text-stone-600">
-                    {project.feedbackCount}
-                  </span>
-                )}
-              </button>
-            ))
-          )}
+                >
+                  <div
+                    className={cn(
+                      "h-2 w-2 rounded-full",
+                      project.newFeedbackCount > 0
+                        ? "animate-pulse bg-retro-blue"
+                        : "bg-stone-300"
+                    )}
+                  />
+                  <span className="truncate">{project.name}</span>
+                  {project.feedbackCount > 0 && (
+                    <span className={cn(
+                      "ml-auto font-mono text-xs",
+                      selectedProjectId === project._id
+                        ? "rounded border border-stone-200 bg-stone-100 px-1"
+                        : "opacity-50"
+                    )}>
+                      {project.feedbackCount}
+                    </span>
+                  )}
+                </button>
+              ))
+            )}
+
+            {/* Add Project Button */}
+            <button className="mt-2 flex w-full items-center justify-center gap-2 border-2 border-dashed border-stone-300 px-3 py-2 text-sm text-stone-400 transition-colors hover:border-retro-black hover:bg-stone-100 hover:text-retro-black">
+              <Icon name="solar:add-square-linear" size={16} />
+              <span>Add Project</span>
+            </button>
+          </div>
         </div>
 
         {/* Views section */}
-        <div className="mb-3">
-          <h3 className="font-mono text-xs font-semibold uppercase tracking-wider text-stone-500">
-            Views
-          </h3>
+        <div>
+          <div className="mb-3 px-2">
+            <span className="font-mono text-xs uppercase tracking-wider text-stone-500">
+              Views
+            </span>
+          </div>
+
+          <nav className="space-y-1">
+            {navItems.map((item) => {
+              const isActive = currentView === item.id;
+              const iconName = item.id === "inbox"
+                ? "solar:inbox-linear"
+                : item.id === "backlog"
+                  ? "solar:bookmark-linear"
+                  : "solar:check-circle-linear";
+
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setCurrentView(item.id);
+                    setSidebarOpen(false);
+                  }}
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded px-3 py-1.5 text-sm font-medium transition-colors",
+                    isActive
+                      ? "border border-retro-lavender bg-retro-lavender/30 text-retro-black"
+                      : "text-stone-500 hover:bg-stone-100 hover:text-retro-black"
+                  )}
+                >
+                  <Icon name={iconName} size={18} />
+                  {item.label}
+                </button>
+              );
+            })}
+
+            {/* Analytics link */}
+            <Link
+              href="/analytics"
+              onClick={() => setSidebarOpen(false)}
+              className="flex w-full items-center gap-3 rounded px-3 py-1.5 text-sm font-medium text-stone-500 transition-colors hover:bg-stone-100 hover:text-retro-black"
+            >
+              <BarChart3 className="h-[18px] w-[18px]" />
+              Analytics
+            </Link>
+          </nav>
         </div>
-
-        <nav className="space-y-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = currentView === item.id;
-
-            return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  setCurrentView(item.id);
-                  setSidebarOpen(false);
-                }}
-                className={cn(
-                  "flex w-full items-center gap-3 rounded px-3 py-2 text-sm font-medium transition-colors",
-                  isActive
-                    ? "border border-retro-lavender bg-retro-lavender/30 text-retro-black"
-                    : "text-stone-500 hover:bg-stone-100 hover:text-retro-black"
-                )}
-              >
-                <Icon className="h-[18px] w-[18px]" />
-                {item.label}
-              </button>
-            );
-          })}
-
-          {/* Analytics link */}
-          <Link
-            href="/analytics"
-            onClick={() => setSidebarOpen(false)}
-            className="flex w-full items-center gap-3 rounded px-3 py-2 text-sm font-medium text-stone-500 transition-colors hover:bg-stone-100 hover:text-retro-black"
-          >
-            <BarChart3 className="h-[18px] w-[18px]" />
-            Analytics
-          </Link>
-        </nav>
       </div>
 
       {/* Usage indicator */}
       {selectedTeamId && <UsageIndicator teamId={selectedTeamId} />}
 
       {/* User footer */}
-      <div className="border-t border-stone-200 bg-white p-4">
+      <div className="border-t-2 border-retro-black bg-white p-4">
         <div className="flex items-center gap-3">
           <UserButton
             afterSignOutUrl="/"
             appearance={{
               elements: {
                 avatarBox:
-                  "h-9 w-9 border-2 border-retro-black shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]",
+                  "h-8 w-8 rounded-full",
               },
             }}
           />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-retro-black">
+          <div className="min-w-0 flex-1 overflow-hidden">
+            <p className="truncate text-sm font-bold text-retro-black">
               {user?.fullName || user?.primaryEmailAddress?.emailAddress}
             </p>
             <p className="truncate text-xs text-stone-500">
@@ -232,10 +235,10 @@ export function DashboardSidebar() {
           </div>
           <Link
             href="/settings"
-            className="rounded p-2 text-stone-400 transition-colors hover:bg-stone-100 hover:text-retro-black"
+            className="text-stone-400 transition-colors hover:text-retro-black"
             onClick={() => setSidebarOpen(false)}
           >
-            <Settings className="h-5 w-5" />
+            <Icon name="solar:settings-linear" size={20} />
           </Link>
         </div>
       </div>

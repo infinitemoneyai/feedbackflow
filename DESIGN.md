@@ -301,6 +301,27 @@ Use `divide-x-2` or `divide-y-2` with `divide-retro-black` for grid layouts.
 </div>
 ```
 
+### Filter Pills
+
+```html
+<!-- Filter pill (active) -->
+<button class="rounded px-2 py-1 font-mono text-xs bg-retro-black text-white transition-colors">
+  All (12)
+</button>
+
+<!-- Filter pill (inactive) -->
+<button class="rounded px-2 py-1 font-mono text-xs bg-stone-100 text-stone-600 transition-colors hover:bg-stone-200">
+  Bugs
+</button>
+
+<!-- Filter pill group -->
+<div class="flex gap-2">
+  <button class="rounded px-2 py-1 font-mono text-xs bg-retro-black text-white">All (12)</button>
+  <button class="rounded px-2 py-1 font-mono text-xs bg-stone-100 text-stone-600 hover:bg-stone-200">Bugs</button>
+  <button class="rounded px-2 py-1 font-mono text-xs bg-stone-100 text-stone-600 hover:bg-stone-200">Features</button>
+</div>
+```
+
 ### Navigation
 
 ```html
@@ -368,27 +389,58 @@ Use `divide-x-2` or `divide-y-2` with `divide-retro-black` for grid layouts.
 ### Dashboard Layout
 
 ```html
-<div class="flex h-screen">
-  <!-- Left sidebar -->
-  <aside class="border-retro-black flex w-64 flex-col border-r-2 bg-stone-50">
-    <!-- Brand -->
-    <div class="border-retro-black bg-retro-yellow border-b-2 p-4">Logo</div>
-    <!-- Nav -->
-    <div class="flex-grow overflow-y-auto p-4">Navigation</div>
-    <!-- User -->
-    <div class="border-retro-black border-t-2 bg-white p-4">User info</div>
-  </aside>
+<!-- Outer wrapper with retro background -->
+<div class="flex h-screen flex-col bg-[#e8e6e1] p-2 font-sans antialiased overflow-hidden">
+  <!-- Main application shell with retro border and shadow -->
+  <div class="mx-auto flex w-full max-w-[1800px] flex-1 flex-col overflow-hidden border-2 border-retro-black bg-retro-paper shadow-[8px_8px_0px_0px_rgba(26,26,26,1)] md:flex-row">
 
-  <!-- Main content -->
-  <main class="flex flex-1 flex-col bg-stone-100">
-    <header class="border-retro-black h-16 border-b-2 bg-white">Header</header>
-    <div class="flex-grow overflow-y-auto p-4">Content</div>
-  </main>
+    <!-- Left sidebar -->
+    <aside class="flex w-64 flex-shrink-0 flex-col border-b-2 border-retro-black bg-stone-50 md:border-b-0 md:border-r-2">
+      <!-- Brand -->
+      <div class="flex items-center gap-2 border-b-2 border-retro-black bg-retro-yellow p-4">
+        <iconify-icon icon="solar:infinite-linear" width="24"></iconify-icon>
+        <span class="text-sm font-bold uppercase tracking-tight">Feedback Flow</span>
+      </div>
+      <!-- Projects & Nav -->
+      <div class="flex-1 overflow-y-auto p-4 space-y-6">Navigation</div>
+      <!-- User -->
+      <div class="border-t-2 border-retro-black bg-white p-4">User info</div>
+    </aside>
 
-  <!-- Right sidebar (desktop) -->
-  <aside class="border-retro-black hidden w-[480px] flex-col border-l-2 lg:flex">
-    Detail panel
-  </aside>
+    <!-- Main content -->
+    <main class="flex min-w-0 flex-1 flex-col bg-stone-100">
+      <header class="flex h-16 flex-shrink-0 items-center justify-between border-b-2 border-retro-black bg-white px-6">
+        <!-- Title + Filter pills -->
+        <div class="flex items-center gap-4">
+          <h1 class="text-lg font-semibold tracking-tight">Inbox</h1>
+          <div class="h-6 w-px bg-stone-300"></div>
+          <div class="flex gap-2">
+            <button class="rounded px-2 py-1 font-mono text-xs bg-retro-black text-white">All (12)</button>
+            <button class="rounded px-2 py-1 font-mono text-xs bg-stone-100 text-stone-600">Bugs</button>
+          </div>
+        </div>
+        <!-- Search + Actions -->
+        <div class="flex items-center gap-3">Search, Sort</div>
+      </header>
+      <div class="flex-1 overflow-y-auto p-4">Content</div>
+    </main>
+
+    <!-- Right sidebar (desktop) -->
+    <aside class="relative z-10 hidden w-[480px] flex-shrink-0 flex-col border-l-2 border-retro-black bg-retro-paper lg:flex">
+      <!-- Panel header -->
+      <div class="flex h-16 items-center justify-between border-b-2 border-retro-black bg-white px-6">
+        <span class="font-mono text-lg font-bold">#402</span>
+        <div class="flex gap-2">Action buttons</div>
+      </div>
+      <!-- Content -->
+      <div class="flex-1 overflow-y-auto p-6">Detail content</div>
+      <!-- Footer with actions -->
+      <div class="z-20 space-y-3 border-t-2 border-retro-black bg-white p-4 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
+        Export buttons
+      </div>
+    </aside>
+
+  </div>
 </div>
 ```
 
