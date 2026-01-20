@@ -3,15 +3,16 @@
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import Link from "next/link";
-import { ArrowLeft, Bot, Settings as SettingsIcon, Users, CreditCard, Plug, Webhook } from "lucide-react";
+import { ArrowLeft, Bot, Settings as SettingsIcon, Users, CreditCard, Plug, Webhook, Key } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { AiConfigSection } from "@/components/settings/ai-config-section";
 import { LinearConfigSection } from "@/components/settings/linear-config-section";
 import { NotionConfigSection } from "@/components/settings/notion-config-section";
 import { WebhookConfigSection } from "@/components/settings/webhook-config-section";
+import { RestApiKeysSection } from "@/components/settings/rest-api-keys-section";
 
-type SettingsTab = "ai" | "integrations" | "webhooks" | "team" | "billing";
+type SettingsTab = "ai" | "integrations" | "webhooks" | "api-keys" | "team" | "billing";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("ai");
@@ -39,6 +40,12 @@ export default function SettingsPage() {
       label: "Webhooks",
       icon: Webhook,
       description: "Configure webhook notifications",
+    },
+    {
+      id: "api-keys" as const,
+      label: "API Keys",
+      icon: Key,
+      description: "Manage REST API access",
     },
     {
       id: "team" as const,
@@ -173,6 +180,10 @@ export default function SettingsPage() {
 
             {activeTab === "webhooks" && selectedTeamId && (
               <WebhookConfigSection teamId={selectedTeamId} />
+            )}
+
+            {activeTab === "api-keys" && selectedTeamId && (
+              <RestApiKeysSection teamId={selectedTeamId} />
             )}
 
             {activeTab === "team" && (
