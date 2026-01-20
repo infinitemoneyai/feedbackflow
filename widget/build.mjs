@@ -1,5 +1,8 @@
 import * as esbuild from "esbuild";
+import { gzip } from "zlib";
+import { promisify } from "util";
 
+const gzipAsync = promisify(gzip);
 const isDev = process.argv.includes("--watch");
 
 const buildOptions = {
@@ -11,6 +14,16 @@ const buildOptions = {
   outfile: "widget/dist/feedbackflow.js",
   format: "iife",
   globalName: "FeedbackFlow",
+  // Performance optimizations
+  treeShaking: true,
+  // Drop console.log in production for smaller bundle
+  drop: isDev ? [] : ["console", "debugger"],
+  // Pure annotations for better tree shaking
+  pure: ["console.log", "console.debug"],
+  // Inline small assets
+  legalComments: "none",
+  // Charset for smaller output
+  charset: "utf8",
 };
 
 if (isDev) {
@@ -21,10 +34,25 @@ if (isDev) {
   const result = await esbuild.build({
     ...buildOptions,
     metafile: true,
+    write: true,
   });
 
   const outputSize = result.metafile.outputs["widget/dist/feedbackflow.js"];
-  console.log(
-    `Built widget: ${(outputSize.bytes / 1024).toFixed(2)}KB (target: <50KB)`
-  );
+  const minifiedSize = outputSize.bytes;
+
+  // Calculate gzipped size for more accurate CDN transfer size
+  const fs = await import("fs");
+  const content = fs.readFileSync("widget/dist/feedbackflow.js");
+  const gzipped = await gzipAsync(content);
+  const gzippedSize = gzipped.length;
+
+  console.log(`Widget build complete:`);
+  console.log(`  Minified: ${(minifiedSize / 1024).toFixed(2)}KB (target: <50KB)`);
+  console.log(`  Gzipped:  ${(gzippedSize / 1024).toFixed(2)}KB (typical CDN transfer)`);
+
+  if (minifiedSize > 50 * 1024) {
+    console.warn(`⚠️  Warning: Widget exceeds 50KB target!`);
+  } else {
+    console.log(`✅ Widget size is within target`);
+  }
 }
