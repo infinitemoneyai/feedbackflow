@@ -543,7 +543,7 @@
         "Typecheck passes"
       ],
       "priority": 30,
-      "passes": false,
+      "passes": true,
       "notes": "Keep in sync with email notifications. Same events, different channel."
     },
     {

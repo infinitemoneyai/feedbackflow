@@ -160,7 +160,7 @@ export const unsubscribeByToken = mutation({
 });
 
 /**
- * Create a notification record
+ * Create a notification record (internal)
  * This is called internally when events occur
  */
 export const createNotification = internalMutation({
@@ -199,6 +199,67 @@ export const createNotification = internalMutation({
     const shouldNotify =
       !prefs ||
       prefs.inAppEnabled === true ||
+      (prefs.events && prefs.events[eventMap[args.type]] !== false);
+
+    if (!shouldNotify) {
+      return null;
+    }
+
+    // Create in-app notification
+    const id = await ctx.db.insert("notifications", {
+      userId: args.userId,
+      type: args.type,
+      title: args.title,
+      body: args.body,
+      feedbackId: args.feedbackId,
+      isRead: false,
+      createdAt: Date.now(),
+    });
+
+    return id;
+  },
+});
+
+/**
+ * Create a notification record (public mutation for API routes)
+ * This can be called from Next.js API routes
+ */
+export const createNotificationPublic = mutation({
+  args: {
+    userId: v.id("users"),
+    type: v.union(
+      v.literal("new_feedback"),
+      v.literal("assignment"),
+      v.literal("comment"),
+      v.literal("mention"),
+      v.literal("export_complete"),
+      v.literal("export_failed")
+    ),
+    title: v.string(),
+    body: v.optional(v.string()),
+    feedbackId: v.optional(v.id("feedback")),
+  },
+  handler: async (ctx, args) => {
+    // Get user preferences
+    const prefs = await ctx.db
+      .query("notificationPreferences")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .first();
+
+    // Check if user has this notification type enabled for in-app
+    const eventMap: Record<NotificationType, keyof typeof prefs.events> = {
+      new_feedback: "newFeedback",
+      assignment: "assignment",
+      comment: "comments",
+      mention: "mentions",
+      export_complete: "exports",
+      export_failed: "exports",
+    };
+
+    // Default to enabled if no preferences set
+    const shouldNotify =
+      !prefs ||
+      prefs.inAppEnabled !== false ||
       (prefs.events && prefs.events[eventMap[args.type]] !== false);
 
     if (!shouldNotify) {
@@ -396,5 +457,209 @@ export const getUserByUnsubscribeToken = query({
     return user
       ? { email: user.email, emailEnabled: prefs.emailEnabled }
       : null;
+  },
+});
+
+// ============================================
+// In-App Notifications Queries and Mutations
+// ============================================
+
+/**
+ * Get notifications for the current user
+ * Returns recent notifications in reverse chronological order
+ */
+export const getNotifications = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return [];
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) {
+      return [];
+    }
+
+    const limit = args.limit ?? 20;
+
+    // Get notifications ordered by creation time (newest first)
+    const notifications = await ctx.db
+      .query("notifications")
+      .withIndex("by_user_and_created", (q) => q.eq("userId", user._id))
+      .order("desc")
+      .take(limit);
+
+    // Enhance notifications with feedback details if available
+    const enhancedNotifications = await Promise.all(
+      notifications.map(async (notification) => {
+        let feedbackTitle: string | undefined;
+        let feedbackType: string | undefined;
+
+        if (notification.feedbackId) {
+          const feedback = await ctx.db.get(notification.feedbackId);
+          if (feedback) {
+            feedbackTitle = feedback.title;
+            feedbackType = feedback.type;
+          }
+        }
+
+        return {
+          ...notification,
+          feedbackTitle,
+          feedbackType,
+        };
+      })
+    );
+
+    return enhancedNotifications;
+  },
+});
+
+/**
+ * Get unread notification count for the current user
+ */
+export const getUnreadCount = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return 0;
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) {
+      return 0;
+    }
+
+    const unreadNotifications = await ctx.db
+      .query("notifications")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .filter((q) => q.eq(q.field("isRead"), false))
+      .collect();
+
+    return unreadNotifications.length;
+  },
+});
+
+/**
+ * Mark a single notification as read
+ */
+export const markAsRead = mutation({
+  args: {
+    notificationId: v.id("notifications"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const notification = await ctx.db.get(args.notificationId);
+
+    if (!notification) {
+      throw new Error("Notification not found");
+    }
+
+    // Verify ownership
+    if (notification.userId !== user._id) {
+      throw new Error("Not authorized");
+    }
+
+    await ctx.db.patch(args.notificationId, { isRead: true });
+
+    return { success: true };
+  },
+});
+
+/**
+ * Mark all notifications as read for the current user
+ */
+export const markAllAsRead = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const unreadNotifications = await ctx.db
+      .query("notifications")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .filter((q) => q.eq(q.field("isRead"), false))
+      .collect();
+
+    for (const notification of unreadNotifications) {
+      await ctx.db.patch(notification._id, { isRead: true });
+    }
+
+    return { success: true, count: unreadNotifications.length };
+  },
+});
+
+/**
+ * Delete a notification
+ */
+export const deleteNotification = mutation({
+  args: {
+    notificationId: v.id("notifications"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const notification = await ctx.db.get(args.notificationId);
+
+    if (!notification) {
+      throw new Error("Notification not found");
+    }
+
+    // Verify ownership
+    if (notification.userId !== user._id) {
+      throw new Error("Not authorized");
+    }
+
+    await ctx.db.delete(args.notificationId);
+
+    return { success: true };
   },
 });

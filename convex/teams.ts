@@ -556,6 +556,38 @@ export const getTeamMembers = query({
 });
 
 /**
+ * Get team members (public query for API routes)
+ * Returns basic user info for notifications
+ */
+export const getTeamMembersPublic = query({
+  args: { teamId: v.id("teams") },
+  handler: async (ctx, args) => {
+    // Get all memberships for the team
+    const memberships = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+      .collect();
+
+    // Get basic user info for each member
+    const members = await Promise.all(
+      memberships.map(async (membership) => {
+        const user = await ctx.db.get(membership.userId);
+        if (!user) return null;
+
+        return {
+          userId: user._id,
+          email: user.email,
+          name: user.name,
+          role: membership.role,
+        };
+      })
+    );
+
+    return members.filter(Boolean);
+  },
+});
+
+/**
  * Get pending invites for a team
  */
 export const getTeamInvites = query({

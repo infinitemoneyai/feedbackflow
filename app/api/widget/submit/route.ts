@@ -367,6 +367,26 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         }).catch((err) => {
           console.warn("Automation rules trigger failed:", err);
         });
+
+        // Fire and forget - Notify team admins of new feedback
+        fetch(`${baseUrl}/api/notifications/trigger-new-feedback`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-internal-key": internalKey,
+          },
+          body: JSON.stringify({
+            feedbackId: result.feedbackId,
+            feedbackTitle: title.trim(),
+            feedbackDescription: description?.trim(),
+            feedbackType: type,
+            projectId: widgetInfo.projectId,
+            projectName: projectInfo.name,
+            teamId: projectInfo.teamId,
+          }),
+        }).catch((err) => {
+          console.warn("New feedback notification trigger failed:", err);
+        });
       }
     } catch (err) {
       console.warn("Failed to trigger background tasks:", err);
