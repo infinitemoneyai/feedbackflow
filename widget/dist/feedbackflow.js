@@ -1,4 +1,4 @@
-"use strict";var FeedbackFlow=(()=>{var w=Object.defineProperty;var L=Object.getOwnPropertyDescriptor;var U=Object.getOwnPropertyNames;var B=Object.prototype.hasOwnProperty;var N=(i,t)=>{for(var e in t)w(i,e,{get:t[e],enumerable:!0})},D=(i,t,e,o)=>{if(t&&typeof t=="object"||typeof t=="function")for(let n of U(t))!B.call(i,n)&&n!==e&&w(i,n,{get:()=>t[n],enumerable:!(o=L(t,n))||o.enumerable});return i};var W=i=>D(w({},"__esModule",{value:!0}),i);var A={};N(A,{FeedbackFlow:()=>P,FeedbackFlowWidget:()=>g});var k={position:"bottom-right",primaryColor:"#1a1a1a",backgroundColor:"#F7F5F0",textColor:"#1a1a1a",buttonText:"Feedback",apiUrl:""};function H(i){switch(i){case"bottom-right":return"bottom: 20px; right: 20px;";case"bottom-left":return"bottom: 20px; left: 20px;";case"top-right":return"top: 20px; right: 20px;";case"top-left":return"top: 20px; left: 20px;";default:return"bottom: 20px; right: 20px;"}}function E(i){return`
+"use strict";var FeedbackFlow=(()=>{var T=Object.defineProperty;var O=Object.getOwnPropertyDescriptor;var W=Object.getOwnPropertyNames;var z=Object.prototype.hasOwnProperty;var Q=(n,e)=>{for(var t in e)T(n,t,{get:e[t],enumerable:!0})},q=(n,e,t,i)=>{if(e&&typeof e=="object"||typeof e=="function")for(let r of W(e))!z.call(n,r)&&r!==t&&T(n,r,{get:()=>e[r],enumerable:!(i=O(e,r))||i.enumerable});return n};var K=n=>q(T({},"__esModule",{value:!0}),n);var ee={};Q(ee,{FeedbackFlow:()=>A,FeedbackFlowWidget:()=>g});var L={position:"bottom-right",primaryColor:"#1a1a1a",backgroundColor:"#F7F5F0",textColor:"#1a1a1a",buttonText:"Feedback",apiUrl:""};function _(n){switch(n){case"bottom-right":return"bottom: 20px; right: 20px;";case"bottom-left":return"bottom: 20px; left: 20px;";case"top-right":return"top: 20px; right: 20px;";case"top-left":return"top: 20px; left: 20px;";default:return"bottom: 20px; right: 20px;"}}function N(n){return`
     /* FeedbackFlow Widget Styles */
     .ff-widget-root {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -16,15 +16,15 @@
     /* Floating Button */
     .ff-trigger-button {
       position: fixed;
-      ${H(i.position)}
+      ${_(n.position)}
       z-index: 2147483646;
       display: flex;
       align-items: center;
       gap: 8px;
       padding: 12px 20px;
-      background-color: ${i.primaryColor};
+      background-color: ${n.primaryColor};
       color: white;
-      border: 2px solid ${i.primaryColor};
+      border: 2px solid ${n.primaryColor};
       border-radius: 0;
       cursor: pointer;
       font-size: 14px;
@@ -73,8 +73,8 @@
 
     /* Modal Container */
     .ff-modal {
-      background-color: ${i.backgroundColor};
-      border: 2px solid ${i.primaryColor};
+      background-color: ${n.backgroundColor};
+      border: 2px solid ${n.primaryColor};
       box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1);
       max-width: 420px;
       width: 90%;
@@ -96,14 +96,14 @@
       align-items: center;
       justify-content: space-between;
       padding: 16px 20px;
-      border-bottom: 2px solid ${i.primaryColor};
+      border-bottom: 2px solid ${n.primaryColor};
       background-color: #F3C952;
     }
 
     .ff-modal-title {
       font-size: 16px;
       font-weight: 600;
-      color: ${i.textColor};
+      color: ${n.textColor};
       margin: 0;
     }
 
@@ -112,7 +112,7 @@
       border: none;
       padding: 4px;
       cursor: pointer;
-      color: ${i.textColor};
+      color: ${n.textColor};
       display: flex;
       align-items: center;
       justify-content: center;
@@ -148,7 +148,7 @@
       gap: 16px;
       padding: 16px;
       background-color: white;
-      border: 2px solid ${i.primaryColor};
+      border: 2px solid ${n.primaryColor};
       cursor: pointer;
       transition: all 0.15s ease;
       box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
@@ -198,7 +198,7 @@
     .ff-capture-title {
       font-size: 15px;
       font-weight: 600;
-      color: ${i.textColor};
+      color: ${n.textColor};
       margin: 0 0 4px 0;
     }
 
@@ -211,7 +211,7 @@
     /* Modal Footer */
     .ff-modal-footer {
       padding: 12px 20px;
-      border-top: 2px solid ${i.primaryColor};
+      border-top: 2px solid ${n.primaryColor};
       background-color: rgba(0, 0, 0, 0.03);
     }
 
@@ -229,7 +229,7 @@
     .ff-powered-by a:hover {
       text-decoration: underline;
     }
-  `}var p={feedback:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  `}var d={feedback:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
   </svg>`,close:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -245,7 +245,33 @@
     <polyline points="12 5 19 12 12 19"></polyline>
   </svg>`,stop:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <rect x="6" y="6" width="12" height="12" rx="2" ry="2"></rect>
-  </svg>`};function r(i,t,e){let o=document.createElement(i);if(t)for(let[n,a]of Object.entries(t))n==="className"?o.className=a:o.setAttribute(n,a);if(e)for(let n of e)typeof n=="string"?o.appendChild(document.createTextNode(n)):o.appendChild(n);return o}function c(i){let t=document.createElement("template");return t.innerHTML=i.trim(),t.content.firstChild}function T(i,t){if(document.getElementById(t))return;let e=r("style",{id:t,type:"text/css"},[i]);document.head.appendChild(e)}function R(){let i=document.getElementById("ff-widget-root");if(i)return i;let t=r("div",{id:"ff-widget-root",className:"ff-widget-root"});return document.body.appendChild(t),t}var m=class{constructor(t){this.backgroundImage=null;this.isDrawing=!1;this.lastPoint=null;this.startPoint=null;this.history=[];this.historyIndex=-1;this.config={tool:"pen",color:"#E85D52",lineWidth:3};this.canvas=t;let e=t.getContext("2d");if(!e)throw new Error("Could not get canvas context");this.ctx=e,this.setupEventListeners()}setBackgroundImage(t){return new Promise((e,o)=>{let n=new Image;n.onload=()=>{this.backgroundImage=n,this.canvas.width=n.width,this.canvas.height=n.height,this.redraw(),this.saveToHistory(),e()},n.onerror=()=>o(new Error("Failed to load image")),n.src=t})}setTool(t){switch(this.config.tool=t,t){case"pen":this.config.color="#E85D52",this.config.lineWidth=3;break;case"highlighter":this.config.color="rgba(243, 201, 82, 0.4)",this.config.lineWidth=20;break;case"arrow":case"circle":this.config.color="#E85D52",this.config.lineWidth=3;break}}getTool(){return this.config.tool}setColor(t){this.config.color=t}clear(){this.redraw(),this.history=[],this.historyIndex=-1,this.saveToHistory()}undo(){if(this.historyIndex>0){this.historyIndex--;let t=this.history[this.historyIndex];this.ctx.putImageData(t,0,0)}}getDataUrl(t="image/png",e=.92){return this.canvas.toDataURL(t,e)}getBlob(t="image/png",e=.92){return new Promise((o,n)=>{this.canvas.toBlob(a=>{a?o(a):n(new Error("Failed to create blob"))},t,e)})}redraw(){this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height),this.backgroundImage&&this.ctx.drawImage(this.backgroundImage,0,0)}saveToHistory(){this.history=this.history.slice(0,this.historyIndex+1);let t=this.ctx.getImageData(0,0,this.canvas.width,this.canvas.height);this.history.push(t),this.historyIndex=this.history.length-1,this.history.length>50&&(this.history.shift(),this.historyIndex--)}setupEventListeners(){this.canvas.addEventListener("mousedown",this.handleStart.bind(this)),this.canvas.addEventListener("mousemove",this.handleMove.bind(this)),this.canvas.addEventListener("mouseup",this.handleEnd.bind(this)),this.canvas.addEventListener("mouseleave",this.handleEnd.bind(this)),this.canvas.addEventListener("touchstart",this.handleTouchStart.bind(this),{passive:!1}),this.canvas.addEventListener("touchmove",this.handleTouchMove.bind(this),{passive:!1}),this.canvas.addEventListener("touchend",this.handleEnd.bind(this)),this.canvas.addEventListener("touchcancel",this.handleEnd.bind(this))}getMousePoint(t){let e=this.canvas.getBoundingClientRect(),o=this.canvas.width/e.width,n=this.canvas.height/e.height;return{x:(t.clientX-e.left)*o,y:(t.clientY-e.top)*n}}getTouchPoint(t){let e=this.canvas.getBoundingClientRect(),o=t.touches[0],n=this.canvas.width/e.width,a=this.canvas.height/e.height;return{x:(o.clientX-e.left)*n,y:(o.clientY-e.top)*a}}handleStart(t){this.isDrawing=!0;let e=this.getMousePoint(t);this.lastPoint=e,this.startPoint=e,(this.config.tool==="pen"||this.config.tool==="highlighter")&&(this.ctx.beginPath(),this.ctx.moveTo(e.x,e.y))}handleTouchStart(t){t.preventDefault(),this.isDrawing=!0;let e=this.getTouchPoint(t);this.lastPoint=e,this.startPoint=e,(this.config.tool==="pen"||this.config.tool==="highlighter")&&(this.ctx.beginPath(),this.ctx.moveTo(e.x,e.y))}handleMove(t){if(!this.isDrawing||!this.lastPoint)return;let e=this.getMousePoint(t);this.config.tool==="pen"||this.config.tool==="highlighter"?(this.drawLine(this.lastPoint,e),this.lastPoint=e):this.startPoint&&(this.restoreFromHistory(),this.drawShape(this.startPoint,e))}handleTouchMove(t){if(t.preventDefault(),!this.isDrawing||!this.lastPoint)return;let e=this.getTouchPoint(t);this.config.tool==="pen"||this.config.tool==="highlighter"?(this.drawLine(this.lastPoint,e),this.lastPoint=e):this.startPoint&&(this.restoreFromHistory(),this.drawShape(this.startPoint,e))}handleEnd(){this.isDrawing&&(this.isDrawing=!1,(this.config.tool==="arrow"||this.config.tool==="circle")&&this.startPoint&&this.lastPoint,this.saveToHistory(),this.lastPoint=null,this.startPoint=null)}drawLine(t,e){this.ctx.strokeStyle=this.config.color,this.ctx.lineWidth=this.config.lineWidth,this.ctx.lineCap="round",this.ctx.lineJoin="round",this.config.tool==="highlighter"?this.ctx.globalCompositeOperation="multiply":this.ctx.globalCompositeOperation="source-over",this.ctx.lineTo(e.x,e.y),this.ctx.stroke(),this.ctx.beginPath(),this.ctx.moveTo(e.x,e.y)}drawShape(t,e){this.ctx.strokeStyle=this.config.color,this.ctx.lineWidth=this.config.lineWidth,this.ctx.lineCap="round",this.ctx.lineJoin="round",this.ctx.globalCompositeOperation="source-over",this.config.tool==="arrow"?this.drawArrow(t,e):this.config.tool==="circle"&&this.drawCircle(t,e)}drawArrow(t,e){let n=Math.atan2(e.y-t.y,e.x-t.x);this.ctx.beginPath(),this.ctx.moveTo(t.x,t.y),this.ctx.lineTo(e.x,e.y),this.ctx.stroke(),this.ctx.beginPath(),this.ctx.moveTo(e.x,e.y),this.ctx.lineTo(e.x-15*Math.cos(n-Math.PI/6),e.y-15*Math.sin(n-Math.PI/6)),this.ctx.moveTo(e.x,e.y),this.ctx.lineTo(e.x-15*Math.cos(n+Math.PI/6),e.y-15*Math.sin(n+Math.PI/6)),this.ctx.stroke()}drawCircle(t,e){let o=(t.x+e.x)/2,n=(t.y+e.y)/2,a=Math.abs(e.x-t.x)/2,s=Math.abs(e.y-t.y)/2;this.ctx.beginPath(),this.ctx.ellipse(o,n,a,s,0,0,2*Math.PI),this.ctx.stroke()}restoreFromHistory(){if(this.historyIndex>=0){let t=this.history[this.historyIndex];this.ctx.putImageData(t,0,0)}}destroy(){this.history=[],this.backgroundImage=null}};async function y(){let i=document.getElementById("ff-widget-root");i&&(i.style.display="none");try{return"mediaDevices"in navigator&&"getDisplayMedia"in navigator.mediaDevices?await $():await j()}finally{i&&(i.style.display="")}}async function $(){let i=await navigator.mediaDevices.getDisplayMedia({video:{displaySurface:"browser"},audio:!1});try{let t=document.createElement("video");t.srcObject=i,t.muted=!0,await new Promise(s=>{t.onloadedmetadata=()=>{t.play(),s()}}),await new Promise(s=>requestAnimationFrame(s));let e=document.createElement("canvas");e.width=t.videoWidth,e.height=t.videoHeight;let o=e.getContext("2d");if(!o)throw new Error("Could not get canvas context");o.drawImage(t,0,0);let n=await new Promise((s,d)=>{e.toBlob(l=>{l?s(l):d(new Error("Failed to create blob"))},"image/png",.92)});return{dataUrl:e.toDataURL("image/png",.92),width:e.width,height:e.height,blob:n}}finally{i.getTracks().forEach(t=>t.stop())}}async function j(){let i=document.createElement("canvas"),t=window.innerWidth,e=window.innerHeight;i.width=t,i.height=e;let o=i.getContext("2d");if(!o)throw new Error("Could not get canvas context");o.fillStyle="#ffffff",o.fillRect(0,0,t,e),o.fillStyle="#666666",o.font="16px sans-serif",o.textAlign="center",o.fillText("Screenshot capture requires screen sharing permission",t/2,e/2);let n=i.toDataURL("image/png"),a=await new Promise((s,d)=>{i.toBlob(l=>{l?s(l):d(new Error("Failed to create blob"))},"image/png")});return{dataUrl:n,width:t,height:e,blob:a}}function S(i,t=1920,e=.85){return new Promise((o,n)=>{let a=new Image;a.onload=()=>{let s=a.width,d=a.height;s>t&&(d=Math.round(d*t/s),s=t);let l=document.createElement("canvas");l.width=s,l.height=d;let u=l.getContext("2d");if(!u){n(new Error("Could not get canvas context"));return}u.drawImage(a,0,0,s,d);let F=l.toDataURL("image/jpeg",e);l.toBlob(C=>{C?o({dataUrl:F,width:s,height:d,blob:C}):n(new Error("Failed to create blob"))},"image/jpeg",e)},a.onerror=()=>n(new Error("Failed to load image")),a.src=i})}var v=class{constructor(t,e){this.container=null;this.canvas=null;this.annotationCanvas=null;this.currentTool="pen";this.capturedImage=null;this.config=t,this.callbacks=e}async start(){try{this.capturedImage=await y(),this.showPreviewUI()}catch(t){console.error("FeedbackFlow: Screenshot capture failed",t),this.callbacks.onCancel()}}showPreviewUI(){if(!this.capturedImage)return;this.container=r("div",{className:"ff-screenshot-overlay"});let t=this.createUI();this.container.appendChild(t),document.body.appendChild(this.container),this.setupCanvas(),this.injectStyles()}createUI(){let t=r("div",{className:"ff-screenshot-wrapper"}),e=r("div",{className:"ff-screenshot-header"},[r("h3",{className:"ff-screenshot-title"},["Annotate Screenshot"]),this.createCloseButton()]),o=r("div",{className:"ff-screenshot-canvas-container"});this.canvas=r("canvas",{className:"ff-screenshot-canvas"}),o.appendChild(this.canvas);let n=this.createToolbar(),a=this.createActions();return t.appendChild(e),t.appendChild(n),t.appendChild(o),t.appendChild(a),t}createCloseButton(){let t=r("button",{className:"ff-screenshot-close",type:"button","aria-label":"Cancel"},[c(p.close)]);return t.addEventListener("click",()=>this.cancel()),t}createToolbar(){let t=r("div",{className:"ff-screenshot-toolbar"});[{tool:"pen",icon:"pen",label:"Pen"},{tool:"highlighter",icon:"highlighter",label:"Highlighter"},{tool:"arrow",icon:"arrow",label:"Arrow"},{tool:"circle",icon:"circle",label:"Circle"}].forEach(({tool:a,icon:s,label:d})=>{let l=r("button",{className:`ff-tool-button ${a===this.currentTool?"ff-active":""}`,type:"button","data-tool":a,title:d},[c(this.getToolIcon(s))]);l.addEventListener("click",()=>{this.setTool(a),t.querySelectorAll(".ff-tool-button").forEach(u=>{u.classList.remove("ff-active")}),l.classList.add("ff-active")}),t.appendChild(l)}),t.appendChild(r("div",{className:"ff-toolbar-separator"}));let o=r("button",{className:"ff-tool-button",type:"button",title:"Undo"},[c(this.getToolIcon("undo"))]);o.addEventListener("click",()=>this.annotationCanvas?.undo()),t.appendChild(o);let n=r("button",{className:"ff-tool-button",type:"button",title:"Clear all"},[c(this.getToolIcon("clear"))]);return n.addEventListener("click",()=>this.annotationCanvas?.clear()),t.appendChild(n),t}createActions(){let t=r("div",{className:"ff-screenshot-actions"}),e=r("button",{className:"ff-screenshot-btn ff-btn-secondary",type:"button"},["Retake"]);e.addEventListener("click",()=>this.retake());let o=r("button",{className:"ff-screenshot-btn ff-btn-primary",type:"button"},["Use Screenshot"]);return o.addEventListener("click",()=>this.confirm()),t.appendChild(e),t.appendChild(o),t}getToolIcon(t){return{pen:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  </svg>`,bug:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m8 2 1.88 1.88"></path>
+    <path d="M14.12 3.88 16 2"></path>
+    <path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"></path>
+    <path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"></path>
+    <path d="M12 20v-9"></path>
+    <path d="M6.53 9C4.6 8.8 3 7.1 3 5"></path>
+    <path d="M6 13H2"></path>
+    <path d="M3 21c0-2.1 1.7-3.9 3.8-4"></path>
+    <path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"></path>
+    <path d="M22 13h-4"></path>
+    <path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"></path>
+  </svg>`,lightbulb:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"></path>
+    <path d="M9 18h6"></path>
+    <path d="M10 22h4"></path>
+  </svg>`,check:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="20 6 9 17 4 12"></polyline>
+  </svg>`,spinner:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+  </svg>`,mail:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+  </svg>`,user:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="8" r="5"></circle>
+    <path d="M20 21a8 8 0 1 0-16 0"></path>
+  </svg>`};function o(n,e,t){let i=document.createElement(n);if(e)for(let[r,s]of Object.entries(e))r==="className"?i.className=s:i.setAttribute(r,s);if(t)for(let r of t)typeof r=="string"?i.appendChild(document.createTextNode(r)):i.appendChild(r);return i}function l(n){let e=document.createElement("template");return e.innerHTML=n.trim(),e.content.firstChild}function P(n,e){if(document.getElementById(e))return;let t=o("style",{id:e,type:"text/css"},[n]);document.head.appendChild(t)}function U(){let n=document.getElementById("ff-widget-root");if(n)return n;let e=o("div",{id:"ff-widget-root",className:"ff-widget-root"});return document.body.appendChild(e),e}var y=class{constructor(e){this.backgroundImage=null;this.isDrawing=!1;this.lastPoint=null;this.startPoint=null;this.history=[];this.historyIndex=-1;this.config={tool:"pen",color:"#E85D52",lineWidth:3};this.canvas=e;let t=e.getContext("2d");if(!t)throw new Error("Could not get canvas context");this.ctx=t,this.setupEventListeners()}setBackgroundImage(e){return new Promise((t,i)=>{let r=new Image;r.onload=()=>{this.backgroundImage=r,this.canvas.width=r.width,this.canvas.height=r.height,this.redraw(),this.saveToHistory(),t()},r.onerror=()=>i(new Error("Failed to load image")),r.src=e})}setTool(e){switch(this.config.tool=e,e){case"pen":this.config.color="#E85D52",this.config.lineWidth=3;break;case"highlighter":this.config.color="rgba(243, 201, 82, 0.4)",this.config.lineWidth=20;break;case"arrow":case"circle":this.config.color="#E85D52",this.config.lineWidth=3;break}}getTool(){return this.config.tool}setColor(e){this.config.color=e}clear(){this.redraw(),this.history=[],this.historyIndex=-1,this.saveToHistory()}undo(){if(this.historyIndex>0){this.historyIndex--;let e=this.history[this.historyIndex];this.ctx.putImageData(e,0,0)}}getDataUrl(e="image/png",t=.92){return this.canvas.toDataURL(e,t)}getBlob(e="image/png",t=.92){return new Promise((i,r)=>{this.canvas.toBlob(s=>{s?i(s):r(new Error("Failed to create blob"))},e,t)})}redraw(){this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height),this.backgroundImage&&this.ctx.drawImage(this.backgroundImage,0,0)}saveToHistory(){this.history=this.history.slice(0,this.historyIndex+1);let e=this.ctx.getImageData(0,0,this.canvas.width,this.canvas.height);this.history.push(e),this.historyIndex=this.history.length-1,this.history.length>50&&(this.history.shift(),this.historyIndex--)}setupEventListeners(){this.canvas.addEventListener("mousedown",this.handleStart.bind(this)),this.canvas.addEventListener("mousemove",this.handleMove.bind(this)),this.canvas.addEventListener("mouseup",this.handleEnd.bind(this)),this.canvas.addEventListener("mouseleave",this.handleEnd.bind(this)),this.canvas.addEventListener("touchstart",this.handleTouchStart.bind(this),{passive:!1}),this.canvas.addEventListener("touchmove",this.handleTouchMove.bind(this),{passive:!1}),this.canvas.addEventListener("touchend",this.handleEnd.bind(this)),this.canvas.addEventListener("touchcancel",this.handleEnd.bind(this))}getMousePoint(e){let t=this.canvas.getBoundingClientRect(),i=this.canvas.width/t.width,r=this.canvas.height/t.height;return{x:(e.clientX-t.left)*i,y:(e.clientY-t.top)*r}}getTouchPoint(e){let t=this.canvas.getBoundingClientRect(),i=e.touches[0],r=this.canvas.width/t.width,s=this.canvas.height/t.height;return{x:(i.clientX-t.left)*r,y:(i.clientY-t.top)*s}}handleStart(e){this.isDrawing=!0;let t=this.getMousePoint(e);this.lastPoint=t,this.startPoint=t,(this.config.tool==="pen"||this.config.tool==="highlighter")&&(this.ctx.beginPath(),this.ctx.moveTo(t.x,t.y))}handleTouchStart(e){e.preventDefault(),this.isDrawing=!0;let t=this.getTouchPoint(e);this.lastPoint=t,this.startPoint=t,(this.config.tool==="pen"||this.config.tool==="highlighter")&&(this.ctx.beginPath(),this.ctx.moveTo(t.x,t.y))}handleMove(e){if(!this.isDrawing||!this.lastPoint)return;let t=this.getMousePoint(e);this.config.tool==="pen"||this.config.tool==="highlighter"?(this.drawLine(this.lastPoint,t),this.lastPoint=t):this.startPoint&&(this.restoreFromHistory(),this.drawShape(this.startPoint,t))}handleTouchMove(e){if(e.preventDefault(),!this.isDrawing||!this.lastPoint)return;let t=this.getTouchPoint(e);this.config.tool==="pen"||this.config.tool==="highlighter"?(this.drawLine(this.lastPoint,t),this.lastPoint=t):this.startPoint&&(this.restoreFromHistory(),this.drawShape(this.startPoint,t))}handleEnd(){this.isDrawing&&(this.isDrawing=!1,(this.config.tool==="arrow"||this.config.tool==="circle")&&this.startPoint&&this.lastPoint,this.saveToHistory(),this.lastPoint=null,this.startPoint=null)}drawLine(e,t){this.ctx.strokeStyle=this.config.color,this.ctx.lineWidth=this.config.lineWidth,this.ctx.lineCap="round",this.ctx.lineJoin="round",this.config.tool==="highlighter"?this.ctx.globalCompositeOperation="multiply":this.ctx.globalCompositeOperation="source-over",this.ctx.lineTo(t.x,t.y),this.ctx.stroke(),this.ctx.beginPath(),this.ctx.moveTo(t.x,t.y)}drawShape(e,t){this.ctx.strokeStyle=this.config.color,this.ctx.lineWidth=this.config.lineWidth,this.ctx.lineCap="round",this.ctx.lineJoin="round",this.ctx.globalCompositeOperation="source-over",this.config.tool==="arrow"?this.drawArrow(e,t):this.config.tool==="circle"&&this.drawCircle(e,t)}drawArrow(e,t){let r=Math.atan2(t.y-e.y,t.x-e.x);this.ctx.beginPath(),this.ctx.moveTo(e.x,e.y),this.ctx.lineTo(t.x,t.y),this.ctx.stroke(),this.ctx.beginPath(),this.ctx.moveTo(t.x,t.y),this.ctx.lineTo(t.x-15*Math.cos(r-Math.PI/6),t.y-15*Math.sin(r-Math.PI/6)),this.ctx.moveTo(t.x,t.y),this.ctx.lineTo(t.x-15*Math.cos(r+Math.PI/6),t.y-15*Math.sin(r+Math.PI/6)),this.ctx.stroke()}drawCircle(e,t){let i=(e.x+t.x)/2,r=(e.y+t.y)/2,s=Math.abs(t.x-e.x)/2,a=Math.abs(t.y-e.y)/2;this.ctx.beginPath(),this.ctx.ellipse(i,r,s,a,0,0,2*Math.PI),this.ctx.stroke()}restoreFromHistory(){if(this.historyIndex>=0){let e=this.history[this.historyIndex];this.ctx.putImageData(e,0,0)}}destroy(){this.history=[],this.backgroundImage=null}};async function M(){let n=document.getElementById("ff-widget-root");n&&(n.style.display="none");try{return"mediaDevices"in navigator&&"getDisplayMedia"in navigator.mediaDevices?await Y():await X()}finally{n&&(n.style.display="")}}async function Y(){let n=await navigator.mediaDevices.getDisplayMedia({video:{displaySurface:"browser"},audio:!1});try{let e=document.createElement("video");e.srcObject=n,e.muted=!0,await new Promise(a=>{e.onloadedmetadata=()=>{e.play(),a()}}),await new Promise(a=>requestAnimationFrame(a));let t=document.createElement("canvas");t.width=e.videoWidth,t.height=e.videoHeight;let i=t.getContext("2d");if(!i)throw new Error("Could not get canvas context");i.drawImage(e,0,0);let r=await new Promise((a,c)=>{t.toBlob(p=>{p?a(p):c(new Error("Failed to create blob"))},"image/png",.92)});return{dataUrl:t.toDataURL("image/png",.92),width:t.width,height:t.height,blob:r}}finally{n.getTracks().forEach(e=>e.stop())}}async function X(){let n=document.createElement("canvas"),e=window.innerWidth,t=window.innerHeight;n.width=e,n.height=t;let i=n.getContext("2d");if(!i)throw new Error("Could not get canvas context");i.fillStyle="#ffffff",i.fillRect(0,0,e,t),i.fillStyle="#666666",i.font="16px sans-serif",i.textAlign="center",i.fillText("Screenshot capture requires screen sharing permission",e/2,t/2);let r=n.toDataURL("image/png"),s=await new Promise((a,c)=>{n.toBlob(p=>{p?a(p):c(new Error("Failed to create blob"))},"image/png")});return{dataUrl:r,width:e,height:t,blob:s}}function B(n,e=1920,t=.85){return new Promise((i,r)=>{let s=new Image;s.onload=()=>{let a=s.width,c=s.height;a>e&&(c=Math.round(c*e/a),a=e);let p=document.createElement("canvas");p.width=a,p.height=c;let u=p.getContext("2d");if(!u){r(new Error("Could not get canvas context"));return}u.drawImage(s,0,0,a,c);let x=p.toDataURL("image/jpeg",t);p.toBlob(m=>{m?i({dataUrl:x,width:a,height:c,blob:m}):r(new Error("Failed to create blob"))},"image/jpeg",t)},s.onerror=()=>r(new Error("Failed to load image")),s.src=n})}var w=class{constructor(e,t){this.container=null;this.canvas=null;this.annotationCanvas=null;this.currentTool="pen";this.capturedImage=null;this.config=e,this.callbacks=t}async start(){try{this.capturedImage=await M(),this.showPreviewUI()}catch(e){console.error("FeedbackFlow: Screenshot capture failed",e),this.callbacks.onCancel()}}showPreviewUI(){if(!this.capturedImage)return;this.container=o("div",{className:"ff-screenshot-overlay"});let e=this.createUI();this.container.appendChild(e),document.body.appendChild(this.container),this.setupCanvas(),this.injectStyles()}createUI(){let e=o("div",{className:"ff-screenshot-wrapper"}),t=o("div",{className:"ff-screenshot-header"},[o("h3",{className:"ff-screenshot-title"},["Annotate Screenshot"]),this.createCloseButton()]),i=o("div",{className:"ff-screenshot-canvas-container"});this.canvas=o("canvas",{className:"ff-screenshot-canvas"}),i.appendChild(this.canvas);let r=this.createToolbar(),s=this.createActions();return e.appendChild(t),e.appendChild(r),e.appendChild(i),e.appendChild(s),e}createCloseButton(){let e=o("button",{className:"ff-screenshot-close",type:"button","aria-label":"Cancel"},[l(d.close)]);return e.addEventListener("click",()=>this.cancel()),e}createToolbar(){let e=o("div",{className:"ff-screenshot-toolbar"});[{tool:"pen",icon:"pen",label:"Pen"},{tool:"highlighter",icon:"highlighter",label:"Highlighter"},{tool:"arrow",icon:"arrow",label:"Arrow"},{tool:"circle",icon:"circle",label:"Circle"}].forEach(({tool:s,icon:a,label:c})=>{let p=o("button",{className:`ff-tool-button ${s===this.currentTool?"ff-active":""}`,type:"button","data-tool":s,title:c},[l(this.getToolIcon(a))]);p.addEventListener("click",()=>{this.setTool(s),e.querySelectorAll(".ff-tool-button").forEach(u=>{u.classList.remove("ff-active")}),p.classList.add("ff-active")}),e.appendChild(p)}),e.appendChild(o("div",{className:"ff-toolbar-separator"}));let i=o("button",{className:"ff-tool-button",type:"button",title:"Undo"},[l(this.getToolIcon("undo"))]);i.addEventListener("click",()=>this.annotationCanvas?.undo()),e.appendChild(i);let r=o("button",{className:"ff-tool-button",type:"button",title:"Clear all"},[l(this.getToolIcon("clear"))]);return r.addEventListener("click",()=>this.annotationCanvas?.clear()),e.appendChild(r),e}createActions(){let e=o("div",{className:"ff-screenshot-actions"}),t=o("button",{className:"ff-screenshot-btn ff-btn-secondary",type:"button"},["Retake"]);t.addEventListener("click",()=>this.retake());let i=o("button",{className:"ff-screenshot-btn ff-btn-primary",type:"button"},["Use Screenshot"]);return i.addEventListener("click",()=>this.confirm()),e.appendChild(t),e.appendChild(i),e}getToolIcon(e){return{pen:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
         <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
         <path d="M2 2l7.586 7.586"></path>
@@ -265,7 +291,7 @@
         <path d="M3 6h18"></path>
         <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
         <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-      </svg>`}[t]||""}async setupCanvas(){!this.canvas||!this.capturedImage||(this.annotationCanvas=new m(this.canvas),await this.annotationCanvas.setBackgroundImage(this.capturedImage.dataUrl),this.annotationCanvas.setTool(this.currentTool))}setTool(t){this.currentTool=t,this.annotationCanvas?.setTool(t)}async retake(){this.destroy();try{this.capturedImage=await y(),this.showPreviewUI()}catch(t){console.error("FeedbackFlow: Screenshot retake failed",t),this.callbacks.onCancel()}}async confirm(){if(this.annotationCanvas)try{let t=this.annotationCanvas.getDataUrl("image/png"),e=await this.annotationCanvas.getBlob("image/png"),o=await S(t,1920,.85);this.destroy(),this.callbacks.onConfirm(o)}catch(t){console.error("FeedbackFlow: Failed to process screenshot",t),this.callbacks.onCancel()}}cancel(){this.destroy(),this.callbacks.onCancel()}injectStyles(){let t="ff-screenshot-styles";if(document.getElementById(t))return;let e=`
+      </svg>`}[e]||""}async setupCanvas(){!this.canvas||!this.capturedImage||(this.annotationCanvas=new y(this.canvas),await this.annotationCanvas.setBackgroundImage(this.capturedImage.dataUrl),this.annotationCanvas.setTool(this.currentTool))}setTool(e){this.currentTool=e,this.annotationCanvas?.setTool(e)}async retake(){this.destroy();try{this.capturedImage=await M(),this.showPreviewUI()}catch(e){console.error("FeedbackFlow: Screenshot retake failed",e),this.callbacks.onCancel()}}async confirm(){if(this.annotationCanvas)try{let e=this.annotationCanvas.getDataUrl("image/png"),t=await this.annotationCanvas.getBlob("image/png"),i=await B(e,1920,.85);this.destroy(),this.callbacks.onConfirm(i)}catch(e){console.error("FeedbackFlow: Failed to process screenshot",e),this.callbacks.onCancel()}}cancel(){this.destroy(),this.callbacks.onCancel()}injectStyles(){let e="ff-screenshot-styles";if(document.getElementById(e))return;let t=`
       .ff-screenshot-overlay {
         position: fixed;
         top: 0;
@@ -426,7 +452,7 @@
         transform: translate(2px, 2px);
         box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.3);
       }
-    `,o=document.createElement("style");o.id=t,o.textContent=e,document.head.appendChild(o)}destroy(){this.annotationCanvas?.destroy(),this.annotationCanvas=null,this.container?.remove(),this.container=null,this.canvas=null,this.capturedImage=null}};var O=["video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm;codecs=vp9","video/webm;codecs=vp8","video/webm","video/mp4"],f=class{constructor(t){this.mediaRecorder=null;this.screenStream=null;this.audioStream=null;this.combinedStream=null;this.chunks=[];this.startTime=0;this.timerInterval=null;this.mimeType="video/webm";this.callbacks=t}static isSupported(){return typeof navigator<"u"&&"mediaDevices"in navigator&&"getDisplayMedia"in navigator.mediaDevices&&typeof MediaRecorder<"u"}getSupportedMimeType(){for(let t of O)if(MediaRecorder.isTypeSupported(t))return t;return"video/webm"}async start(){if(this.mediaRecorder?.state==="recording")throw new Error("Recording already in progress");try{this.screenStream=await navigator.mediaDevices.getDisplayMedia({video:{displaySurface:"browser",cursor:"always"},audio:!1});try{this.audioStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:!0,noiseSuppression:!0,autoGainControl:!0},video:!1})}catch{console.log("FeedbackFlow: Microphone not available, recording without audio")}let t=[...this.screenStream.getVideoTracks(),...this.audioStream?.getAudioTracks()||[]];this.combinedStream=new MediaStream(t),this.mimeType=this.getSupportedMimeType(),this.mediaRecorder=new MediaRecorder(this.combinedStream,{mimeType:this.mimeType,videoBitsPerSecond:25e5}),this.chunks=[],this.mediaRecorder.ondataavailable=e=>{e.data.size>0&&this.chunks.push(e.data)},this.mediaRecorder.onstop=()=>{this.handleStop()},this.mediaRecorder.onerror=e=>{let o=e,n=new Error(o.error?.message||"Recording failed");this.cleanup(),this.callbacks.onError(n)},this.screenStream.getVideoTracks()[0].onended=()=>{this.mediaRecorder?.state==="recording"&&this.stop()},this.mediaRecorder.start(1e3),this.startTime=Date.now(),this.callbacks.onStart(),this.startTimer()}catch(t){throw this.cleanup(),t}}stop(){this.mediaRecorder?.state==="recording"&&this.mediaRecorder.stop(),this.stopTimer()}handleStop(){let t=Date.now()-this.startTime,e=new Blob(this.chunks,{type:this.mimeType});this.cleanup(),this.callbacks.onStop({blob:e,duration:t,mimeType:this.mimeType})}startTimer(){this.timerInterval=setInterval(()=>{let t=Date.now()-this.startTime;this.callbacks.onTimeUpdate(t),t>=12e4&&this.stop()},100)}stopTimer(){this.timerInterval&&(clearInterval(this.timerInterval),this.timerInterval=null)}cleanup(){this.stopTimer(),this.screenStream?.getTracks().forEach(t=>t.stop()),this.audioStream?.getTracks().forEach(t=>t.stop()),this.combinedStream?.getTracks().forEach(t=>t.stop()),this.screenStream=null,this.audioStream=null,this.combinedStream=null,this.mediaRecorder=null,this.chunks=[]}isRecording(){return this.mediaRecorder?.state==="recording"}getElapsed(){return this.startTime?Date.now()-this.startTime:0}destroy(){this.stop(),this.cleanup()}};function x(i){let t=Math.floor(i/1e3),e=Math.floor(t/60),o=t%60;return`${e.toString().padStart(2,"0")}:${o.toString().padStart(2,"0")}`}function M(){return 12e4}var b=class{constructor(t,e){this.recorder=null;this.recordingResult=null;this.state="idle";this.indicatorElement=null;this.previewElement=null;this.videoElement=null;this.timerElement=null;this.objectUrl=null;this.config=t,this.callbacks=e,this.injectStyles()}async start(){if(!f.isSupported()){alert("Screen recording is not supported in this browser."),this.callbacks.onCancel();return}try{this.state="recording",this.showRecordingIndicator(),this.recorder=new f({onStart:()=>{console.log("FeedbackFlow: Recording started")},onStop:t=>{this.handleRecordingComplete(t)},onError:t=>{console.error("FeedbackFlow: Recording error",t),this.hideRecordingIndicator(),this.callbacks.onCancel()},onTimeUpdate:t=>{this.updateTimer(t)}}),await this.recorder.start()}catch(t){console.error("FeedbackFlow: Failed to start recording",t),this.hideRecordingIndicator(),this.callbacks.onCancel()}}showRecordingIndicator(){this.indicatorElement=r("div",{className:"ff-recording-indicator"});let t=r("div",{className:"ff-recording-content"},[r("div",{className:"ff-recording-dot"}),r("span",{className:"ff-recording-text"},["Recording"]),r("span",{className:"ff-recording-timer"},["00:00"]),r("span",{className:"ff-recording-separator"},[" / "]),r("span",{className:"ff-recording-max"},[x(M())])]),e=r("button",{className:"ff-recording-stop",type:"button"},[c(p.stop||p.close),"Stop"]);e.addEventListener("click",()=>this.stopRecording()),this.indicatorElement.appendChild(t),this.indicatorElement.appendChild(e),document.body.appendChild(this.indicatorElement),this.timerElement=this.indicatorElement.querySelector(".ff-recording-timer")}updateTimer(t){this.timerElement&&(this.timerElement.textContent=x(t))}hideRecordingIndicator(){this.indicatorElement?.remove(),this.indicatorElement=null,this.timerElement=null}stopRecording(){this.recorder?.stop()}handleRecordingComplete(t){this.recordingResult=t,this.state="preview",this.hideRecordingIndicator(),this.showPreview()}showPreview(){if(!this.recordingResult)return;this.objectUrl=URL.createObjectURL(this.recordingResult.blob),this.previewElement=r("div",{className:"ff-recording-preview-overlay"});let t=r("div",{className:"ff-recording-preview-wrapper"}),e=r("div",{className:"ff-recording-preview-header"},[r("h3",{className:"ff-recording-preview-title"},["Preview Recording"]),this.createCloseButton()]),o=r("div",{className:"ff-recording-preview-video-container"});this.videoElement=r("video",{className:"ff-recording-preview-video"}),this.videoElement.src=this.objectUrl,this.videoElement.controls=!0,this.videoElement.playsInline=!0,o.appendChild(this.videoElement);let n=r("div",{className:"ff-recording-preview-info"},[r("span",{className:"ff-recording-info-item"},[`Duration: ${x(this.recordingResult.duration)}`]),r("span",{className:"ff-recording-info-item"},[`Size: ${(this.recordingResult.blob.size/(1024*1024)).toFixed(2)} MB`])]),a=r("div",{className:"ff-recording-preview-actions"},[this.createButton("Retake","secondary",()=>this.retake()),this.createButton("Use Recording","primary",()=>this.confirm())]);t.appendChild(e),t.appendChild(o),t.appendChild(n),t.appendChild(a),this.previewElement.appendChild(t),document.body.appendChild(this.previewElement)}createCloseButton(){let t=r("button",{className:"ff-recording-preview-close",type:"button","aria-label":"Cancel"},[c(p.close)]);return t.addEventListener("click",()=>this.cancel()),t}createButton(t,e,o){let n=r("button",{className:`ff-recording-btn ff-btn-${e}`,type:"button"},[t]);return n.addEventListener("click",o),n}hidePreview(){this.previewElement?.remove(),this.previewElement=null,this.videoElement=null,this.objectUrl&&(URL.revokeObjectURL(this.objectUrl),this.objectUrl=null)}async retake(){this.hidePreview(),this.recordingResult=null,await this.start()}confirm(){if(!this.recordingResult)return;let t=this.recordingResult;this.hidePreview(),this.callbacks.onConfirm(t)}cancel(){this.recorder?.destroy(),this.hideRecordingIndicator(),this.hidePreview(),this.recordingResult=null,this.callbacks.onCancel()}injectStyles(){let t="ff-recording-styles";if(document.getElementById(t))return;let e=`
+    `,i=document.createElement("style");i.id=e,i.textContent=t,document.head.appendChild(i)}destroy(){this.annotationCanvas?.destroy(),this.annotationCanvas=null,this.container?.remove(),this.container=null,this.canvas=null,this.capturedImage=null}};var G=["video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm;codecs=vp9","video/webm;codecs=vp8","video/webm","video/mp4"],b=class{constructor(e){this.mediaRecorder=null;this.screenStream=null;this.audioStream=null;this.combinedStream=null;this.chunks=[];this.startTime=0;this.timerInterval=null;this.mimeType="video/webm";this.callbacks=e}static isSupported(){return typeof navigator<"u"&&"mediaDevices"in navigator&&"getDisplayMedia"in navigator.mediaDevices&&typeof MediaRecorder<"u"}getSupportedMimeType(){for(let e of G)if(MediaRecorder.isTypeSupported(e))return e;return"video/webm"}async start(){if(this.mediaRecorder?.state==="recording")throw new Error("Recording already in progress");try{this.screenStream=await navigator.mediaDevices.getDisplayMedia({video:{displaySurface:"browser",cursor:"always"},audio:!1});try{this.audioStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:!0,noiseSuppression:!0,autoGainControl:!0},video:!1})}catch{console.log("FeedbackFlow: Microphone not available, recording without audio")}let e=[...this.screenStream.getVideoTracks(),...this.audioStream?.getAudioTracks()||[]];this.combinedStream=new MediaStream(e),this.mimeType=this.getSupportedMimeType(),this.mediaRecorder=new MediaRecorder(this.combinedStream,{mimeType:this.mimeType,videoBitsPerSecond:25e5}),this.chunks=[],this.mediaRecorder.ondataavailable=t=>{t.data.size>0&&this.chunks.push(t.data)},this.mediaRecorder.onstop=()=>{this.handleStop()},this.mediaRecorder.onerror=t=>{let i=t,r=new Error(i.error?.message||"Recording failed");this.cleanup(),this.callbacks.onError(r)},this.screenStream.getVideoTracks()[0].onended=()=>{this.mediaRecorder?.state==="recording"&&this.stop()},this.mediaRecorder.start(1e3),this.startTime=Date.now(),this.callbacks.onStart(),this.startTimer()}catch(e){throw this.cleanup(),e}}stop(){this.mediaRecorder?.state==="recording"&&this.mediaRecorder.stop(),this.stopTimer()}handleStop(){let e=Date.now()-this.startTime,t=new Blob(this.chunks,{type:this.mimeType});this.cleanup(),this.callbacks.onStop({blob:t,duration:e,mimeType:this.mimeType})}startTimer(){this.timerInterval=setInterval(()=>{let e=Date.now()-this.startTime;this.callbacks.onTimeUpdate(e),e>=12e4&&this.stop()},100)}stopTimer(){this.timerInterval&&(clearInterval(this.timerInterval),this.timerInterval=null)}cleanup(){this.stopTimer(),this.screenStream?.getTracks().forEach(e=>e.stop()),this.audioStream?.getTracks().forEach(e=>e.stop()),this.combinedStream?.getTracks().forEach(e=>e.stop()),this.screenStream=null,this.audioStream=null,this.combinedStream=null,this.mediaRecorder=null,this.chunks=[]}isRecording(){return this.mediaRecorder?.state==="recording"}getElapsed(){return this.startTime?Date.now()-this.startTime:0}destroy(){this.stop(),this.cleanup()}};function C(n){let e=Math.floor(n/1e3),t=Math.floor(e/60),i=e%60;return`${t.toString().padStart(2,"0")}:${i.toString().padStart(2,"0")}`}function D(){return 12e4}var k=class{constructor(e,t){this.recorder=null;this.recordingResult=null;this.state="idle";this.indicatorElement=null;this.previewElement=null;this.videoElement=null;this.timerElement=null;this.objectUrl=null;this.config=e,this.callbacks=t,this.injectStyles()}async start(){if(!b.isSupported()){alert("Screen recording is not supported in this browser."),this.callbacks.onCancel();return}try{this.state="recording",this.showRecordingIndicator(),this.recorder=new b({onStart:()=>{console.log("FeedbackFlow: Recording started")},onStop:e=>{this.handleRecordingComplete(e)},onError:e=>{console.error("FeedbackFlow: Recording error",e),this.hideRecordingIndicator(),this.callbacks.onCancel()},onTimeUpdate:e=>{this.updateTimer(e)}}),await this.recorder.start()}catch(e){console.error("FeedbackFlow: Failed to start recording",e),this.hideRecordingIndicator(),this.callbacks.onCancel()}}showRecordingIndicator(){this.indicatorElement=o("div",{className:"ff-recording-indicator"});let e=o("div",{className:"ff-recording-content"},[o("div",{className:"ff-recording-dot"}),o("span",{className:"ff-recording-text"},["Recording"]),o("span",{className:"ff-recording-timer"},["00:00"]),o("span",{className:"ff-recording-separator"},[" / "]),o("span",{className:"ff-recording-max"},[C(D())])]),t=o("button",{className:"ff-recording-stop",type:"button"},[l(d.stop||d.close),"Stop"]);t.addEventListener("click",()=>this.stopRecording()),this.indicatorElement.appendChild(e),this.indicatorElement.appendChild(t),document.body.appendChild(this.indicatorElement),this.timerElement=this.indicatorElement.querySelector(".ff-recording-timer")}updateTimer(e){this.timerElement&&(this.timerElement.textContent=C(e))}hideRecordingIndicator(){this.indicatorElement?.remove(),this.indicatorElement=null,this.timerElement=null}stopRecording(){this.recorder?.stop()}handleRecordingComplete(e){this.recordingResult=e,this.state="preview",this.hideRecordingIndicator(),this.showPreview()}showPreview(){if(!this.recordingResult)return;this.objectUrl=URL.createObjectURL(this.recordingResult.blob),this.previewElement=o("div",{className:"ff-recording-preview-overlay"});let e=o("div",{className:"ff-recording-preview-wrapper"}),t=o("div",{className:"ff-recording-preview-header"},[o("h3",{className:"ff-recording-preview-title"},["Preview Recording"]),this.createCloseButton()]),i=o("div",{className:"ff-recording-preview-video-container"});this.videoElement=o("video",{className:"ff-recording-preview-video"}),this.videoElement.src=this.objectUrl,this.videoElement.controls=!0,this.videoElement.playsInline=!0,i.appendChild(this.videoElement);let r=o("div",{className:"ff-recording-preview-info"},[o("span",{className:"ff-recording-info-item"},[`Duration: ${C(this.recordingResult.duration)}`]),o("span",{className:"ff-recording-info-item"},[`Size: ${(this.recordingResult.blob.size/(1024*1024)).toFixed(2)} MB`])]),s=o("div",{className:"ff-recording-preview-actions"},[this.createButton("Retake","secondary",()=>this.retake()),this.createButton("Use Recording","primary",()=>this.confirm())]);e.appendChild(t),e.appendChild(i),e.appendChild(r),e.appendChild(s),this.previewElement.appendChild(e),document.body.appendChild(this.previewElement)}createCloseButton(){let e=o("button",{className:"ff-recording-preview-close",type:"button","aria-label":"Cancel"},[l(d.close)]);return e.addEventListener("click",()=>this.cancel()),e}createButton(e,t,i){let r=o("button",{className:`ff-recording-btn ff-btn-${t}`,type:"button"},[e]);return r.addEventListener("click",i),r}hidePreview(){this.previewElement?.remove(),this.previewElement=null,this.videoElement=null,this.objectUrl&&(URL.revokeObjectURL(this.objectUrl),this.objectUrl=null)}async retake(){this.hidePreview(),this.recordingResult=null,await this.start()}confirm(){if(!this.recordingResult)return;let e=this.recordingResult;this.hidePreview(),this.callbacks.onConfirm(e)}cancel(){this.recorder?.destroy(),this.hideRecordingIndicator(),this.hidePreview(),this.recordingResult=null,this.callbacks.onCancel()}injectStyles(){let e="ff-recording-styles";if(document.getElementById(e))return;let t=`
       .ff-recording-indicator {
         position: fixed;
         top: 20px;
@@ -634,4 +660,439 @@
         transform: translate(2px, 2px);
         box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.3);
       }
-    `,o=document.createElement("style");o.id=t,o.textContent=e,document.head.appendChild(o)}destroy(){this.recorder?.destroy(),this.hideRecordingIndicator(),this.hidePreview(),this.recordingResult=null}};var g=class{constructor(t){this.root=null;this.triggerButton=null;this.modalOverlay=null;this.screenshotUI=null;this.recordUI=null;this.capturedScreenshot=null;this.capturedRecording=null;this.config={...k,...t},this.state={isOpen:!1,isCapturing:!1,captureMode:null},this.init()}init(){T(E(this.config),"ff-widget-styles"),this.root=R(),this.createTriggerButton(),this.createModal(),this.setupEventListeners()}createTriggerButton(){this.triggerButton=r("button",{className:"ff-trigger-button","aria-label":"Open feedback widget",type:"button"},[c(p.feedback),this.config.buttonText]),this.root?.appendChild(this.triggerButton)}createModal(){this.modalOverlay=r("div",{className:"ff-modal-overlay",role:"dialog","aria-modal":"true","aria-labelledby":"ff-modal-title"});let t=r("div",{className:"ff-modal"}),e=r("div",{className:"ff-modal-header"},[r("h2",{className:"ff-modal-title",id:"ff-modal-title"},["Share Feedback"]),this.createCloseButton()]),o=r("div",{className:"ff-modal-content"},[this.createCaptureOptions()]),n=r("div",{className:"ff-modal-footer"},[r("div",{className:"ff-powered-by"},["Powered by ",r("a",{href:"https://feedbackflow.dev",target:"_blank"},["FeedbackFlow"])])]);t.appendChild(e),t.appendChild(o),t.appendChild(n),this.modalOverlay.appendChild(t),this.root?.appendChild(this.modalOverlay)}createCloseButton(){return r("button",{className:"ff-close-button","aria-label":"Close feedback widget",type:"button"},[c(p.close)])}createCaptureOptions(){let t=r("div",{className:"ff-capture-options"}),e=r("button",{className:"ff-capture-option","data-capture-type":"screenshot",type:"button"},[r("div",{className:"ff-capture-icon ff-screenshot"},[c(p.camera)]),r("div",{className:"ff-capture-text"},[r("p",{className:"ff-capture-title"},["Take a Screenshot"]),r("p",{className:"ff-capture-description"},["Capture and annotate your screen"])])]),o=r("button",{className:"ff-capture-option","data-capture-type":"record",type:"button"},[r("div",{className:"ff-capture-icon ff-record"},[c(p.video)]),r("div",{className:"ff-capture-text"},[r("p",{className:"ff-capture-title"},["Record Your Screen"]),r("p",{className:"ff-capture-description"},["Record with voice narration (up to 2 min)"])])]);return t.appendChild(e),t.appendChild(o),t}setupEventListeners(){this.triggerButton?.addEventListener("click",()=>{this.open()}),this.modalOverlay?.querySelector(".ff-close-button")?.addEventListener("click",()=>{this.close()}),this.modalOverlay?.addEventListener("click",t=>{t.target===this.modalOverlay&&this.close()}),document.addEventListener("keydown",t=>{t.key==="Escape"&&this.state.isOpen&&this.close()}),this.modalOverlay?.querySelectorAll(".ff-capture-option").forEach(t=>{t.addEventListener("click",()=>{let e=t.getAttribute("data-capture-type");e&&this.startCapture(e)})})}open(){if(this.state.isOpen)return;this.state.isOpen=!0,this.modalOverlay?.classList.add("ff-visible"),this.triggerButton?.setAttribute("aria-expanded","true"),this.modalOverlay?.querySelector("button, [href], input, select, textarea")?.focus()}close(){this.state.isOpen&&(this.state.isOpen=!1,this.modalOverlay?.classList.remove("ff-visible"),this.triggerButton?.setAttribute("aria-expanded","false"),this.triggerButton?.focus())}startCapture(t){this.state.captureMode=t,this.state.isCapturing=!0,this.close();let e=new CustomEvent("ff:capture-start",{detail:{mode:t,widgetKey:this.config.widgetKey}});window.dispatchEvent(e),t==="screenshot"?this.startScreenshotCapture():t==="record"&&this.startRecordingCapture()}startScreenshotCapture(){this.screenshotUI=new v(this.config,{onConfirm:t=>{this.handleScreenshotConfirm(t)},onCancel:()=>{this.handleScreenshotCancel()}}),this.screenshotUI.start()}handleScreenshotConfirm(t){this.capturedScreenshot=t,this.state.isCapturing=!1;let e=new CustomEvent("ff:screenshot-captured",{detail:{widgetKey:this.config.widgetKey,screenshot:t}});window.dispatchEvent(e),console.log("FeedbackFlow: Screenshot captured",{width:t.width,height:t.height,size:t.blob?`${(t.blob.size/1024).toFixed(2)}KB`:"unknown"}),this.screenshotUI?.destroy(),this.screenshotUI=null}handleScreenshotCancel(){this.state.isCapturing=!1,this.state.captureMode=null,this.capturedScreenshot=null,this.screenshotUI?.destroy(),this.screenshotUI=null}startRecordingCapture(){this.recordUI=new b(this.config,{onConfirm:t=>{this.handleRecordingConfirm(t)},onCancel:()=>{this.handleRecordingCancel()}}),this.recordUI.start()}handleRecordingConfirm(t){this.capturedRecording=t,this.state.isCapturing=!1;let e=new CustomEvent("ff:recording-captured",{detail:{widgetKey:this.config.widgetKey,recording:{duration:t.duration,mimeType:t.mimeType,size:t.blob.size}}});window.dispatchEvent(e),console.log("FeedbackFlow: Recording captured",{duration:`${(t.duration/1e3).toFixed(1)}s`,size:`${(t.blob.size/(1024*1024)).toFixed(2)}MB`,mimeType:t.mimeType}),this.recordUI?.destroy(),this.recordUI=null}handleRecordingCancel(){this.state.isCapturing=!1,this.state.captureMode=null,this.capturedRecording=null,this.recordUI?.destroy(),this.recordUI=null}getCapturedScreenshot(){return this.capturedScreenshot}getCapturedRecording(){return this.capturedRecording}getConfig(){return{...this.config}}getState(){return{...this.state}}destroy(){this.screenshotUI?.destroy(),this.screenshotUI=null,this.recordUI?.destroy(),this.recordUI=null,this.root?.remove(),document.getElementById("ff-widget-styles")?.remove(),document.getElementById("ff-screenshot-styles")?.remove(),document.getElementById("ff-recording-styles")?.remove()}};var h=null;function z(){let i=document.querySelectorAll("script[data-widget-key]"),t=i[i.length-1];if(!t)return console.error("FeedbackFlow: No script tag with data-widget-key found"),null;let e=t.dataset.widgetKey;if(!e)return console.error("FeedbackFlow: data-widget-key is required"),null;let o={widgetKey:e},n=t.dataset.position;return n&&["bottom-right","bottom-left","top-right","top-left"].includes(n)&&(o.position=n),t.dataset.primaryColor&&(o.primaryColor=t.dataset.primaryColor),t.dataset.backgroundColor&&(o.backgroundColor=t.dataset.backgroundColor),t.dataset.textColor&&(o.textColor=t.dataset.textColor),t.dataset.buttonText&&(o.buttonText=t.dataset.buttonText),t.dataset.apiUrl&&(o.apiUrl=t.dataset.apiUrl),o}function I(){if(h){console.warn("FeedbackFlow: Widget already initialized");return}let i=z();if(!(!i||!i.widgetKey))try{h=new g(i),console.log("FeedbackFlow: Widget initialized")}catch(t){console.error("FeedbackFlow: Failed to initialize widget",t)}}var P={init(i){if(h){console.warn("FeedbackFlow: Widget already initialized");return}try{h=new g(i)}catch(t){console.error("FeedbackFlow: Failed to initialize widget",t)}},open(){h?.open()},close(){h?.close()},getInstance(){return h},destroy(){h?.destroy(),h=null}};document.readyState==="loading"?document.addEventListener("DOMContentLoaded",I):I();typeof window<"u"&&(window.FeedbackFlow=P);return W(A);})();
+    `,i=document.createElement("style");i.id=e,i.textContent=t,document.head.appendChild(i)}destroy(){this.recorder?.destroy(),this.hideRecordingIndicator(),this.hidePreview(),this.recordingResult=null}};var $="ff_submission_queue";function V(){return`ff_${Date.now()}_${Math.random().toString(36).substring(2,9)}`}function J(n){let e=1e3*Math.pow(2,n),t=e*.2*Math.random();return Date.now()+e+t}var v=class n{constructor(e=""){this.retryTimer=null;this.isProcessing=!1;this.apiUrl=e||this.getDefaultApiUrl(),this.setupConnectivityListener(),this.scheduleRetry()}getDefaultApiUrl(){return typeof window>"u"?"":"https://feedbackflow.dev/api/widget/submit"}setupConnectivityListener(){typeof window>"u"||window.addEventListener("online",()=>{console.log("FeedbackFlow: Connection restored, processing queue..."),this.processQueue()})}getQueue(){try{let e=localStorage.getItem($);return e?JSON.parse(e):[]}catch{return[]}}saveQueue(e){try{localStorage.setItem($,JSON.stringify(e))}catch(t){console.error("FeedbackFlow: Failed to save queue",t)}}addToQueue(e,t,i,r){let s=this.getQueue(),a={id:V(),widgetKey:e,formData:t,screenshotDataUrl:i,recordingBlob:r?this.blobToBase64Sync(r):void 0,recordingMimeType:r?.type,timestamp:Date.now(),retryCount:0,nextRetryAt:Date.now()};return s.push(a),this.saveQueue(s),this.scheduleRetry(),a.id}blobToBase64Sync(e){return""}static blobToBase64(e){return new Promise((t,i)=>{let r=new FileReader;r.onload=()=>{let a=r.result.split(",")[1];t(a)},r.onerror=()=>i(new Error("Failed to convert blob to base64")),r.readAsDataURL(e)})}static base64ToBlob(e,t){let i=atob(e),r=new Uint8Array(i.length);for(let s=0;s<i.length;s++)r[s]=i.charCodeAt(s);return new Blob([r],{type:t})}removeFromQueue(e){let t=this.getQueue().filter(i=>i.id!==e);this.saveQueue(t)}scheduleRetry(){this.retryTimer&&clearTimeout(this.retryTimer);let e=this.getQueue();if(e.length===0)return;let t=Date.now(),i=Math.min(...e.map(s=>s.nextRetryAt)),r=Math.max(0,i-t);this.retryTimer=setTimeout(()=>{this.processQueue()},r)}async processQueue(){if(!this.isProcessing&&navigator.onLine){this.isProcessing=!0;try{let e=this.getQueue(),t=Date.now();for(let i of e)if(!(i.nextRetryAt>t)){if(i.retryCount>=5){console.warn(`FeedbackFlow: Max retries exceeded for submission ${i.id}, removing from queue`),this.removeFromQueue(i.id);continue}try{let r=await this.submitToApi(i);if(r.success)console.log(`FeedbackFlow: Queued submission ${i.id} succeeded, feedback ID: ${r.feedbackId}`),this.removeFromQueue(i.id),window.dispatchEvent(new CustomEvent("ff:queue-submission-success",{detail:{id:i.id,feedbackId:r.feedbackId}}));else throw new Error(r.error||"Submission failed")}catch(r){console.warn(`FeedbackFlow: Queue submission ${i.id} failed, scheduling retry`,r);let s=this.getQueue(),a=s.findIndex(c=>c.id===i.id);a!==-1&&(s[a].retryCount++,s[a].nextRetryAt=J(s[a].retryCount),this.saveQueue(s))}}}finally{this.isProcessing=!1,this.scheduleRetry()}}}async submitToApi(e){let t=new FormData;if(t.append("widgetKey",e.widgetKey),t.append("title",e.formData.title),t.append("description",e.formData.description),t.append("type",e.formData.type),t.append("metadata",JSON.stringify(e.formData.metadata)),e.formData.email&&t.append("email",e.formData.email),e.formData.name&&t.append("name",e.formData.name),e.screenshotDataUrl){let a=await(await fetch(e.screenshotDataUrl)).blob();t.append("screenshot",a,"screenshot.jpg")}if(e.recordingBlob&&e.recordingMimeType){let s=n.base64ToBlob(e.recordingBlob,e.recordingMimeType),a=e.recordingMimeType.includes("webm")?"webm":"mp4";t.append("recording",s,`recording.${a}`)}let i=await fetch(this.apiUrl,{method:"POST",body:t});if(!i.ok){let s=await i.text().catch(()=>"Unknown error");return{success:!1,error:`HTTP ${i.status}: ${s}`}}let r=await i.json();return{success:!0,feedbackId:r.feedbackId||r.id}}getQueueSize(){return this.getQueue().length}clearQueue(){this.saveQueue([]),this.retryTimer&&(clearTimeout(this.retryTimer),this.retryTimer=null)}destroy(){this.retryTimer&&(clearTimeout(this.retryTimer),this.retryTimer=null)}},R=null;function S(n){return R||(R=new v(n)),R}var E=class{constructor(e,t,i,r){this.container=null;this.state="form";this.formState={title:"",description:"",type:"bug",email:"",name:""};this.feedbackId="";this.errorMessage="";this.config=e,this.callbacks=t,this.screenshot=i,this.recording=r,this.offlineQueue=S(e.apiUrl)}show(){this.injectStyles(),this.render()}render(){this.container?.remove(),this.container=o("div",{className:"ff-submit-overlay"});let e=o("div",{className:"ff-submit-wrapper"});switch(this.state){case"form":e.appendChild(this.renderForm());break;case"loading":e.appendChild(this.renderLoading());break;case"success":e.appendChild(this.renderSuccess());break;case"error":e.appendChild(this.renderError());break}this.container.appendChild(e),document.body.appendChild(this.container),this.state==="form"&&this.container.querySelector(".ff-submit-title-input")?.focus()}renderForm(){let e=o("div",{className:"ff-submit-form"}),t=o("div",{className:"ff-submit-header"},[o("h3",{className:"ff-submit-title"},["Submit Feedback"]),this.createCloseButton()]),i=o("div",{className:"ff-submit-content"});(this.screenshot||this.recording)&&i.appendChild(this.renderPreviewThumbnail()),i.appendChild(this.renderTypeSelector());let r=o("div",{className:"ff-form-group"},[o("label",{className:"ff-form-label"},["Title"]),o("input",{className:"ff-submit-title-input ff-input",type:"text",placeholder:"Brief summary of the issue or request"})]),s=r.querySelector("input");s.value=this.formState.title,s.addEventListener("input",f=>{this.formState.title=f.target.value}),i.appendChild(r);let a=o("div",{className:"ff-form-group"},[o("label",{className:"ff-form-label"},["Description"]),o("textarea",{className:"ff-submit-description-input ff-textarea",placeholder:"Provide more details about what happened or what you'd like to see..."})]),c=a.querySelector("textarea");c.value=this.formState.description,c.addEventListener("input",f=>{this.formState.description=f.target.value}),i.appendChild(a);let p=o("div",{className:"ff-optional-section"}),u=o("div",{className:"ff-optional-header"},[o("span",{className:"ff-optional-label"},["Optional"])]);p.appendChild(u);let x=o("div",{className:"ff-form-group ff-form-group-sm"},[o("label",{className:"ff-form-label-sm"},[l(d.mail),"Email (for follow-up)"]),o("input",{className:"ff-input ff-input-sm",type:"email",placeholder:"your@email.com"})]),m=x.querySelector("input");m.value=this.formState.email,m.addEventListener("input",f=>{this.formState.email=f.target.value}),p.appendChild(x);let I=o("div",{className:"ff-form-group ff-form-group-sm"},[o("label",{className:"ff-form-label-sm"},[l(d.user),"Name"]),o("input",{className:"ff-input ff-input-sm",type:"text",placeholder:"Your name"})]),F=I.querySelector("input");F.value=this.formState.name,F.addEventListener("input",f=>{this.formState.name=f.target.value}),p.appendChild(I),i.appendChild(p);let j=o("div",{className:"ff-submit-actions"},[this.createButton("Cancel","secondary",()=>this.cancel()),this.createButton("Submit Feedback","primary",()=>this.submit())]);return e.appendChild(t),e.appendChild(i),e.appendChild(j),e}renderPreviewThumbnail(){let e=o("div",{className:"ff-preview-thumbnail"});if(this.screenshot){let t=o("img",{className:"ff-preview-img"});t.src=this.screenshot.dataUrl,t.alt="Screenshot preview",e.appendChild(t),e.appendChild(o("span",{className:"ff-preview-label"},["Screenshot attached"]))}else if(this.recording){let t=o("div",{className:"ff-preview-icon"},[l(d.video)]);e.appendChild(t);let i=Math.round(this.recording.duration/1e3);e.appendChild(o("span",{className:"ff-preview-label"},[`Recording attached (${i}s)`]))}return e}renderTypeSelector(){let e=o("div",{className:"ff-type-selector"}),t=this.createTypeOption("bug","Bug Report",d.bug,"#E85D52"),i=this.createTypeOption("feature","Feature Request",d.lightbulb,"#6B9AC4");return e.appendChild(t),e.appendChild(i),e}createTypeOption(e,t,i,r){let s=this.formState.type===e,a=o("button",{className:`ff-type-option ${s?"ff-selected":""}`,type:"button","data-type":e},[o("div",{className:"ff-type-icon"},[l(i)]),o("span",{className:"ff-type-label"},[t])]),c=a.querySelector(".ff-type-icon");return c&&(c.style.color=r,s&&(c.style.backgroundColor=`${r}20`,c.style.borderColor=`${r}40`)),a.addEventListener("click",()=>{this.formState.type=e,this.render()}),a}renderLoading(){let e=o("div",{className:"ff-submit-loading"}),t=o("div",{className:"ff-spinner"},[l(d.spinner)]),i=o("p",{className:"ff-loading-text"},["Submitting your feedback..."]);return e.appendChild(t),e.appendChild(i),e}renderSuccess(){let e=o("div",{className:"ff-submit-success"}),t=o("div",{className:"ff-success-icon"},[l(d.check)]),i=o("h3",{className:"ff-success-title"},["Feedback Submitted!"]),r=o("p",{className:"ff-success-message"},["Thank you for your feedback. We'll review it shortly."]),s=o("div",{className:"ff-success-id"},[o("span",{className:"ff-id-label"},["Reference ID: "]),o("code",{className:"ff-id-value"},[this.feedbackId])]),a=this.createButton("Close","primary",()=>{this.callbacks.onSuccess(this.feedbackId),this.destroy()});return e.appendChild(t),e.appendChild(i),e.appendChild(r),e.appendChild(s),e.appendChild(a),e}renderError(){let e=o("div",{className:"ff-submit-error"}),t=o("div",{className:"ff-error-icon"},[l(d.close)]),i=o("h3",{className:"ff-error-title"},["Submission Failed"]),r=o("p",{className:"ff-error-message"},[this.errorMessage||"Something went wrong. Your feedback has been saved and will be submitted automatically when the connection is restored."]),s=o("div",{className:"ff-error-actions"},[this.createButton("Try Again","secondary",()=>{this.state="form",this.render()}),this.createButton("Close","primary",()=>{this.callbacks.onError(this.errorMessage),this.destroy()})]);return e.appendChild(t),e.appendChild(i),e.appendChild(r),e.appendChild(s),e}createCloseButton(){let e=o("button",{className:"ff-submit-close",type:"button","aria-label":"Cancel"},[l(d.close)]);return e.addEventListener("click",()=>this.cancel()),e}createButton(e,t,i){let r=o("button",{className:`ff-submit-btn ff-btn-${t}`,type:"button"},[e]);return r.addEventListener("click",i),r}cancel(){this.destroy(),this.callbacks.onCancel()}async submit(){if(!this.formState.title.trim()){alert("Please enter a title for your feedback.");return}this.state="loading",this.render();try{let e=await this.submitFeedback();if(e.success&&e.feedbackId)this.feedbackId=e.feedbackId,this.state="success",this.render();else throw new Error(e.error||"Submission failed")}catch(e){console.error("FeedbackFlow: Submission failed",e),await this.queueForRetry(),this.errorMessage=e instanceof Error?e.message:"Submission failed",this.state="error",this.render()}}async submitFeedback(){let e=this.getMetadata(),t=this.config.apiUrl||"https://feedbackflow.dev/api/widget/submit",i=new FormData;if(i.append("widgetKey",this.config.widgetKey),i.append("title",this.formState.title),i.append("description",this.formState.description),i.append("type",this.formState.type),i.append("metadata",JSON.stringify(e)),this.formState.email&&i.append("email",this.formState.email),this.formState.name&&i.append("name",this.formState.name),this.screenshot?.blob&&i.append("screenshot",this.screenshot.blob,"screenshot.jpg"),this.recording?.blob){let a=this.recording.mimeType.includes("webm")?"webm":"mp4";i.append("recording",this.recording.blob,`recording.${a}`)}let r=await fetch(t,{method:"POST",body:i});if(!r.ok){let a=await r.text().catch(()=>"Unknown error");throw new Error(`HTTP ${r.status}: ${a}`)}let s=await r.json();return{success:!0,feedbackId:s.feedbackId||s.id}}async queueForRetry(){let e=this.getMetadata(),t={title:this.formState.title,description:this.formState.description,type:this.formState.type,email:this.formState.email||void 0,name:this.formState.name||void 0,metadata:e},i;this.recording?.blob&&(i=await v.blobToBase64(this.recording.blob));let r=this.offlineQueue.getQueue(),s={id:`ff_${Date.now()}_${Math.random().toString(36).substring(2,9)}`,widgetKey:this.config.widgetKey,formData:t,screenshotDataUrl:this.screenshot?.dataUrl,recordingBlob:i,recordingMimeType:this.recording?.mimeType,timestamp:Date.now(),retryCount:0,nextRetryAt:Date.now()};r.push(s),localStorage.setItem("ff_submission_queue",JSON.stringify(r)),console.log("FeedbackFlow: Feedback queued for retry")}getMetadata(){return{url:window.location.href,userAgent:navigator.userAgent,timestamp:new Date().toISOString(),screenWidth:window.screen.width,screenHeight:window.screen.height}}injectStyles(){let e="ff-submit-styles";if(document.getElementById(e))return;let t=`
+      .ff-submit-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 2147483647;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+
+      .ff-submit-wrapper {
+        background-color: ${this.config.backgroundColor};
+        border: 2px solid ${this.config.primaryColor};
+        box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1);
+        max-width: 480px;
+        width: 90%;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .ff-submit-form {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .ff-submit-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        background-color: #F3C952;
+        border-bottom: 2px solid ${this.config.primaryColor};
+      }
+
+      .ff-submit-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: ${this.config.textColor};
+        margin: 0;
+      }
+
+      .ff-submit-close {
+        background: none;
+        border: none;
+        padding: 4px;
+        cursor: pointer;
+        color: ${this.config.textColor};
+        display: flex;
+        border-radius: 4px;
+      }
+
+      .ff-submit-close:hover {
+        background-color: rgba(0, 0, 0, 0.1);
+      }
+
+      .ff-submit-close svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      .ff-submit-content {
+        flex: 1;
+        padding: 16px;
+        overflow-y: auto;
+      }
+
+      /* Preview Thumbnail */
+      .ff-preview-thumbnail {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        background-color: #f5f5f4;
+        border: 1px solid #d6d3d1;
+        margin-bottom: 16px;
+      }
+
+      .ff-preview-img {
+        width: 60px;
+        height: 45px;
+        object-fit: cover;
+        border: 1px solid ${this.config.primaryColor};
+      }
+
+      .ff-preview-icon {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(232, 93, 82, 0.1);
+        border: 1px solid rgba(232, 93, 82, 0.3);
+        border-radius: 50%;
+        color: #E85D52;
+      }
+
+      .ff-preview-icon svg {
+        width: 24px;
+        height: 24px;
+      }
+
+      .ff-preview-label {
+        font-size: 13px;
+        color: #666;
+      }
+
+      /* Type Selector */
+      .ff-type-selector {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .ff-type-option {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px;
+        background: white;
+        border: 2px solid #d6d3d1;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+
+      .ff-type-option:hover {
+        border-color: ${this.config.primaryColor};
+      }
+
+      .ff-type-option.ff-selected {
+        border-color: ${this.config.primaryColor};
+        box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.5);
+      }
+
+      .ff-type-icon {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        border: 1px solid transparent;
+      }
+
+      .ff-type-icon svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .ff-type-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: ${this.config.textColor};
+      }
+
+      /* Form Groups */
+      .ff-form-group {
+        margin-bottom: 16px;
+      }
+
+      .ff-form-group-sm {
+        margin-bottom: 12px;
+      }
+
+      .ff-form-label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: ${this.config.textColor};
+        margin-bottom: 6px;
+      }
+
+      .ff-form-label-sm {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        color: #666;
+        margin-bottom: 4px;
+      }
+
+      .ff-form-label-sm svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      .ff-input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 2px solid #d6d3d1;
+        background-color: white;
+        font-size: 14px;
+        color: ${this.config.textColor};
+        transition: border-color 0.15s ease;
+        outline: none;
+      }
+
+      .ff-input:focus {
+        border-color: ${this.config.primaryColor};
+      }
+
+      .ff-input::placeholder {
+        color: #999;
+      }
+
+      .ff-input-sm {
+        padding: 8px 10px;
+        font-size: 13px;
+      }
+
+      .ff-textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 2px solid #d6d3d1;
+        background-color: white;
+        font-size: 14px;
+        color: ${this.config.textColor};
+        min-height: 80px;
+        resize: vertical;
+        transition: border-color 0.15s ease;
+        outline: none;
+        font-family: inherit;
+      }
+
+      .ff-textarea:focus {
+        border-color: ${this.config.primaryColor};
+      }
+
+      .ff-textarea::placeholder {
+        color: #999;
+      }
+
+      /* Optional Section */
+      .ff-optional-section {
+        border-top: 1px solid #e5e5e5;
+        padding-top: 12px;
+        margin-top: 8px;
+      }
+
+      .ff-optional-header {
+        margin-bottom: 12px;
+      }
+
+      .ff-optional-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      /* Actions */
+      .ff-submit-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        padding: 12px 16px;
+        background-color: rgba(0, 0, 0, 0.03);
+        border-top: 2px solid ${this.config.primaryColor};
+      }
+
+      .ff-submit-btn {
+        padding: 10px 20px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        border: 2px solid ${this.config.primaryColor};
+        transition: all 0.15s ease;
+      }
+
+      .ff-submit-btn.ff-btn-secondary {
+        background-color: white;
+        color: ${this.config.textColor};
+      }
+
+      .ff-submit-btn.ff-btn-secondary:hover {
+        background-color: #f5f5f4;
+      }
+
+      .ff-submit-btn.ff-btn-primary {
+        background-color: ${this.config.primaryColor};
+        color: white;
+        box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 0.3);
+      }
+
+      .ff-submit-btn.ff-btn-primary:hover {
+        transform: translate(2px, 2px);
+        box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.3);
+      }
+
+      /* Loading State */
+      .ff-submit-loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 48px 24px;
+        text-align: center;
+      }
+
+      .ff-spinner {
+        width: 48px;
+        height: 48px;
+        color: ${this.config.primaryColor};
+        animation: ff-spin 1s linear infinite;
+        margin-bottom: 16px;
+      }
+
+      .ff-spinner svg {
+        width: 100%;
+        height: 100%;
+      }
+
+      @keyframes ff-spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+
+      .ff-loading-text {
+        font-size: 14px;
+        color: #666;
+        margin: 0;
+      }
+
+      /* Success State */
+      .ff-submit-success {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 32px 24px;
+        text-align: center;
+      }
+
+      .ff-success-icon {
+        width: 64px;
+        height: 64px;
+        background-color: #22c55e;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        margin-bottom: 16px;
+      }
+
+      .ff-success-icon svg {
+        width: 32px;
+        height: 32px;
+      }
+
+      .ff-success-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: ${this.config.textColor};
+        margin: 0 0 8px 0;
+      }
+
+      .ff-success-message {
+        font-size: 14px;
+        color: #666;
+        margin: 0 0 16px 0;
+      }
+
+      .ff-success-id {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+        margin-bottom: 24px;
+      }
+
+      .ff-id-label {
+        color: #888;
+      }
+
+      .ff-id-value {
+        font-family: monospace;
+        background-color: #f5f5f4;
+        padding: 2px 6px;
+        border: 1px solid #d6d3d1;
+      }
+
+      /* Error State */
+      .ff-submit-error {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 32px 24px;
+        text-align: center;
+      }
+
+      .ff-error-icon {
+        width: 64px;
+        height: 64px;
+        background-color: #E85D52;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        margin-bottom: 16px;
+      }
+
+      .ff-error-icon svg {
+        width: 32px;
+        height: 32px;
+      }
+
+      .ff-error-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: ${this.config.textColor};
+        margin: 0 0 8px 0;
+      }
+
+      .ff-error-message {
+        font-size: 14px;
+        color: #666;
+        margin: 0 0 24px 0;
+        max-width: 320px;
+      }
+
+      .ff-error-actions {
+        display: flex;
+        gap: 12px;
+      }
+    `,i=document.createElement("style");i.id=e,i.textContent=t,document.head.appendChild(i)}destroy(){this.container?.remove(),this.container=null}};var g=class{constructor(e){this.root=null;this.triggerButton=null;this.modalOverlay=null;this.screenshotUI=null;this.recordUI=null;this.submitUI=null;this.capturedScreenshot=null;this.capturedRecording=null;this.config={...L,...e},this.state={isOpen:!1,isCapturing:!1,captureMode:null},this.init()}init(){P(N(this.config),"ff-widget-styles"),this.root=U(),this.createTriggerButton(),this.createModal(),this.setupEventListeners(),S(this.config.apiUrl)}createTriggerButton(){this.triggerButton=o("button",{className:"ff-trigger-button","aria-label":"Open feedback widget",type:"button"},[l(d.feedback),this.config.buttonText]),this.root?.appendChild(this.triggerButton)}createModal(){this.modalOverlay=o("div",{className:"ff-modal-overlay",role:"dialog","aria-modal":"true","aria-labelledby":"ff-modal-title"});let e=o("div",{className:"ff-modal"}),t=o("div",{className:"ff-modal-header"},[o("h2",{className:"ff-modal-title",id:"ff-modal-title"},["Share Feedback"]),this.createCloseButton()]),i=o("div",{className:"ff-modal-content"},[this.createCaptureOptions()]),r=o("div",{className:"ff-modal-footer"},[o("div",{className:"ff-powered-by"},["Powered by ",o("a",{href:"https://feedbackflow.dev",target:"_blank"},["FeedbackFlow"])])]);e.appendChild(t),e.appendChild(i),e.appendChild(r),this.modalOverlay.appendChild(e),this.root?.appendChild(this.modalOverlay)}createCloseButton(){return o("button",{className:"ff-close-button","aria-label":"Close feedback widget",type:"button"},[l(d.close)])}createCaptureOptions(){let e=o("div",{className:"ff-capture-options"}),t=o("button",{className:"ff-capture-option","data-capture-type":"screenshot",type:"button"},[o("div",{className:"ff-capture-icon ff-screenshot"},[l(d.camera)]),o("div",{className:"ff-capture-text"},[o("p",{className:"ff-capture-title"},["Take a Screenshot"]),o("p",{className:"ff-capture-description"},["Capture and annotate your screen"])])]),i=o("button",{className:"ff-capture-option","data-capture-type":"record",type:"button"},[o("div",{className:"ff-capture-icon ff-record"},[l(d.video)]),o("div",{className:"ff-capture-text"},[o("p",{className:"ff-capture-title"},["Record Your Screen"]),o("p",{className:"ff-capture-description"},["Record with voice narration (up to 2 min)"])])]);return e.appendChild(t),e.appendChild(i),e}setupEventListeners(){this.triggerButton?.addEventListener("click",()=>{this.open()}),this.modalOverlay?.querySelector(".ff-close-button")?.addEventListener("click",()=>{this.close()}),this.modalOverlay?.addEventListener("click",e=>{e.target===this.modalOverlay&&this.close()}),document.addEventListener("keydown",e=>{e.key==="Escape"&&this.state.isOpen&&this.close()}),this.modalOverlay?.querySelectorAll(".ff-capture-option").forEach(e=>{e.addEventListener("click",()=>{let t=e.getAttribute("data-capture-type");t&&this.startCapture(t)})})}open(){if(this.state.isOpen)return;this.state.isOpen=!0,this.modalOverlay?.classList.add("ff-visible"),this.triggerButton?.setAttribute("aria-expanded","true"),this.modalOverlay?.querySelector("button, [href], input, select, textarea")?.focus()}close(){this.state.isOpen&&(this.state.isOpen=!1,this.modalOverlay?.classList.remove("ff-visible"),this.triggerButton?.setAttribute("aria-expanded","false"),this.triggerButton?.focus())}startCapture(e){this.state.captureMode=e,this.state.isCapturing=!0,this.close();let t=new CustomEvent("ff:capture-start",{detail:{mode:e,widgetKey:this.config.widgetKey}});window.dispatchEvent(t),e==="screenshot"?this.startScreenshotCapture():e==="record"&&this.startRecordingCapture()}startScreenshotCapture(){this.screenshotUI=new w(this.config,{onConfirm:e=>{this.handleScreenshotConfirm(e)},onCancel:()=>{this.handleScreenshotCancel()}}),this.screenshotUI.start()}handleScreenshotConfirm(e){this.capturedScreenshot=e,this.state.isCapturing=!1;let t=new CustomEvent("ff:screenshot-captured",{detail:{widgetKey:this.config.widgetKey,screenshot:e}});window.dispatchEvent(t),console.log("FeedbackFlow: Screenshot captured",{width:e.width,height:e.height,size:e.blob?`${(e.blob.size/1024).toFixed(2)}KB`:"unknown"}),this.screenshotUI?.destroy(),this.screenshotUI=null,this.showSubmitForm()}handleScreenshotCancel(){this.state.isCapturing=!1,this.state.captureMode=null,this.capturedScreenshot=null,this.screenshotUI?.destroy(),this.screenshotUI=null}startRecordingCapture(){this.recordUI=new k(this.config,{onConfirm:e=>{this.handleRecordingConfirm(e)},onCancel:()=>{this.handleRecordingCancel()}}),this.recordUI.start()}handleRecordingConfirm(e){this.capturedRecording=e,this.state.isCapturing=!1;let t=new CustomEvent("ff:recording-captured",{detail:{widgetKey:this.config.widgetKey,recording:{duration:e.duration,mimeType:e.mimeType,size:e.blob.size}}});window.dispatchEvent(t),console.log("FeedbackFlow: Recording captured",{duration:`${(e.duration/1e3).toFixed(1)}s`,size:`${(e.blob.size/(1024*1024)).toFixed(2)}MB`,mimeType:e.mimeType}),this.recordUI?.destroy(),this.recordUI=null,this.showSubmitForm()}handleRecordingCancel(){this.state.isCapturing=!1,this.state.captureMode=null,this.capturedRecording=null,this.recordUI?.destroy(),this.recordUI=null}showSubmitForm(){this.submitUI=new E(this.config,{onSuccess:e=>{this.handleSubmissionSuccess(e)},onCancel:()=>{this.handleSubmissionCancel()},onError:e=>{this.handleSubmissionError(e)}},this.capturedScreenshot,this.capturedRecording),this.submitUI.show()}handleSubmissionSuccess(e){let t=new CustomEvent("ff:submission-success",{detail:{widgetKey:this.config.widgetKey,feedbackId:e}});window.dispatchEvent(t),console.log("FeedbackFlow: Feedback submitted successfully",{feedbackId:e}),this.cleanupAfterSubmission()}handleSubmissionCancel(){console.log("FeedbackFlow: Submission cancelled"),this.cleanupAfterSubmission()}handleSubmissionError(e){let t=new CustomEvent("ff:submission-error",{detail:{widgetKey:this.config.widgetKey,error:e}});window.dispatchEvent(t),console.warn("FeedbackFlow: Submission error",{error:e}),this.cleanupAfterSubmission()}cleanupAfterSubmission(){this.submitUI?.destroy(),this.submitUI=null,this.capturedScreenshot=null,this.capturedRecording=null,this.state.captureMode=null}getCapturedScreenshot(){return this.capturedScreenshot}getCapturedRecording(){return this.capturedRecording}getConfig(){return{...this.config}}getState(){return{...this.state}}destroy(){this.screenshotUI?.destroy(),this.screenshotUI=null,this.recordUI?.destroy(),this.recordUI=null,this.submitUI?.destroy(),this.submitUI=null,this.root?.remove(),document.getElementById("ff-widget-styles")?.remove(),document.getElementById("ff-screenshot-styles")?.remove(),document.getElementById("ff-recording-styles")?.remove(),document.getElementById("ff-submit-styles")?.remove()}};var h=null;function Z(){let n=document.querySelectorAll("script[data-widget-key]"),e=n[n.length-1];if(!e)return console.error("FeedbackFlow: No script tag with data-widget-key found"),null;let t=e.dataset.widgetKey;if(!t)return console.error("FeedbackFlow: data-widget-key is required"),null;let i={widgetKey:t},r=e.dataset.position;return r&&["bottom-right","bottom-left","top-right","top-left"].includes(r)&&(i.position=r),e.dataset.primaryColor&&(i.primaryColor=e.dataset.primaryColor),e.dataset.backgroundColor&&(i.backgroundColor=e.dataset.backgroundColor),e.dataset.textColor&&(i.textColor=e.dataset.textColor),e.dataset.buttonText&&(i.buttonText=e.dataset.buttonText),e.dataset.apiUrl&&(i.apiUrl=e.dataset.apiUrl),i}function H(){if(h){console.warn("FeedbackFlow: Widget already initialized");return}let n=Z();if(!(!n||!n.widgetKey))try{h=new g(n),console.log("FeedbackFlow: Widget initialized")}catch(e){console.error("FeedbackFlow: Failed to initialize widget",e)}}var A={init(n){if(h){console.warn("FeedbackFlow: Widget already initialized");return}try{h=new g(n)}catch(e){console.error("FeedbackFlow: Failed to initialize widget",e)}},open(){h?.open()},close(){h?.close()},getInstance(){return h},destroy(){h?.destroy(),h=null}};document.readyState==="loading"?document.addEventListener("DOMContentLoaded",H):H();typeof window<"u"&&(window.FeedbackFlow=A);return K(ee);})();
