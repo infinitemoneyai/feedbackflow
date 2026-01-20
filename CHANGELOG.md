@@ -96,6 +96,22 @@ All notable changes to FeedbackFlow will be documented in this file.
   - Full CORS support with OPTIONS preflight handler
   - Rate limit headers: X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset
   - New files: `app/api/widget/submit/route.ts`, `convex/feedback.ts`, `lib/rate-limit.ts`
+- **FF-013: Feedback Inbox View** - Complete feedback listing with filtering, sorting, search, and bulk selection:
+  - `listFeedback` Convex query with type, status, priority, view, sortBy, and sortOrder filters
+  - `searchFeedback` Convex query using full-text search index on title, with fallback description search
+  - `getFeedback` query for single feedback details with assignee info
+  - `updateFeedback` mutation for status, priority, tags, and assignment updates with activity logging
+  - `getTeamMembersForAssignment` query for team member dropdown
+  - `FeedbackList` component with real-time updates via Convex subscriptions
+  - Filter controls for type (bug/feature), priority, and sort order (date, priority, status)
+  - Bulk selection with select all/deselect all and multi-select checkboxes
+  - Search integration in dashboard header via shared context
+  - Thumbnail display for screenshots, placeholder for items without
+  - Media indicators showing screenshot/video icons when present
+  - Tags display with overflow handling (+N more)
+  - Empty states for inbox, backlog, and resolved views
+  - Loading skeleton state while data fetches
+  - Matches retro design aesthetic from mockup
 
 ---
 
@@ -121,7 +137,7 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Milestone 3: Dashboard Core
 
-- [ ] FF-013: Feedback inbox
+- [x] FF-013: Feedback inbox
 - [ ] FF-014: Feedback detail view
 - [ ] FF-015: Comments & activity log
 - [ ] FF-016: Full-text search

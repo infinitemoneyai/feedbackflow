@@ -10,6 +10,8 @@ export function DashboardHeader() {
     selectedProjectId,
     currentView,
     setSidebarOpen,
+    searchQuery,
+    setSearchQuery,
   } = useDashboard();
 
   // Get project name
@@ -66,6 +68,8 @@ export function DashboardHeader() {
           <input
             type="text"
             placeholder="Search feedback..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="w-48 rounded-full border-2 border-stone-200 bg-stone-50 py-1.5 pl-9 pr-4 text-sm outline-none transition-colors focus:border-retro-black lg:w-64"
           />
         </div>
