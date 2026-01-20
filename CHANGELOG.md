@@ -126,6 +126,22 @@ All notable changes to FeedbackFlow will be documented in this file.
   - Error state for deleted or inaccessible feedback
   - Empty state prompting user to select a feedback item
   - Matches retro design aesthetic with bordered dropdowns and shadow effects
+- **FF-015: Comments & Activity Log** - Complete comments and activity timeline system:
+  - `addComment` mutation creates comment and logs activity entry
+  - `getComments` query returns comments with user details in chronological order
+  - `getActivityLog` query returns activity entries with user details
+  - `getCommentsAndActivity` query returns interleaved timeline of comments and activity
+  - CommentsAndActivity component with tabbed interface: All, Comments, Activity views
+  - Comment input at bottom with Enter key submission support
+  - Comments displayed with user avatar, name, timestamp, and content
+  - Activity entries showing: created, status_changed, priority_changed, assigned/unassigned, tagged, exported, ai_analyzed, ticket_drafted
+  - Activity entries display formatted descriptions (e.g., "John changed status from new to triaging")
+  - Real-time updates via Convex subscriptions
+  - Auto-scroll to bottom when new comments are added
+  - Loading state with spinner during data fetch
+  - Empty states for each tab (no comments, no activity, no items)
+  - Count badges showing number of comments and activity entries
+  - Matches retro design aesthetic with tabs, borders, and avatar styling
 
 ---
 
@@ -153,7 +169,7 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 - [x] FF-013: Feedback inbox
 - [x] FF-014: Feedback detail view
-- [ ] FF-015: Comments & activity log
+- [x] FF-015: Comments & activity log
 - [ ] FF-016: Full-text search
 
 ### Milestone 4: AI Processing

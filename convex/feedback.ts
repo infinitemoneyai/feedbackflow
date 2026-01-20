@@ -641,6 +641,318 @@ export const updateFeedback = mutation({
 });
 
 /**
+ * Add a comment to feedback
+ */
+export const addComment = mutation({
+  args: {
+    feedbackId: v.id("feedback"),
+    content: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const feedback = await ctx.db.get(args.feedbackId);
+    if (!feedback) {
+      throw new Error("Feedback not found");
+    }
+
+    // Check if user is a member of the team
+    const membership = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .filter((q) => q.eq(q.field("teamId"), feedback.teamId))
+      .first();
+
+    if (!membership) {
+      throw new Error("You are not a member of this team");
+    }
+
+    // Create the comment
+    const commentId = await ctx.db.insert("comments", {
+      feedbackId: args.feedbackId,
+      userId: user._id,
+      content: args.content,
+      createdAt: Date.now(),
+    });
+
+    // Create activity log entry
+    await ctx.db.insert("activityLog", {
+      feedbackId: args.feedbackId,
+      userId: user._id,
+      action: "commented",
+      details: {
+        extra: args.content.length > 100
+          ? args.content.substring(0, 100) + "..."
+          : args.content,
+      },
+      createdAt: Date.now(),
+    });
+
+    return { commentId };
+  },
+});
+
+/**
+ * Get comments for a feedback item
+ */
+export const getComments = query({
+  args: {
+    feedbackId: v.id("feedback"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return [];
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) {
+      return [];
+    }
+
+    const feedback = await ctx.db.get(args.feedbackId);
+    if (!feedback) {
+      return [];
+    }
+
+    // Check if user is a member of the team
+    const membership = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .filter((q) => q.eq(q.field("teamId"), feedback.teamId))
+      .first();
+
+    if (!membership) {
+      return [];
+    }
+
+    // Get comments ordered by creation time
+    const comments = await ctx.db
+      .query("comments")
+      .withIndex("by_feedback_and_created", (q) => q.eq("feedbackId", args.feedbackId))
+      .collect();
+
+    // Get user details for each comment
+    const commentsWithUsers = await Promise.all(
+      comments.map(async (comment) => {
+        const commentUser = await ctx.db.get(comment.userId);
+        return {
+          _id: comment._id,
+          content: comment.content,
+          createdAt: comment.createdAt,
+          updatedAt: comment.updatedAt,
+          user: commentUser
+            ? {
+                _id: commentUser._id,
+                name: commentUser.name,
+                email: commentUser.email,
+                avatar: commentUser.avatar,
+              }
+            : null,
+        };
+      })
+    );
+
+    return commentsWithUsers;
+  },
+});
+
+/**
+ * Get activity log for a feedback item
+ */
+export const getActivityLog = query({
+  args: {
+    feedbackId: v.id("feedback"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return [];
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) {
+      return [];
+    }
+
+    const feedback = await ctx.db.get(args.feedbackId);
+    if (!feedback) {
+      return [];
+    }
+
+    // Check if user is a member of the team
+    const membership = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .filter((q) => q.eq(q.field("teamId"), feedback.teamId))
+      .first();
+
+    if (!membership) {
+      return [];
+    }
+
+    // Get activity log entries ordered by creation time
+    const activityLog = await ctx.db
+      .query("activityLog")
+      .withIndex("by_feedback_and_created", (q) => q.eq("feedbackId", args.feedbackId))
+      .collect();
+
+    // Get user details for each activity entry
+    const activityWithUsers = await Promise.all(
+      activityLog.map(async (activity) => {
+        let activityUser = null;
+        if (activity.userId) {
+          activityUser = await ctx.db.get(activity.userId);
+        }
+        return {
+          _id: activity._id,
+          action: activity.action,
+          details: activity.details,
+          createdAt: activity.createdAt,
+          user: activityUser
+            ? {
+                _id: activityUser._id,
+                name: activityUser.name,
+                email: activityUser.email,
+                avatar: activityUser.avatar,
+              }
+            : null,
+        };
+      })
+    );
+
+    return activityWithUsers;
+  },
+});
+
+/**
+ * Get combined comments and activity (interleaved by time)
+ */
+export const getCommentsAndActivity = query({
+  args: {
+    feedbackId: v.id("feedback"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return [];
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) {
+      return [];
+    }
+
+    const feedback = await ctx.db.get(args.feedbackId);
+    if (!feedback) {
+      return [];
+    }
+
+    // Check if user is a member of the team
+    const membership = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .filter((q) => q.eq(q.field("teamId"), feedback.teamId))
+      .first();
+
+    if (!membership) {
+      return [];
+    }
+
+    // Get comments
+    const comments = await ctx.db
+      .query("comments")
+      .withIndex("by_feedback_and_created", (q) => q.eq("feedbackId", args.feedbackId))
+      .collect();
+
+    // Get activity log (excluding "commented" actions since we have the actual comments)
+    const activityLog = await ctx.db
+      .query("activityLog")
+      .withIndex("by_feedback_and_created", (q) => q.eq("feedbackId", args.feedbackId))
+      .collect();
+
+    // Filter out "commented" activity entries since we show actual comments
+    const filteredActivity = activityLog.filter((a) => a.action !== "commented");
+
+    // Get user details and combine
+    const commentsWithUsers = await Promise.all(
+      comments.map(async (comment) => {
+        const commentUser = await ctx.db.get(comment.userId);
+        return {
+          _id: comment._id,
+          type: "comment" as const,
+          content: comment.content,
+          createdAt: comment.createdAt,
+          user: commentUser
+            ? {
+                _id: commentUser._id,
+                name: commentUser.name,
+                email: commentUser.email,
+                avatar: commentUser.avatar,
+              }
+            : null,
+        };
+      })
+    );
+
+    const activityWithUsers = await Promise.all(
+      filteredActivity.map(async (activity) => {
+        let activityUser = null;
+        if (activity.userId) {
+          activityUser = await ctx.db.get(activity.userId);
+        }
+        return {
+          _id: activity._id,
+          type: "activity" as const,
+          action: activity.action,
+          details: activity.details,
+          createdAt: activity.createdAt,
+          user: activityUser
+            ? {
+                _id: activityUser._id,
+                name: activityUser.name,
+                email: activityUser.email,
+                avatar: activityUser.avatar,
+              }
+            : null,
+        };
+      })
+    );
+
+    // Combine and sort by creation time
+    const combined = [...commentsWithUsers, ...activityWithUsers].sort(
+      (a, b) => a.createdAt - b.createdAt
+    );
+
+    return combined;
+  },
+});
+
+/**
  * Get team members for assignment dropdown
  */
 export const getTeamMembersForAssignment = query({
