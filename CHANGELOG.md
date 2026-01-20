@@ -63,6 +63,24 @@ All notable changes to FeedbackFlow will be documented in this file.
   - 2.5 Mbps video bitrate for good quality at reasonable size
   - Widget size: ~44KB minified (still under 50KB target)
   - New files: `record.ts`, `record-ui.ts`
+- **FF-011: Widget Submission Form & Offline Queue** - Complete feedback submission flow:
+  - Submission form appears after screenshot/recording capture
+  - Title input with required validation
+  - Description textarea for detailed feedback
+  - Type selector: Bug Report or Feature Request with icons
+  - Optional email field for follow-up
+  - Optional name field for identification
+  - Preview thumbnail of captured screenshot/recording
+  - Loading state with spinner during API submission
+  - Success confirmation showing feedback reference ID
+  - Error state with retry option
+  - Offline queue using localStorage for failed submissions
+  - Queue processes on page load and connectivity restore
+  - Exponential backoff retry (1s, 2s, 4s, 8s, 16s) up to 5 attempts
+  - Custom events: ff:submission-success, ff:submission-error, ff:queue-submission-success
+  - Widget size: ~69KB minified
+  - New files: `submit-ui.ts`, `offline-queue.ts`
+  - Updated icons.ts with bug, lightbulb, check, spinner, mail, user icons
 
 ---
 
@@ -83,7 +101,7 @@ All notable changes to FeedbackFlow will be documented in this file.
 - [x] FF-008: Widget script structure
 - [x] FF-009: Screenshot capture
 - [x] FF-010: Screen recording with audio
-- [ ] FF-011: Submission form & offline queue
+- [x] FF-011: Submission form & offline queue
 - [ ] FF-012: Widget API endpoint
 
 ### Milestone 3: Dashboard Core

@@ -10,6 +10,8 @@ import {
 } from "./dom";
 import { ScreenshotUI } from "./screenshot-ui";
 import { RecordUI } from "./record-ui";
+import { SubmitUI } from "./submit-ui";
+import { getOfflineQueue } from "./offline-queue";
 import type { CaptureResult } from "./capture";
 import type { RecordingResult } from "./record";
 
@@ -25,6 +27,7 @@ export class FeedbackFlowWidget {
   private modalOverlay: HTMLElement | null = null;
   private screenshotUI: ScreenshotUI | null = null;
   private recordUI: RecordUI | null = null;
+  private submitUI: SubmitUI | null = null;
   private capturedScreenshot: CaptureResult | null = null;
   private capturedRecording: RecordingResult | null = null;
 
@@ -61,6 +64,9 @@ export class FeedbackFlowWidget {
 
     // Set up event listeners
     this.setupEventListeners();
+
+    // Initialize offline queue to process any pending submissions
+    getOfflineQueue(this.config.apiUrl);
   }
 
   /**
@@ -333,17 +339,18 @@ export class FeedbackFlowWidget {
     });
     window.dispatchEvent(event);
 
-    // For now, log the result (submission form will be added in FF-011)
     console.log("FeedbackFlow: Screenshot captured", {
       width: result.width,
       height: result.height,
       size: result.blob ? `${(result.blob.size / 1024).toFixed(2)}KB` : "unknown",
     });
 
-    // Re-open modal to show submission form (will be implemented in FF-011)
-    // For now, just clean up
+    // Clean up screenshot UI
     this.screenshotUI?.destroy();
     this.screenshotUI = null;
+
+    // Show submission form
+    this.showSubmitForm();
   }
 
   /**
@@ -393,7 +400,6 @@ export class FeedbackFlowWidget {
     });
     window.dispatchEvent(event);
 
-    // For now, log the result (submission form will be added in FF-011)
     console.log("FeedbackFlow: Recording captured", {
       duration: `${(result.duration / 1000).toFixed(1)}s`,
       size: `${(result.blob.size / (1024 * 1024)).toFixed(2)}MB`,
@@ -403,6 +409,9 @@ export class FeedbackFlowWidget {
     // Clean up
     this.recordUI?.destroy();
     this.recordUI = null;
+
+    // Show submission form
+    this.showSubmitForm();
   }
 
   /**
@@ -414,6 +423,85 @@ export class FeedbackFlowWidget {
     this.capturedRecording = null;
     this.recordUI?.destroy();
     this.recordUI = null;
+  }
+
+  /**
+   * Show the submission form
+   */
+  private showSubmitForm(): void {
+    this.submitUI = new SubmitUI(
+      this.config,
+      {
+        onSuccess: (feedbackId: string) => {
+          this.handleSubmissionSuccess(feedbackId);
+        },
+        onCancel: () => {
+          this.handleSubmissionCancel();
+        },
+        onError: (error: string) => {
+          this.handleSubmissionError(error);
+        },
+      },
+      this.capturedScreenshot,
+      this.capturedRecording
+    );
+
+    this.submitUI.show();
+  }
+
+  /**
+   * Handle successful submission
+   */
+  private handleSubmissionSuccess(feedbackId: string): void {
+    // Dispatch success event
+    const event = new CustomEvent("ff:submission-success", {
+      detail: {
+        widgetKey: this.config.widgetKey,
+        feedbackId,
+      },
+    });
+    window.dispatchEvent(event);
+
+    console.log("FeedbackFlow: Feedback submitted successfully", { feedbackId });
+
+    // Clean up
+    this.cleanupAfterSubmission();
+  }
+
+  /**
+   * Handle submission cancellation
+   */
+  private handleSubmissionCancel(): void {
+    console.log("FeedbackFlow: Submission cancelled");
+    this.cleanupAfterSubmission();
+  }
+
+  /**
+   * Handle submission error
+   */
+  private handleSubmissionError(error: string): void {
+    // Dispatch error event
+    const event = new CustomEvent("ff:submission-error", {
+      detail: {
+        widgetKey: this.config.widgetKey,
+        error,
+      },
+    });
+    window.dispatchEvent(event);
+
+    console.warn("FeedbackFlow: Submission error", { error });
+    this.cleanupAfterSubmission();
+  }
+
+  /**
+   * Clean up after submission (success, cancel, or error)
+   */
+  private cleanupAfterSubmission(): void {
+    this.submitUI?.destroy();
+    this.submitUI = null;
+    this.capturedScreenshot = null;
+    this.capturedRecording = null;
+    this.state.captureMode = null;
   }
 
   /**
@@ -452,9 +540,12 @@ export class FeedbackFlowWidget {
     this.screenshotUI = null;
     this.recordUI?.destroy();
     this.recordUI = null;
+    this.submitUI?.destroy();
+    this.submitUI = null;
     this.root?.remove();
     document.getElementById("ff-widget-styles")?.remove();
     document.getElementById("ff-screenshot-styles")?.remove();
     document.getElementById("ff-recording-styles")?.remove();
+    document.getElementById("ff-submit-styles")?.remove();
   }
 }
