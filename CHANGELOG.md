@@ -11,6 +11,7 @@ All notable changes to FeedbackFlow will be documented in this file.
 - **Design System** - Retro-modern aesthetic with colors, typography, components documented
 - **Ralph Automation** - ralph.sh and prompt.md for automated development
 - **FF-001: Project Foundation** - Next.js 15 with App Router, Convex configured, TypeScript strict mode, Tailwind CSS with retro design colors, shadcn/ui base components (Button, Badge, Card, Input), ESLint with Prettier
+- **FF-002: Database Schema** - Complete Convex schema with 25+ tables: users, teams, teamMembers, teamInvites, projects, widgets, widgetConfig, feedback, aiAnalysis, conversations, ticketDrafts, comments, activityLog, integrations, exports, exportTemplates, automationRules, webhooks, webhookLogs, apiKeys, storageConfig, notifications, notificationPreferences, subscriptions, usageTracking, restApiKeys, submitterTokens, submitterUpdates, publicNotes. Includes indexes for common queries and search index on feedback.
 
 ---
 
@@ -19,7 +20,7 @@ All notable changes to FeedbackFlow will be documented in this file.
 ### Milestone 1: Foundation
 
 - [x] FF-001: Project setup (Next.js 15, Convex, Tailwind)
-- [ ] FF-002: Database schema
+- [x] FF-002: Database schema
 - [ ] FF-003: Clerk authentication
 - [ ] FF-004: Team management
 - [ ] FF-005: Landing page
