@@ -20,6 +20,9 @@ export default defineSchema({
     name: v.optional(v.string()),
     avatar: v.optional(v.string()),
     createdAt: v.number(),
+    // Onboarding state (1-7, undefined = complete/returning user)
+    onboardingStep: v.optional(v.number()),
+    onboardingCompletedAt: v.optional(v.number()),
   })
     .index("by_clerk_id", ["clerkId"])
     .index("by_email", ["email"]),
@@ -76,6 +79,15 @@ export default defineSchema({
     teamId: v.id("teams"),
     name: v.string(),
     description: v.optional(v.string()),
+    siteUrl: v.optional(v.string()),
+    projectType: v.optional(
+      v.union(
+        v.literal("web_app"),
+        v.literal("marketing_site"),
+        v.literal("mobile_app"),
+        v.literal("other")
+      )
+    ),
     settings: v.optional(
       v.object({
         defaultPriority: v.optional(
