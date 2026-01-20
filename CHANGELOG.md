@@ -6,6 +6,46 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Added
 
+- **FF-044: E2E Tests for Critical Flows** - Comprehensive E2E test suite with Playwright:
+  - Playwright testing framework configured with Chromium browser
+  - Test fixtures and helper utilities (`e2e/fixtures/test-fixtures.ts`)
+  - Test scripts: `npm run test:e2e`, `npm run test:e2e:ui`, `npm run test:e2e:headed`
+  - **Auth & Team Tests** (`auth-and-team.spec.ts`) - 6 tests:
+    - Landing page loads with signup button
+    - Sign-in/sign-up page accessibility
+    - Dashboard redirect to sign-in when unauthenticated
+    - Protected route handling
+  - **Project & Widget Tests** (`project-and-widget.spec.ts`) - 5 tests:
+    - Dashboard redirect behavior
+    - Widget installation documentation page
+    - API documentation page
+    - Self-hosting documentation page
+    - Settings page access handling
+  - **Widget Submission Tests** (`widget-submission.spec.ts`) - 8 tests:
+    - API validation (missing widget key, missing title, invalid type)
+    - CORS preflight handling
+    - Rate limiting response headers
+    - Honeypot spam detection
+    - Content-Type validation
+  - **Dashboard Feedback Tests** (`dashboard-feedback.spec.ts`) - 6 tests:
+    - Dashboard access redirect
+    - Analytics page redirect
+    - Pricing page display and content
+    - Landing page navigation
+    - CTA button visibility
+  - **Export Linear Tests** (`export-linear.spec.ts`) - 4 tests:
+    - Settings page unauthenticated handling
+    - Linear API key validation
+    - Missing action handling
+  - **Subscription Upgrade Tests** (`subscription-upgrade.spec.ts`) - 6 tests:
+    - Pricing page with Free/Pro plans
+    - Checkout API authentication
+    - Stripe webhook signature verification
+    - Billing portal authentication
+  - Skipped tests documented for authenticated flows (require Clerk session)
+  - Tests are environment-resilient (handle Convex unavailable, different redirect behaviors)
+  - Typecheck passes with no errors
+
 - **FF-043: Unit Tests for Core Functionality** - Comprehensive unit test suite with Vitest:
   - Vitest testing framework configured with happy-dom environment
   - Test setup file with global mocks and test utilities
@@ -883,5 +923,5 @@ All notable changes to FeedbackFlow will be documented in this file.
 - [x] FF-041: User profile & settings
 - [x] FF-042: Export templates
 - [x] FF-043: Unit tests
-- [ ] FF-044: E2E tests
+- [x] FF-044: E2E tests
 - [ ] FF-045: Performance optimization
