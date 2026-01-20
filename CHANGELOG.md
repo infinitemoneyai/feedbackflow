@@ -6,6 +6,22 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Added
 
+- **FF-041: User Profile and Settings** - Complete user profile management interface:
+  - New Profile tab in settings page as the default view
+  - Profile information display with avatar, name, email, and member since date
+  - Edit profile form with display name and avatar URL inputs
+  - Security & Authentication section with password and 2FA management (via Clerk)
+  - Connected accounts section showing OAuth providers (Google, GitHub, etc.)
+  - Manage buttons that open Clerk's built-in user profile for advanced settings
+  - Delete account functionality with typed confirmation ("DELETE")
+  - Account deletion removes user from Convex and signs out from Clerk
+  - Success/error message display for all operations
+  - Loading states throughout the component
+  - Uses existing Convex mutations (updateProfile, deleteUser)
+  - Integrates with Clerk hooks (useUser, useClerk)
+  - Retro design aesthetic matching the app theme
+  - Typecheck passes with no errors
+
 - **FF-040: Team Settings Page** - Complete team management interface:
   - Team settings section in settings page
   - Team name editing with auto-generated slug

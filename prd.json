@@ -731,7 +731,7 @@
         "Typecheck passes"
       ],
       "priority": 41,
-      "passes": false,
+      "passes": true,
       "notes": "Keep user settings separate from team settings"
     },
     {
