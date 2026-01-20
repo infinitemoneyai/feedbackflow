@@ -848,3 +848,515 @@ export const triggerSolutionGeneration = action({
     return { success: true };
   },
 });
+
+// =============================================================================
+// Ticket Draft Generation
+// =============================================================================
+
+/**
+ * System prompt for generating ticket drafts
+ */
+const TICKET_DRAFT_PROMPT = `You are an expert technical writer creating actionable tickets for development teams.
+
+Your task is to transform user feedback into a well-structured, clear ticket that developers can act on immediately.
+
+For BUG reports, create a ticket with:
+- Clear, concise title (50-80 chars)
+- Detailed description explaining the issue
+- Step-by-step reproduction steps (numbered)
+- Expected behavior
+- Actual behavior
+- Acceptance criteria for the fix
+
+For FEATURE requests, create a ticket with:
+- Clear, descriptive title (50-80 chars)
+- User story format description: "As a [user type], I want to [action] so that [benefit]"
+- Detailed description expanding on the user's request
+- Acceptance criteria (checkboxes-style, testable requirements)
+
+Respond with a JSON object in this exact format:
+{
+  "title": "Clear, actionable ticket title",
+  "description": "Detailed description of the issue or feature",
+  "acceptanceCriteria": ["Criterion 1", "Criterion 2", "..."],
+  "reproSteps": ["Step 1", "Step 2", "..."],  // Only for bugs
+  "expectedBehavior": "What should happen",  // Only for bugs
+  "actualBehavior": "What actually happens"  // Only for bugs
+}
+
+Guidelines:
+- Be specific and actionable
+- Use technical language appropriately
+- Include all relevant context from the feedback
+- Acceptance criteria should be testable (can be checked off as done/not done)
+- For bugs: always include repro steps, expected, and actual behavior
+- For features: focus on the user story and clear acceptance criteria`;
+
+/**
+ * Build the user message for ticket drafting
+ */
+function buildTicketDraftPrompt(feedback: {
+  title: string;
+  description?: string;
+  type: string;
+  metadata: {
+    browser?: string;
+    os?: string;
+    url?: string;
+  };
+  existingAnalysis?: {
+    summary?: string;
+    potentialCauses?: string[];
+    affectedComponent?: string;
+    suggestedSolutions?: string[];
+  };
+  existingSuggestions?: {
+    summary?: string;
+    suggestions?: Array<{ title: string; description: string }>;
+    nextSteps?: string[];
+  };
+}): string {
+  let prompt = `# Feedback to Convert to Ticket
+
+## Original Title
+${feedback.title}
+
+## Type
+${feedback.type === "bug" ? "Bug Report" : "Feature Request"}
+`;
+
+  if (feedback.description) {
+    prompt += `
+## Original Description
+${feedback.description}
+`;
+  }
+
+  if (feedback.metadata.url) {
+    prompt += `
+## Page URL
+${feedback.metadata.url}
+`;
+  }
+
+  if (feedback.metadata.browser || feedback.metadata.os) {
+    prompt += `
+## Environment
+`;
+    if (feedback.metadata.browser) prompt += `- Browser: ${feedback.metadata.browser}\n`;
+    if (feedback.metadata.os) prompt += `- OS: ${feedback.metadata.os}\n`;
+  }
+
+  if (feedback.existingAnalysis) {
+    if (feedback.existingAnalysis.summary) {
+      prompt += `
+## AI Analysis Summary
+${feedback.existingAnalysis.summary}
+`;
+    }
+    if (feedback.existingAnalysis.affectedComponent) {
+      prompt += `
+## Affected Component
+${feedback.existingAnalysis.affectedComponent}
+`;
+    }
+    if (feedback.existingAnalysis.potentialCauses && feedback.existingAnalysis.potentialCauses.length > 0) {
+      prompt += `
+## Identified Causes
+${feedback.existingAnalysis.potentialCauses.map((c) => `- ${c}`).join("\n")}
+`;
+    }
+    if (feedback.existingAnalysis.suggestedSolutions && feedback.existingAnalysis.suggestedSolutions.length > 0) {
+      prompt += `
+## Suggested Solutions
+${feedback.existingAnalysis.suggestedSolutions.map((s) => `- ${s}`).join("\n")}
+`;
+    }
+  }
+
+  if (feedback.existingSuggestions) {
+    if (feedback.existingSuggestions.summary) {
+      prompt += `
+## Solution Recommendations
+${feedback.existingSuggestions.summary}
+`;
+    }
+    if (feedback.existingSuggestions.suggestions && feedback.existingSuggestions.suggestions.length > 0) {
+      prompt += `
+## Detailed Suggestions
+${feedback.existingSuggestions.suggestions.map((s) => `- **${s.title}**: ${s.description}`).join("\n")}
+`;
+    }
+    if (feedback.existingSuggestions.nextSteps && feedback.existingSuggestions.nextSteps.length > 0) {
+      prompt += `
+## Recommended Next Steps
+${feedback.existingSuggestions.nextSteps.map((s, i) => `${i + 1}. ${s}`).join("\n")}
+`;
+    }
+  }
+
+  prompt += `
+Please convert this ${feedback.type === "bug" ? "bug report" : "feature request"} into a well-structured ticket in JSON format.`;
+
+  return prompt;
+}
+
+interface TicketDraftResult {
+  title: string;
+  description: string;
+  acceptanceCriteria: string[];
+  reproSteps?: string[];
+  expectedBehavior?: string;
+  actualBehavior?: string;
+}
+
+/**
+ * Call OpenAI for ticket draft generation
+ */
+async function callOpenAIForTicketDraft(
+  apiKey: string,
+  model: string,
+  feedback: {
+    title: string;
+    description?: string;
+    type: string;
+    metadata: { browser?: string; os?: string; url?: string };
+    existingAnalysis?: {
+      summary?: string;
+      potentialCauses?: string[];
+      affectedComponent?: string;
+      suggestedSolutions?: string[];
+    };
+    existingSuggestions?: {
+      summary?: string;
+      suggestions?: Array<{ title: string; description: string }>;
+      nextSteps?: string[];
+    };
+  },
+  screenshotBase64?: string
+): Promise<TicketDraftResult> {
+  const messages: Array<{
+    role: "system" | "user";
+    content: string | Array<{ type: string; text?: string; image_url?: { url: string } }>;
+  }> = [
+    {
+      role: "system",
+      content: TICKET_DRAFT_PROMPT,
+    },
+  ];
+
+  if (screenshotBase64) {
+    messages.push({
+      role: "user",
+      content: [
+        {
+          type: "text",
+          text: buildTicketDraftPrompt(feedback),
+        },
+        {
+          type: "image_url",
+          image_url: {
+            url: `data:image/png;base64,${screenshotBase64}`,
+          },
+        },
+      ],
+    });
+  } else {
+    messages.push({
+      role: "user",
+      content: buildTicketDraftPrompt(feedback),
+    });
+  }
+
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages,
+      temperature: 0.4,
+      response_format: { type: "json_object" },
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error?.message || `OpenAI API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+
+  if (!content) {
+    throw new Error("No response from OpenAI");
+  }
+
+  return normalizeTicketDraftResult(JSON.parse(content));
+}
+
+/**
+ * Call Anthropic for ticket draft generation
+ */
+async function callAnthropicForTicketDraft(
+  apiKey: string,
+  model: string,
+  feedback: {
+    title: string;
+    description?: string;
+    type: string;
+    metadata: { browser?: string; os?: string; url?: string };
+    existingAnalysis?: {
+      summary?: string;
+      potentialCauses?: string[];
+      affectedComponent?: string;
+      suggestedSolutions?: string[];
+    };
+    existingSuggestions?: {
+      summary?: string;
+      suggestions?: Array<{ title: string; description: string }>;
+      nextSteps?: string[];
+    };
+  },
+  screenshotBase64?: string
+): Promise<TicketDraftResult> {
+  const contentBlocks: Array<{
+    type: "text" | "image";
+    text?: string;
+    source?: { type: "base64"; media_type: string; data: string };
+  }> = [
+    {
+      type: "text",
+      text: buildTicketDraftPrompt(feedback),
+    },
+  ];
+
+  if (screenshotBase64) {
+    contentBlocks.push({
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: "image/png",
+        data: screenshotBase64,
+      },
+    });
+  }
+
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: 2048,
+      system: TICKET_DRAFT_PROMPT,
+      messages: [
+        {
+          role: "user",
+          content: contentBlocks,
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error?.message || `Anthropic API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const textBlock = data.content?.find((block: { type: string }) => block.type === "text");
+  const content = textBlock?.text;
+
+  if (!content) {
+    throw new Error("No response from Anthropic");
+  }
+
+  try {
+    return normalizeTicketDraftResult(JSON.parse(content));
+  } catch {
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      return normalizeTicketDraftResult(JSON.parse(jsonMatch[0]));
+    }
+    throw new Error("Failed to parse Anthropic response as JSON");
+  }
+}
+
+/**
+ * Normalize ticket draft result
+ */
+function normalizeTicketDraftResult(result: Partial<TicketDraftResult>): TicketDraftResult {
+  return {
+    title: result.title || "Untitled Ticket",
+    description: result.description || "No description provided",
+    acceptanceCriteria: Array.isArray(result.acceptanceCriteria)
+      ? result.acceptanceCriteria.filter((c): c is string => typeof c === "string")
+      : [],
+    reproSteps: Array.isArray(result.reproSteps)
+      ? result.reproSteps.filter((s): s is string => typeof s === "string")
+      : undefined,
+    expectedBehavior: typeof result.expectedBehavior === "string" ? result.expectedBehavior : undefined,
+    actualBehavior: typeof result.actualBehavior === "string" ? result.actualBehavior : undefined,
+  };
+}
+
+/**
+ * Internal action to generate ticket draft
+ */
+export const generateTicketDraftAction = internalAction({
+  args: {
+    feedbackId: v.id("feedback"),
+    teamId: v.id("teams"),
+    userId: v.id("users"),
+    provider: v.union(v.literal("openai"), v.literal("anthropic")),
+    model: v.string(),
+    apiKey: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Fetch feedback data
+    const feedback = await ctx.runQuery(api.feedback.getFeedback, {
+      feedbackId: args.feedbackId,
+    });
+
+    if (!feedback) {
+      throw new Error("Feedback not found");
+    }
+
+    // Get existing AI analysis if available
+    const existingAnalysis = await ctx.runQuery(api.ai.getAnalysis, {
+      feedbackId: args.feedbackId,
+    });
+
+    // Get existing solution suggestions if available
+    const existingSuggestions = await ctx.runQuery(api.ai.getSolutionSuggestions, {
+      feedbackId: args.feedbackId,
+    });
+
+    const feedbackData = {
+      title: feedback.title,
+      description: feedback.description,
+      type: feedback.type,
+      metadata: {
+        browser: feedback.metadata.browser,
+        os: feedback.metadata.os,
+        url: feedback.metadata.url,
+      },
+      existingAnalysis: existingAnalysis
+        ? {
+            summary: existingAnalysis.summary,
+            potentialCauses: existingAnalysis.potentialCauses,
+            affectedComponent: existingAnalysis.affectedComponent,
+            suggestedSolutions: existingAnalysis.suggestedSolutions,
+          }
+        : undefined,
+      existingSuggestions: existingSuggestions
+        ? {
+            summary: existingSuggestions.summary,
+            suggestions: existingSuggestions.suggestions?.map((s: { title: string; description: string }) => ({
+              title: s.title,
+              description: s.description,
+            })),
+            nextSteps: existingSuggestions.nextSteps,
+          }
+        : undefined,
+    };
+
+    // Fetch screenshot if available
+    let screenshotBase64: string | undefined;
+    if (feedback.screenshotUrl) {
+      try {
+        const imageResponse = await fetch(feedback.screenshotUrl);
+        if (imageResponse.ok) {
+          const arrayBuffer = await imageResponse.arrayBuffer();
+          screenshotBase64 = Buffer.from(arrayBuffer).toString("base64");
+        }
+      } catch (err) {
+        console.warn("Failed to fetch screenshot for ticket draft generation:", err);
+      }
+    }
+
+    // Call the AI API
+    let draftResult: TicketDraftResult;
+    if (args.provider === "openai") {
+      draftResult = await callOpenAIForTicketDraft(args.apiKey, args.model, feedbackData, screenshotBase64);
+    } else {
+      draftResult = await callAnthropicForTicketDraft(args.apiKey, args.model, feedbackData, screenshotBase64);
+    }
+
+    // Store the ticket draft
+    await ctx.runMutation(internal.ai.storeTicketDraft, {
+      feedbackId: args.feedbackId,
+      userId: args.userId,
+      title: draftResult.title,
+      description: draftResult.description,
+      acceptanceCriteria: draftResult.acceptanceCriteria,
+      reproSteps: draftResult.reproSteps,
+      expectedBehavior: draftResult.expectedBehavior,
+      actualBehavior: draftResult.actualBehavior,
+      provider: args.provider,
+      model: args.model,
+    });
+
+    return { success: true };
+  },
+});
+
+/**
+ * Public action to trigger ticket draft generation
+ */
+export const triggerTicketDraftGeneration = action({
+  args: {
+    feedbackId: v.id("feedback"),
+    teamId: v.id("teams"),
+  },
+  handler: async (ctx, args) => {
+    // Get current user
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return { success: false, error: "Unauthenticated" };
+    }
+
+    // Get user from database
+    const user = await ctx.runQuery(api.users.getCurrentUser);
+    if (!user) {
+      return { success: false, error: "User not found" };
+    }
+
+    // Get AI config for the team
+    const aiConfig = await ctx.runQuery(api.ai.getTeamAiConfig, {
+      teamId: args.teamId,
+    });
+
+    if (!aiConfig?.isConfigured || !aiConfig.preferredProvider || !aiConfig.preferredModel) {
+      return { success: false, error: "AI not configured" };
+    }
+
+    // Get the API key
+    const apiKeyData = await ctx.runQuery(api.apiKeys.getDecryptedApiKey, {
+      teamId: args.teamId,
+      provider: aiConfig.preferredProvider,
+    });
+
+    if (!apiKeyData?.key) {
+      return { success: false, error: "API key not found" };
+    }
+
+    // Schedule the ticket draft generation action
+    await ctx.scheduler.runAfter(0, internal.aiActions.generateTicketDraftAction, {
+      feedbackId: args.feedbackId,
+      teamId: args.teamId,
+      userId: user._id,
+      provider: aiConfig.preferredProvider,
+      model: aiConfig.preferredModel,
+      apiKey: apiKeyData.key,
+    });
+
+    return { success: true };
+  },
+});

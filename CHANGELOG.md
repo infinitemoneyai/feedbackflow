@@ -6,6 +6,28 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Added
 
+- **FF-020: AI Ticket Drafting** - Priority AI feature for generating actionable tickets from feedback:
+  - "Draft Ticket" button in feedback detail panel with retro lavender styling
+  - AI generates structured tickets using feedback content, AI analysis, and solution suggestions
+  - Bug reports include: clear title, description, reproduction steps, expected behavior, actual behavior, acceptance criteria
+  - Feature requests include: user story format description, clear title, acceptance criteria
+  - Editable preview with inline editing for all fields
+  - EditableTextArea component with auto-resize
+  - EditableList component for managing acceptance criteria and repro steps (add/remove/edit items)
+  - Save edits mutation (`updateTicketDraft`) for user modifications
+  - Delete draft mutation (`deleteTicketDraft`) with status rollback
+  - Regenerate button to create fresh drafts
+  - Copy ticket button exports formatted markdown to clipboard
+  - Draft saved to `ticketDrafts` table with automatic status change to "drafted"
+  - Activity log entry for "ticket_drafted" action
+  - Works with both OpenAI (GPT-4o) and Anthropic (Claude) via vision APIs
+  - Screenshot analysis included when available
+  - Leverages existing AI analysis and solution suggestions for richer drafts
+  - TicketDraftSection component with expandable UI matching dashboard theme
+  - Internal action `generateTicketDraftAction` with dedicated prompt engineering
+  - Public action `triggerTicketDraftGeneration` for user-initiated generation
+  - Queries: `getTicketDraft` for fetching existing draft
+
 - **FF-019: AI Solution Suggestions** - Dedicated AI-powered solution suggestions feature:
   - New `solutionSuggestions` table in Convex schema for storing rich suggestion data
   - `generateSolutionsAction` internal action in convex/aiActions.ts with dedicated prompt engineering
@@ -250,8 +272,8 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 - [x] FF-017: API key management
 - [x] FF-018: Auto-categorization
-- [ ] FF-019: Solution suggestions
-- [ ] FF-020: Ticket drafting (priority)
+- [x] FF-019: Solution suggestions
+- [x] FF-020: Ticket drafting (priority)
 - [ ] FF-021: AI conversation
 
 ### Milestone 5: Exports & Integrations
