@@ -700,10 +700,14 @@ export const updateFeedback = mutation({
       });
     }
 
+    // Track assignee for notification
+    let newAssigneeId: typeof args.assigneeId | undefined;
+
     if (args.assigneeId !== undefined) {
       if (args.assigneeId && args.assigneeId !== feedback.assigneeId) {
         const assignee = await ctx.db.get(args.assigneeId);
         updates.assigneeId = args.assigneeId;
+        newAssigneeId = args.assigneeId;
         activityLogs.push({
           action: "assigned",
           details: { to: assignee?.name || assignee?.email || "Unknown user" },
@@ -739,6 +743,35 @@ export const updateFeedback = mutation({
         details: log.details,
         createdAt: Date.now(),
       });
+    }
+
+    // Create in-app notification for assignment
+    if (newAssigneeId && newAssigneeId !== user._id) {
+      // Don't notify yourself when you assign to yourself
+      // Check assignee's notification preferences
+      const assigneePrefs = await ctx.db
+        .query("notificationPreferences")
+        .withIndex("by_user", (q) => q.eq("userId", newAssigneeId))
+        .first();
+
+      const shouldNotify =
+        !assigneePrefs ||
+        assigneePrefs.inAppEnabled !== false ||
+        (assigneePrefs.events && assigneePrefs.events.assignment !== false);
+
+      if (shouldNotify) {
+        await ctx.db.insert("notifications", {
+          userId: newAssigneeId,
+          type: "assignment",
+          title: `You were assigned to: ${feedback.title}`,
+          body: feedback.description
+            ? feedback.description.substring(0, 200)
+            : undefined,
+          feedbackId: args.feedbackId,
+          isRead: false,
+          createdAt: Date.now(),
+        });
+      }
     }
 
     return { success: true };
@@ -804,6 +837,33 @@ export const addComment = mutation({
       },
       createdAt: Date.now(),
     });
+
+    // Notify assignee of new comment (if they're not the commenter)
+    if (feedback.assigneeId && feedback.assigneeId !== user._id) {
+      const assigneePrefs = await ctx.db
+        .query("notificationPreferences")
+        .withIndex("by_user", (q) => q.eq("userId", feedback.assigneeId!))
+        .first();
+
+      const shouldNotify =
+        !assigneePrefs ||
+        assigneePrefs.inAppEnabled !== false ||
+        (assigneePrefs.events && assigneePrefs.events.comments !== false);
+
+      if (shouldNotify) {
+        await ctx.db.insert("notifications", {
+          userId: feedback.assigneeId,
+          type: "comment",
+          title: `${user.name || user.email} commented on: ${feedback.title}`,
+          body: args.content.length > 200
+            ? args.content.substring(0, 200) + "..."
+            : args.content,
+          feedbackId: args.feedbackId,
+          isRead: false,
+          createdAt: Date.now(),
+        });
+      }
+    }
 
     return { commentId };
   },

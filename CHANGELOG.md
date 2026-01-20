@@ -6,6 +6,34 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Added
 
+- **FF-030: In-App Notifications** - Complete in-app notification system with real-time updates:
+  - Notification bell icon in dashboard header with unread count badge
+  - Dropdown component listing recent notifications in retro design style
+  - Notifications created for: new feedback, assignments, comments, export status
+  - Click notification navigates to relevant feedback item
+  - Mark as read on click with visual indicator for unread items
+  - Mark all as read button in dropdown header
+  - Real-time updates via Convex subscriptions (instant updates when new notifications arrive)
+  - Notification triggers integrated into existing mutations (updateFeedback for assignments, addComment for comments, createExport for exports)
+  - API route for triggering new feedback notifications to team members
+  - Public mutation for creating notifications from API routes
+  - Respects user notification preferences (inAppEnabled, event-level toggles)
+  - Empty state UI when no notifications exist
+  - Loading state while notifications are being fetched
+  - Timestamps shown as relative time (e.g., "5 minutes ago")
+  - Notification types with distinct icons and colors:
+    - New feedback (Inbox, blue)
+    - Assignment (UserPlus, lavender)
+    - Comment (MessageSquare, gray)
+    - Mention (AtSign, yellow)
+    - Export complete (Send, green)
+    - Export failed (AlertTriangle, red)
+  - Convex queries: getNotifications, getUnreadCount
+  - Convex mutations: markAsRead, markAllAsRead, deleteNotification, createNotificationPublic
+  - New component: NotificationDropdown in dashboard/notification-dropdown.tsx
+  - API route: /api/notifications/trigger-new-feedback for notifying team on new feedback
+  - Typecheck passes with no errors
+
 - **FF-029: Email Notifications** - Complete email notification system with Resend:
   - Email notifications sent on: new feedback, assignment, comment mention, export complete/failed
   - Emails sent via Resend with branded HTML templates matching retro design system

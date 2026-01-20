@@ -2,9 +2,10 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useQuery } from "convex/react";
-import { Menu, Search, Bell, Filter, X } from "lucide-react";
+import { Menu, Search, Filter, X } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { useDashboard } from "./dashboard-layout";
+import { NotificationDropdown } from "./notification-dropdown";
 
 export function DashboardHeader() {
   const {
@@ -13,6 +14,7 @@ export function DashboardHeader() {
     setSidebarOpen,
     searchQuery,
     setSearchQuery,
+    setSelectedFeedbackId,
   } = useDashboard();
 
   // Mobile search expanded state
@@ -170,14 +172,13 @@ export function DashboardHeader() {
         </button>
 
         {/* Notifications */}
-        <button className="relative rounded p-2 text-stone-600 transition-colors hover:bg-stone-100 hover:text-retro-black">
-          <Bell className="h-5 w-5" />
-          {/* Notification badge */}
-          <span className="absolute right-1 top-1 flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-retro-red opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-retro-red" />
-          </span>
-        </button>
+        <NotificationDropdown
+          onNotificationClick={(feedbackId) => {
+            if (feedbackId) {
+              setSelectedFeedbackId(feedbackId);
+            }
+          }}
+        />
       </div>
     </header>
   );

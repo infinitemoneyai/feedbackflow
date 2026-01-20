@@ -367,6 +367,43 @@ export const createExport = mutation({
       });
     }
 
+    // Create in-app notification for export result
+    // Notify the user who initiated the export (or assignee if different)
+    const notifyUserId = feedback.assigneeId && feedback.assigneeId !== user._id
+      ? feedback.assigneeId
+      : null;
+
+    // Always notify the user who triggered the export if it's not in realtime
+    // For now, we'll skip notifying the user who triggered it since they see the result immediately
+    // But we will notify the assignee if they're different
+    if (notifyUserId) {
+      const assigneePrefs = await ctx.db
+        .query("notificationPreferences")
+        .withIndex("by_user", (q) => q.eq("userId", notifyUserId))
+        .first();
+
+      const shouldNotify =
+        !assigneePrefs ||
+        assigneePrefs.inAppEnabled !== false ||
+        (assigneePrefs.events && assigneePrefs.events.exports !== false);
+
+      if (shouldNotify) {
+        await ctx.db.insert("notifications", {
+          userId: notifyUserId,
+          type: args.status === "success" ? "export_complete" : "export_failed",
+          title: args.status === "success"
+            ? `Export completed: ${feedback.title}`
+            : `Export failed: ${feedback.title}`,
+          body: args.status === "success"
+            ? `Exported to ${args.provider}`
+            : args.errorMessage,
+          feedbackId: args.feedbackId,
+          isRead: false,
+          createdAt: Date.now(),
+        });
+      }
+    }
+
     return { exportId };
   },
 });

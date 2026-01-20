@@ -1,5 +1,5 @@
 /**
- * API route to send notification emails
+ * API route to send notifications (both in-app and email)
  * Called internally after notification events occur
  */
 
@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { sendNotificationEmail, sendDigestEmail, type NotificationType } from "@/lib/email";
+import { sendNotificationEmail, type NotificationType } from "@/lib/email";
 
 // Internal key for securing internal API calls
 const INTERNAL_KEY = process.env.INTERNAL_API_KEY || "feedbackflow-internal-key";
@@ -55,6 +55,30 @@ export async function POST(request: Request): Promise<Response> {
         { error: "Missing required fields: userId, type" },
         { status: 400 }
       );
+    }
+
+    // Build notification title based on type
+    const notificationTitleMap: Record<NotificationType, string> = {
+      new_feedback: feedbackTitle ? `New feedback: ${feedbackTitle}` : "New feedback submitted",
+      assignment: `You were assigned to: ${feedbackTitle || "feedback"}`,
+      comment: actorName ? `${actorName} commented on: ${feedbackTitle || "feedback"}` : `New comment on: ${feedbackTitle || "feedback"}`,
+      mention: actorName ? `${actorName} mentioned you in: ${feedbackTitle || "feedback"}` : `You were mentioned in: ${feedbackTitle || "feedback"}`,
+      export_complete: `Export completed: ${feedbackTitle || "feedback"}`,
+      export_failed: `Export failed: ${feedbackTitle || "feedback"}`,
+    };
+
+    // Create in-app notification
+    try {
+      await convex.mutation(api.notifications.createNotificationPublic, {
+        userId: userId as Id<"users">,
+        type,
+        title: notificationTitleMap[type],
+        body: feedbackDescription || commentPreview,
+        feedbackId: feedbackId ? feedbackId as Id<"feedback"> : undefined,
+      });
+    } catch (inAppError) {
+      console.error("Failed to create in-app notification:", inAppError);
+      // Continue with email notification even if in-app fails
     }
 
     // Get user preferences
