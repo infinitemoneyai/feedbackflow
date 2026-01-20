@@ -14,6 +14,7 @@ All notable changes to FeedbackFlow will be documented in this file.
 - **FF-002: Database Schema** - Complete Convex schema with 25+ tables: users, teams, teamMembers, teamInvites, projects, widgets, widgetConfig, feedback, aiAnalysis, conversations, ticketDrafts, comments, activityLog, integrations, exports, exportTemplates, automationRules, webhooks, webhookLogs, apiKeys, storageConfig, notifications, notificationPreferences, subscriptions, usageTracking, restApiKeys, submitterTokens, submitterUpdates, publicNotes. Includes indexes for common queries and search index on feedback.
 - **FF-003: Clerk Authentication** - Integrated Clerk for authentication with middleware protecting routes, ClerkProvider with ConvexProviderWithClerk, user sync to Convex on sign-in, sign-in/sign-up pages with retro styling, protected dashboard layout with useStoreUser hook
 - **FF-004: Team Management** - Full team CRUD in convex/teams.ts: createTeam (generates unique slug, adds creator as admin, creates free subscription), inviteToTeam (creates invite with token), acceptInvite (validates token and email match), updateMemberRole (admin only, cannot change owner), removeMember (admin or self), getTeam/getMyTeams/getTeamMembers queries, getTeamInvites/cancelInvite for pending invites, updateTeam/deleteTeam mutations
+- **FF-005: Landing Page** - Complete marketing landing page with navigation, hero section (headline with highlighted text, CTAs), problem section (3 pain points), features grid (bento-style with 6 features including AI ticket drafting highlight), workflow section (4-step process), exports section (Linear, Notion, JSON), multi-project section with code snippet, open source section, and CTA footer. Fully responsive with retro design aesthetic.
 
 ---
 
@@ -25,7 +26,7 @@ All notable changes to FeedbackFlow will be documented in this file.
 - [x] FF-002: Database schema
 - [x] FF-003: Clerk authentication
 - [x] FF-004: Team management
-- [ ] FF-005: Landing page
+- [x] FF-005: Landing page
 - [ ] FF-006: Dashboard layout
 
 ### Milestone 2: Widget Core
