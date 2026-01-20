@@ -1,0 +1,86 @@
+# Changelog
+
+All notable changes to FeedbackFlow will be documented in this file.
+
+## [Unreleased]
+
+### Added
+
+- **Project Initialized** - Created project structure with prd.json, CLAUDE.md, DESIGN.md
+- **45 User Stories** - Comprehensive PRD covering all features from foundation to polish
+- **Design System** - Retro-modern aesthetic with colors, typography, components documented
+- **Ralph Automation** - ralph.sh and prompt.md for automated development
+- **FF-001: Project Foundation** - Next.js 15 with App Router, Convex configured, TypeScript strict mode, Tailwind CSS with retro design colors, shadcn/ui base components (Button, Badge, Card, Input), ESLint with Prettier
+
+---
+
+## Project Milestones
+
+### Milestone 1: Foundation
+
+- [x] FF-001: Project setup (Next.js 15, Convex, Tailwind)
+- [ ] FF-002: Database schema
+- [ ] FF-003: Clerk authentication
+- [ ] FF-004: Team management
+- [ ] FF-005: Landing page
+- [ ] FF-006: Dashboard layout
+
+### Milestone 2: Widget Core
+
+- [ ] FF-007: Project & widget management
+- [ ] FF-008: Widget script structure
+- [ ] FF-009: Screenshot capture
+- [ ] FF-010: Screen recording with audio
+- [ ] FF-011: Submission form & offline queue
+- [ ] FF-012: Widget API endpoint
+
+### Milestone 3: Dashboard Core
+
+- [ ] FF-013: Feedback inbox
+- [ ] FF-014: Feedback detail view
+- [ ] FF-015: Comments & activity log
+- [ ] FF-016: Full-text search
+
+### Milestone 4: AI Processing
+
+- [ ] FF-017: API key management
+- [ ] FF-018: Auto-categorization
+- [ ] FF-019: Solution suggestions
+- [ ] FF-020: Ticket drafting (priority)
+- [ ] FF-021: AI conversation
+
+### Milestone 5: Exports & Integrations
+
+- [ ] FF-022: Linear integration
+- [ ] FF-023: Notion integration
+- [ ] FF-024: JSON/prd.json export
+- [ ] FF-025: Webhooks
+- [ ] FF-026: REST API
+- [ ] FF-027: Automation rules
+
+### Milestone 6: Analytics & Notifications
+
+- [ ] FF-028: Analytics dashboard
+- [ ] FF-029: Email notifications
+- [ ] FF-030: In-app notifications
+
+### Milestone 7: Submitter Portal & Privacy
+
+- [ ] FF-031: Submitter status page
+- [ ] FF-032: GDPR compliance
+
+### Milestone 8: Billing & Polish
+
+- [ ] FF-033: Stripe integration
+- [ ] FF-034: Usage tracking & limits
+- [ ] FF-035: Pricing page
+- [ ] FF-036: Widget customization UI
+- [ ] FF-037: Installation documentation
+- [ ] FF-038: External storage config
+- [ ] FF-039: Self-hosting documentation
+- [ ] FF-040: Team settings
+- [ ] FF-041: User profile & settings
+- [ ] FF-042: Export templates
+- [ ] FF-043: Unit tests
+- [ ] FF-044: E2E tests
+- [ ] FF-045: Performance optimization
