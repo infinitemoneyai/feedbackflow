@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import Link from "next/link";
-import { ArrowLeft, Bot, Settings as SettingsIcon, Users, CreditCard, Plug, Webhook, Key, Zap, Bell, Palette } from "lucide-react";
+import { ArrowLeft, Bot, Settings as SettingsIcon, Users, CreditCard, Plug, Webhook, Key, Zap, Bell, Palette, HardDrive } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { AiConfigSection } from "@/components/settings/ai-config-section";
@@ -15,8 +15,9 @@ import { AutomationRulesSection } from "@/components/settings/automation-rules-s
 import { NotificationPreferencesSection } from "@/components/settings/notification-preferences-section";
 import { BillingSection } from "@/components/settings/billing-section";
 import { WidgetCustomizationSection } from "@/components/settings/widget-customization-section";
+import { StorageConfigSection } from "@/components/settings/storage-config-section";
 
-type SettingsTab = "widget" | "ai" | "integrations" | "webhooks" | "automation" | "api-keys" | "notifications" | "team" | "billing";
+type SettingsTab = "widget" | "ai" | "storage" | "integrations" | "webhooks" | "automation" | "api-keys" | "notifications" | "team" | "billing";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("widget");
@@ -62,6 +63,12 @@ export default function SettingsPage() {
       label: "AI Configuration",
       icon: Bot,
       description: "Configure AI providers and API keys",
+    },
+    {
+      id: "storage" as const,
+      label: "Storage",
+      icon: HardDrive,
+      description: "Configure external video storage",
     },
     {
       id: "integrations" as const,
@@ -287,6 +294,10 @@ export default function SettingsPage() {
 
             {activeTab === "ai" && selectedTeamId && (
               <AiConfigSection teamId={selectedTeamId} />
+            )}
+
+            {activeTab === "storage" && selectedTeamId && (
+              <StorageConfigSection teamId={selectedTeamId} />
             )}
 
             {activeTab === "integrations" && selectedTeamId && (

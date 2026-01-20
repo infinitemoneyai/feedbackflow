@@ -6,6 +6,23 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Added
 
+- **FF-038: Configurable External Storage** - External storage configuration for video recordings:
+  - Storage tab in settings page for configuring external storage providers
+  - Support for Amazon S3 with region selector and custom endpoint option
+  - Support for Cloudflare R2 with S3-compatible API
+  - Support for Google Cloud Storage with service account authentication
+  - Encrypted credential storage using base64 obfuscation
+  - Test connection button to validate configuration
+  - Bucket name input field for all providers
+  - Current configuration status display with last tested timestamp
+  - Delete configuration option with confirmation
+  - Info box explaining storage fallback behavior
+  - Convex storage used as fallback when no external storage configured
+  - API route `/api/storage/test` for connection testing
+  - Convex backend with `getStorageConfig`, `saveStorageConfig`, `deleteStorageConfig`, `markStorageConfigTested`
+  - Masked credential hints shown in UI after save
+  - Typecheck passes with no errors
+
 - **FF-037: Widget Installation Documentation** - Comprehensive installation guide and inline code snippets:
   - Docs page at `/docs/installation` with complete installation instructions
   - Quick start section with copy-paste script tag
