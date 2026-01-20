@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, Suspense } from "react";
 import { useQuery, useMutation } from "convex/react";
+import dynamic from "next/dynamic";
 import {
   X,
   Bug,
@@ -24,20 +25,63 @@ import {
   Volume2,
   VolumeX,
   ExternalLink,
+  Loader2,
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { useDashboard } from "./dashboard-layout";
 import { cn } from "@/lib/utils";
 import { Id } from "@/convex/_generated/dataModel";
 import { CommentsAndActivity } from "./comments-activity";
-import { AIAnalysisSection } from "./ai-analysis-section";
-import { SolutionSuggestionsSection } from "./solution-suggestions-section";
-import { TicketDraftSection } from "./ticket-draft-section";
-import { AIConversationSection } from "./ai-conversation-section";
-import { LinearExportSection } from "./linear-export-section";
-import { NotionExportSection } from "./notion-export-section";
-import { JsonExportSection } from "./json-export-section";
-import { SubmitterPortalSection } from "./submitter-portal-section";
+
+// Loading fallback component for lazy-loaded sections
+function SectionLoader() {
+  return (
+    <div className="flex items-center justify-center py-8">
+      <Loader2 className="h-5 w-5 animate-spin text-stone-400" />
+    </div>
+  );
+}
+
+// Dynamic imports for heavy AI sections - these are code-split and loaded on demand
+const AIAnalysisSection = dynamic(
+  () => import("./ai-analysis-section").then((mod) => ({ default: mod.AIAnalysisSection })),
+  { loading: () => <SectionLoader />, ssr: false }
+);
+
+const SolutionSuggestionsSection = dynamic(
+  () => import("./solution-suggestions-section").then((mod) => ({ default: mod.SolutionSuggestionsSection })),
+  { loading: () => <SectionLoader />, ssr: false }
+);
+
+const TicketDraftSection = dynamic(
+  () => import("./ticket-draft-section").then((mod) => ({ default: mod.TicketDraftSection })),
+  { loading: () => <SectionLoader />, ssr: false }
+);
+
+const AIConversationSection = dynamic(
+  () => import("./ai-conversation-section").then((mod) => ({ default: mod.AIConversationSection })),
+  { loading: () => <SectionLoader />, ssr: false }
+);
+
+const LinearExportSection = dynamic(
+  () => import("./linear-export-section").then((mod) => ({ default: mod.LinearExportSection })),
+  { loading: () => <SectionLoader />, ssr: false }
+);
+
+const NotionExportSection = dynamic(
+  () => import("./notion-export-section").then((mod) => ({ default: mod.NotionExportSection })),
+  { loading: () => <SectionLoader />, ssr: false }
+);
+
+const JsonExportSection = dynamic(
+  () => import("./json-export-section").then((mod) => ({ default: mod.JsonExportSection })),
+  { loading: () => <SectionLoader />, ssr: false }
+);
+
+const SubmitterPortalSection = dynamic(
+  () => import("./submitter-portal-section").then((mod) => ({ default: mod.SubmitterPortalSection })),
+  { loading: () => <SectionLoader />, ssr: false }
+);
 
 type FeedbackStatus = "new" | "triaging" | "drafted" | "exported" | "resolved";
 type FeedbackPriority = "low" | "medium" | "high" | "critical";

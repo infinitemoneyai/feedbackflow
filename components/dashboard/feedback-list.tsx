@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, ReactNode } from "react";
 import { useQuery, useMutation } from "convex/react";
+import Image from "next/image";
 import {
   Bug,
   Lightbulb,
@@ -692,11 +693,14 @@ export function FeedbackList() {
 
                 {/* Thumbnail */}
                 {feedback.screenshotUrl ? (
-                  <div className="hidden h-16 w-24 flex-shrink-0 overflow-hidden rounded border border-stone-200 sm:block">
-                    <img
+                  <div className="relative hidden h-16 w-24 flex-shrink-0 overflow-hidden rounded border border-stone-200 sm:block">
+                    <Image
                       src={feedback.screenshotUrl}
-                      alt="Screenshot"
-                      className="h-full w-full object-cover"
+                      alt="Screenshot thumbnail"
+                      fill
+                      sizes="96px"
+                      className="object-cover"
+                      loading="lazy"
                     />
                   </div>
                 ) : (

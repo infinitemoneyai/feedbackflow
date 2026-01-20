@@ -797,7 +797,7 @@
         "Typecheck passes"
       ],
       "priority": 45,
-      "passes": false,
+      "passes": true,
       "notes": "Final polish pass before launch"
     }
   ],
