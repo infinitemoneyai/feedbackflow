@@ -30,6 +30,17 @@ All notable changes to FeedbackFlow will be documented in this file.
   - updateProject and deleteProject mutations (deleteProject cleans up widgets and feedback)
   - updateWidget mutation for siteUrl and isActive
   - regenerateWidgetKey mutation invalidates old key (admin only)
+- **FF-008: Widget Script Core Structure** - Embeddable feedback widget built with vanilla TypeScript:
+  - Builds to single JS file (~13KB minified, well under 50KB target)
+  - Bundled with esbuild for optimal size and browser compatibility
+  - Initializes via data attributes: `data-widget-key`, `data-position`, `data-primary-color`, etc.
+  - Floating button with configurable position (bottom-right, bottom-left, top-right, top-left)
+  - Click opens modal overlay with retro design matching FeedbackFlow aesthetic
+  - Modal has Screenshot and Record buttons (capture logic in FF-009/FF-010)
+  - Close button, backdrop click, and Escape key dismiss modal
+  - No external dependencies - all vanilla JS/CSS
+  - Programmatic API: `FeedbackFlow.open()`, `FeedbackFlow.close()`, `FeedbackFlow.init(config)`
+  - Widget files: `widget/src/index.ts`, `widget.ts`, `styles.ts`, `icons.ts`, `dom.ts`, `types.ts`
 
 ---
 
@@ -47,7 +58,7 @@ All notable changes to FeedbackFlow will be documented in this file.
 ### Milestone 2: Widget Core
 
 - [x] FF-007: Project & widget management
-- [ ] FF-008: Widget script structure
+- [x] FF-008: Widget script structure
 - [ ] FF-009: Screenshot capture
 - [ ] FF-010: Screen recording with audio
 - [ ] FF-011: Submission form & offline queue

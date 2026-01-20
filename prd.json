@@ -150,7 +150,7 @@
         "Typecheck passes"
       ],
       "priority": 8,
-      "passes": false,
+      "passes": true,
       "notes": "Build with vanilla JS/TS, bundle with esbuild or similar. Widget config: position, colors, button text"
     },
     {
