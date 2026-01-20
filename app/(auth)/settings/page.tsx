@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import Link from "next/link";
-import { ArrowLeft, Bot, Settings as SettingsIcon, Users, CreditCard, Plug, Webhook, Key, Zap, Bell, Palette, HardDrive } from "lucide-react";
+import { ArrowLeft, Bot, Settings as SettingsIcon, Users, CreditCard, Plug, Webhook, Key, Zap, Bell, Palette, HardDrive, User } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { AiConfigSection } from "@/components/settings/ai-config-section";
@@ -17,11 +17,12 @@ import { BillingSection } from "@/components/settings/billing-section";
 import { WidgetCustomizationSection } from "@/components/settings/widget-customization-section";
 import { StorageConfigSection } from "@/components/settings/storage-config-section";
 import { TeamSettingsSection } from "@/components/settings/team-settings-section";
+import { UserProfileSection } from "@/components/settings/user-profile-section";
 
-type SettingsTab = "widget" | "ai" | "storage" | "integrations" | "webhooks" | "automation" | "api-keys" | "notifications" | "team" | "billing";
+type SettingsTab = "profile" | "widget" | "ai" | "storage" | "integrations" | "webhooks" | "automation" | "api-keys" | "notifications" | "team" | "billing";
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<SettingsTab>("widget");
+  const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
   const [selectedProjectId, setSelectedProjectId] = useState<Id<"projects"> | null>(null);
   const [selectedWidgetId, setSelectedWidgetId] = useState<Id<"widgets"> | null>(null);
   const teams = useQuery(api.teams.getMyTeams);
@@ -53,6 +54,12 @@ export default function SettingsPage() {
   }
 
   const tabs = [
+    {
+      id: "profile" as const,
+      label: "Profile",
+      icon: User,
+      description: "Your account settings",
+    },
     {
       id: "widget" as const,
       label: "Widget",
@@ -200,6 +207,10 @@ export default function SettingsPage() {
 
           {/* Main content */}
           <main className="flex-1">
+            {activeTab === "profile" && (
+              <UserProfileSection />
+            )}
+
             {activeTab === "widget" && (
               <div className="space-y-6">
                 {/* Project/Widget selector */}
