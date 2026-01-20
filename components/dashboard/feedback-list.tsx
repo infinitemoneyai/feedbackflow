@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, ReactNode } from "react";
 import { useQuery } from "convex/react";
 import {
   Bug,
@@ -12,11 +12,55 @@ import {
   Video,
   ArrowUpDown,
   X,
+  MessageSquare,
+  Tag,
+  User,
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { useDashboard } from "./dashboard-layout";
 import { cn } from "@/lib/utils";
 import { Id } from "@/convex/_generated/dataModel";
+
+/**
+ * Highlight matching search terms in text
+ * Returns ReactNode with <mark> elements wrapping matched terms
+ */
+function highlightText(text: string, searchQuery: string): ReactNode {
+  if (!searchQuery || searchQuery.trim().length === 0) {
+    return text;
+  }
+
+  const terms = searchQuery.toLowerCase().split(/\s+/).filter((t) => t.length > 0);
+  if (terms.length === 0) {
+    return text;
+  }
+
+  // Create a regex pattern that matches any of the search terms (case-insensitive)
+  const pattern = new RegExp(`(${terms.map(escapeRegex).join("|")})`, "gi");
+  const parts = text.split(pattern);
+
+  return parts.map((part, index) => {
+    const isMatch = terms.some((term) => part.toLowerCase() === term);
+    if (isMatch) {
+      return (
+        <mark
+          key={index}
+          className="bg-retro-yellow/40 text-retro-black rounded px-0.5"
+        >
+          {part}
+        </mark>
+      );
+    }
+    return part;
+  });
+}
+
+/**
+ * Escape special regex characters
+ */
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
 /**
  * Format a timestamp as a human-readable time ago string
@@ -47,6 +91,12 @@ interface FeedbackFilters {
   sortOrder: SortOrder;
 }
 
+interface SearchMeta {
+  score: number;
+  matchedFields: string[];
+  matchedCommentIds: string[];
+}
+
 interface FeedbackItem {
   _id: Id<"feedback">;
   type: FeedbackType;
@@ -60,6 +110,7 @@ interface FeedbackItem {
   screenshotUrl?: string;
   recordingUrl?: string;
   tags: string[];
+  _searchMeta?: SearchMeta;
 }
 
 export function FeedbackList() {
@@ -409,15 +460,49 @@ export function FeedbackList() {
                         <Video className="h-3 w-3 text-stone-500" />
                       </span>
                     )}
+
+                    {/* Search match indicators (only show when searching) */}
+                    {effectiveSearchQuery && feedback._searchMeta && (
+                      <div className="flex items-center gap-1">
+                        {feedback._searchMeta.matchedFields.includes("comments") && (
+                          <span
+                            className="flex items-center rounded border border-retro-yellow/30 bg-retro-yellow/10 px-1 py-0.5"
+                            title="Match found in comments"
+                          >
+                            <MessageSquare className="h-3 w-3 text-retro-yellow" />
+                          </span>
+                        )}
+                        {feedback._searchMeta.matchedFields.includes("tags") && (
+                          <span
+                            className="flex items-center rounded border border-retro-yellow/30 bg-retro-yellow/10 px-1 py-0.5"
+                            title="Match found in tags"
+                          >
+                            <Tag className="h-3 w-3 text-retro-yellow" />
+                          </span>
+                        )}
+                        {feedback._searchMeta.matchedFields.includes("submitter") && (
+                          <span
+                            className="flex items-center rounded border border-retro-yellow/30 bg-retro-yellow/10 px-1 py-0.5"
+                            title="Match found in submitter info"
+                          >
+                            <User className="h-3 w-3 text-retro-yellow" />
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <h3 className="mb-1 truncate font-medium text-retro-black">
-                    {feedback.title}
+                    {effectiveSearchQuery
+                      ? highlightText(feedback.title, effectiveSearchQuery)
+                      : feedback.title}
                   </h3>
 
                   {feedback.description && (
                     <p className="line-clamp-2 text-sm text-stone-500">
-                      {feedback.description}
+                      {effectiveSearchQuery
+                        ? highlightText(feedback.description, effectiveSearchQuery)
+                        : feedback.description}
                     </p>
                   )}
 
@@ -427,9 +512,18 @@ export function FeedbackList() {
                       {feedback.tags.slice(0, 3).map((tag) => (
                         <span
                           key={tag}
-                          className="rounded border border-retro-lavender/30 bg-retro-lavender/10 px-1.5 py-0.5 text-[10px] font-medium text-retro-lavender"
+                          className={cn(
+                            "rounded border px-1.5 py-0.5 text-[10px] font-medium",
+                            effectiveSearchQuery &&
+                              feedback._searchMeta?.matchedFields.includes("tags") &&
+                              tag.toLowerCase().includes(effectiveSearchQuery.toLowerCase())
+                              ? "border-retro-yellow/50 bg-retro-yellow/20 text-retro-black"
+                              : "border-retro-lavender/30 bg-retro-lavender/10 text-retro-lavender"
+                          )}
                         >
-                          {tag}
+                          {effectiveSearchQuery
+                            ? highlightText(tag, effectiveSearchQuery)
+                            : tag}
                         </span>
                       ))}
                       {feedback.tags.length > 3 && (
