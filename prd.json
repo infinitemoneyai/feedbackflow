@@ -560,7 +560,7 @@
         "Typecheck passes"
       ],
       "priority": 31,
-      "passes": false,
+      "passes": true,
       "notes": "Only accessible if submitter provided email. Magic link for security."
     },
     {

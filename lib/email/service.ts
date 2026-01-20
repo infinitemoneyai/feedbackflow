@@ -10,6 +10,7 @@ import {
   mentionEmail,
   exportEmail,
   digestEmail,
+  magicLinkEmail,
 } from "./templates";
 
 // Initialize Resend client
@@ -201,6 +202,54 @@ export async function sendDigestEmail(data: DigestEmailData): Promise<{
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to send digest email",
+    };
+  }
+}
+
+/**
+ * Send a magic link email for submitter status access
+ */
+export async function sendMagicLinkEmail(data: {
+  recipientEmail: string;
+  recipientName?: string;
+  feedbackTitle: string;
+  projectName?: string;
+  token: string;
+  baseUrl?: string;
+}): Promise<{
+  success: boolean;
+  id?: string;
+  error?: string;
+}> {
+  const baseUrl = data.baseUrl || process.env.NEXT_PUBLIC_APP_URL || "https://feedbackflow.dev";
+  const statusUrl = `${baseUrl.replace(/\/$/, "")}/status?token=${data.token}`;
+
+  const emailContent = magicLinkEmail({
+    recipientName: data.recipientName,
+    feedbackTitle: data.feedbackTitle,
+    projectName: data.projectName,
+    statusUrl,
+  });
+
+  try {
+    const result = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: data.recipientEmail,
+      subject: emailContent.subject,
+      html: emailContent.html,
+    });
+
+    if (result.error) {
+      console.error("Resend error:", result.error);
+      return { success: false, error: result.error.message };
+    }
+
+    return { success: true, id: result.data?.id };
+  } catch (error) {
+    console.error("Magic link email send error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to send email",
     };
   }
 }
