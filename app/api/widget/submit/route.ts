@@ -325,8 +325,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       metadata: feedbackMetadata,
     });
 
-    // Trigger background auto-analysis (fire and forget)
-    // This runs asynchronously after response is sent
+    // Trigger background tasks (fire and forget)
+    // These run asynchronously after response is sent
     try {
       // Get project to find team ID for auto-analysis
       const projectInfo = await convex.query(api.projects.getProjectInternal, {
@@ -334,13 +334,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       });
 
       if (projectInfo) {
-        // Fire and forget - don't wait for completion
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
+        const internalKey = process.env.INTERNAL_API_KEY || "";
+
+        // Fire and forget - AI auto-analysis
         fetch(`${baseUrl}/api/ai/auto-analyze`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "x-internal-key": process.env.INTERNAL_API_KEY || "",
+            "x-internal-key": internalKey,
           },
           body: JSON.stringify({
             feedbackId: result.feedbackId,
@@ -350,9 +352,24 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         }).catch((err) => {
           console.warn("Auto-analysis trigger failed:", err);
         });
+
+        // Fire and forget - Automation rules evaluation
+        fetch(`${baseUrl}/api/automation/trigger`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-internal-key": internalKey,
+          },
+          body: JSON.stringify({
+            feedbackId: result.feedbackId,
+            trigger: "new_feedback",
+          }),
+        }).catch((err) => {
+          console.warn("Automation rules trigger failed:", err);
+        });
       }
     } catch (err) {
-      console.warn("Failed to trigger auto-analysis:", err);
+      console.warn("Failed to trigger background tasks:", err);
     }
 
     // Return success response

@@ -6,6 +6,30 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Added
 
+- **FF-027: Automation Rules** - Complete automation rules system for automatic feedback processing:
+  - Automation Rules section in project Settings with dedicated tab
+  - Create rules with trigger, conditions, and action configuration
+  - Triggers: new_feedback, status_changed, priority_changed
+  - Conditions: field (type/priority/status/tags), operator (equals/not_equals/contains), value
+  - Actions: export_linear, export_notion, send_webhook, assign_user, set_priority, add_tag
+  - Project selector for scoping rules to specific projects
+  - Team member selector for assign_user action
+  - Webhook selector for send_webhook action
+  - Rules can be enabled/disabled individually
+  - Rule evaluation triggered automatically on new feedback submission
+  - Fire-and-forget API call from widget submit endpoint to automation trigger
+  - Condition evaluation with AND logic (all conditions must match)
+  - Action execution with proper error handling and logging
+  - Rule execution logged to activity log with success/failed status
+  - Internal API authentication with x-internal-key header
+  - Convex mutations: createRule, updateRule, deleteRule, toggleRule
+  - Convex queries: getRulesForProject, getEnabledRulesForProjectPublic
+  - Convex mutations for automation actions: assignFeedbackFromAutomation, setPriorityFromAutomation, addTagFromAutomation, logRuleExecutionPublic
+  - API endpoint: /api/automation/trigger for rule evaluation
+  - AutomationRulesSection component with retro design aesthetic
+  - Real-time updates via Convex subscriptions
+  - Typecheck passes with no errors
+
 - **FF-026: REST API for External Access** - Complete REST API with Bearer token authentication:
   - API key management in Settings with dedicated "API Keys" tab
   - Create API keys with custom names and scoped permissions (read:feedback, write:feedback, read:projects, write:projects)
@@ -438,8 +462,8 @@ All notable changes to FeedbackFlow will be documented in this file.
 - [x] FF-023: Notion integration
 - [x] FF-024: JSON/prd.json export
 - [x] FF-025: Webhooks
-- [ ] FF-026: REST API
-- [ ] FF-027: Automation rules
+- [x] FF-026: REST API
+- [x] FF-027: Automation rules
 
 ### Milestone 6: Analytics & Notifications
 
