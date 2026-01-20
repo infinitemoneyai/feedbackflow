@@ -6,6 +6,31 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Added
 
+- **FF-034: Usage Tracking & Limits** - Complete usage tracking and enforcement system:
+  - Monthly feedback count tracking per team via `usageTracking` table
+  - Free tier limit enforcement: 25 feedback submissions per month
+  - Widget submission API (`/api/widget/submit`) checks usage limits before accepting submissions
+  - Returns HTTP 402 (Payment Required) when free tier limit is exceeded
+  - Response includes plan info, current count, limit, and upgrade required flag
+  - `checkCanSubmitFeedback` public query for checking limits from API routes
+  - `checkUsageLimit` and `checkSeatLimit` internal queries for Convex functions
+  - Dashboard usage indicator in sidebar showing:
+    - Current plan (Free/Pro) with icon
+    - Feedback usage progress bar for free tier
+    - Percentage used with color coding (blue < 80%, orange at 80%+, red at 100%)
+    - Warning message at 80% usage with upgrade link
+    - Alert message when limit reached with upgrade link
+    - Pro tier shows count with "Unlimited" indicator
+  - Seat count enforcement on team invites:
+    - `inviteToTeam` mutation checks `canAddSeat` before creating invite
+    - `acceptInvite` mutation checks `canAddSeat` before adding member
+    - Clear error messages when seat limit reached
+    - Free tier: 1 seat only, Pro tier: seats match subscription
+  - Pro tier has unlimited feedback submissions
+  - Usage resets automatically at the start of each month
+  - UsageIndicator component with retro design aesthetic
+  - Typecheck passes with no errors
+
 - **FF-033: Stripe Billing Integration** - Complete Stripe integration for subscription billing:
   - Stripe SDK installed and configured with 2025-12-15.clover API version
   - `lib/stripe.ts` module with:
@@ -650,7 +675,7 @@ All notable changes to FeedbackFlow will be documented in this file.
 ### Milestone 8: Billing & Polish
 
 - [x] FF-033: Stripe integration
-- [ ] FF-034: Usage tracking & limits
+- [x] FF-034: Usage tracking & limits
 - [ ] FF-035: Pricing page
 - [ ] FF-036: Widget customization UI
 - [ ] FF-037: Installation documentation

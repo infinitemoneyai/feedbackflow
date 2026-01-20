@@ -611,7 +611,7 @@
         "Typecheck passes"
       ],
       "priority": 34,
-      "passes": false,
+      "passes": true,
       "notes": "Soft limit approach: allow submission but show upgrade prompts, vs hard block"
     },
     {

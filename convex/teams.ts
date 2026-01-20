@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query, MutationCtx } from "./_generated/server";
+import { canAddSeat } from "./billing";
 
 /**
  * Generate a URL-friendly slug from a team name
@@ -180,6 +181,12 @@ export const inviteToTeam = mutation({
       throw new Error("An invite for this email is already pending");
     }
 
+    // Check seat limit before creating invite
+    const seatCheck = await canAddSeat(ctx, args.teamId);
+    if (!seatCheck.allowed) {
+      throw new Error(seatCheck.reason || "Cannot add more team members");
+    }
+
     // Create invite (expires in 7 days)
     const token = generateInviteToken();
     const inviteId = await ctx.db.insert("teamInvites", {
@@ -251,6 +258,15 @@ export const acceptInvite = mutation({
       // Clean up invite since user is already a member
       await ctx.db.delete(invite._id);
       throw new Error("You are already a member of this team");
+    }
+
+    // Check seat limit before accepting invite
+    const seatCheck = await canAddSeat(ctx, invite.teamId);
+    if (!seatCheck.allowed) {
+      throw new Error(
+        seatCheck.reason ||
+          "This team has reached its member limit. Contact the team admin to upgrade."
+      );
     }
 
     // Add user as team member

@@ -182,6 +182,34 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
+    // Get project to find team ID for usage limit check
+    const project = await convex.query(api.projects.getProjectInternal, {
+      projectId: widgetInfo.projectId,
+    });
+
+    if (!project) {
+      return jsonResponse({ error: "Project not found" }, 404);
+    }
+
+    // Check team's monthly usage limit (Free: 25/month, Pro: unlimited)
+    const usageCheck = await convex.query(api.billing.checkCanSubmitFeedback, {
+      teamId: project.teamId,
+    });
+
+    if (!usageCheck.allowed) {
+      return jsonResponse(
+        {
+          error: "Usage limit exceeded",
+          message: usageCheck.reason,
+          plan: usageCheck.plan,
+          currentCount: usageCheck.currentCount,
+          limit: usageCheck.limit,
+          upgradeRequired: usageCheck.plan === "free",
+        },
+        402 // Payment Required
+      );
+    }
+
     // Extract optional fields
     const description = (formData.get("description") as string) || undefined;
     const email = (formData.get("email") as string) || undefined;
