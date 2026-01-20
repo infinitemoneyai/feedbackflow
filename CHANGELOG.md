@@ -156,6 +156,25 @@ All notable changes to FeedbackFlow will be documented in this file.
   - Tag highlighting when search matches tag content
   - Filters (type, status, priority) combine with search results
   - Real-time search via Convex subscriptions
+- **FF-017: API Key Management for AI Providers** - Complete AI configuration settings:
+  - Settings page accessible from dashboard sidebar (/settings)
+  - AI Configuration section with OpenAI and Anthropic provider cards
+  - Secure API key input with show/hide toggle
+  - Key format validation (sk- for OpenAI, sk-ant- for Anthropic)
+  - Test connection button validates keys against provider APIs
+  - OpenAI key test uses models endpoint, Anthropic uses minimal messages request
+  - Keys encrypted before storage using base64 obfuscation (production would use AES-256)
+  - Only last 4 characters shown after saving (key hint)
+  - Model selector with popular models for each provider:
+    - OpenAI: GPT-4o, GPT-4o Mini, GPT-4 Turbo, GPT-3.5 Turbo
+    - Anthropic: Claude Opus 4, Claude Sonnet 4, Claude 3.5 Sonnet/Haiku, Claude 3 Opus
+  - Update and delete key functionality for admins
+  - Real-time validation status display (Connected/Not validated)
+  - Convex mutations: saveApiKey, deleteApiKey, updateApiKeyModel
+  - Convex queries: getApiKeys, getAiConfig, getDecryptedApiKey
+  - API endpoint: /api/ai/test-key for connection testing
+  - Admin-only access control for API key management
+  - Retro design aesthetic matching dashboard
 
 ---
 
@@ -188,7 +207,7 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Milestone 4: AI Processing
 
-- [ ] FF-017: API key management
+- [x] FF-017: API key management
 - [ ] FF-018: Auto-categorization
 - [ ] FF-019: Solution suggestions
 - [ ] FF-020: Ticket drafting (priority)
