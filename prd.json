@@ -261,7 +261,7 @@
         "Typecheck passes"
       ],
       "priority": 14,
-      "passes": false,
+      "passes": true,
       "notes": "Match the detail panel design from mockup"
     },
     {

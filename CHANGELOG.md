@@ -112,6 +112,20 @@ All notable changes to FeedbackFlow will be documented in this file.
   - Empty states for inbox, backlog, and resolved views
   - Loading skeleton state while data fetches
   - Matches retro design aesthetic from mockup
+- **FF-014: Feedback Detail View** - Complete feedback detail panel with full editing capabilities:
+  - Full feedback details displayed in right sidebar panel
+  - ScreenshotViewer component with fullscreen modal, zoom in/out controls (0.5x-3x), and reset zoom
+  - VideoPlayer component with custom controls: play/pause, seek bar, time display, mute toggle
+  - Metadata section showing: URL (clickable with external link), browser, OS, screen dimensions, submission timestamp
+  - Status dropdown to change status (New, Triaging, Drafted, Exported, Resolved) with activity logging
+  - Priority dropdown to change priority (Critical, High, Medium, Low) with activity logging
+  - AssigneeSelector component fetching team members for assignment with avatars
+  - TagsInput component for adding/removing custom labels with keyboard support (Enter to add, Backspace to remove)
+  - SubmitterSection showing submitter name and email with mailto link
+  - Loading state with spinner while fetching feedback
+  - Error state for deleted or inaccessible feedback
+  - Empty state prompting user to select a feedback item
+  - Matches retro design aesthetic with bordered dropdowns and shadow effects
 
 ---
 
@@ -138,7 +152,7 @@ All notable changes to FeedbackFlow will be documented in this file.
 ### Milestone 3: Dashboard Core
 
 - [x] FF-013: Feedback inbox
-- [ ] FF-014: Feedback detail view
+- [x] FF-014: Feedback detail view
 - [ ] FF-015: Comments & activity log
 - [ ] FF-016: Full-text search
 
