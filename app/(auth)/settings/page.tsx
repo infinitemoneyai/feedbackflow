@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import Link from "next/link";
-import { ArrowLeft, Bot, Settings as SettingsIcon, Users, CreditCard, Plug, Webhook, Key, Zap, Bell, Palette, HardDrive, User } from "lucide-react";
+import { ArrowLeft, Bot, Settings as SettingsIcon, Users, CreditCard, Plug, Webhook, Key, Zap, Bell, Palette, HardDrive, User, FileCode } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { AiConfigSection } from "@/components/settings/ai-config-section";
@@ -18,8 +18,9 @@ import { WidgetCustomizationSection } from "@/components/settings/widget-customi
 import { StorageConfigSection } from "@/components/settings/storage-config-section";
 import { TeamSettingsSection } from "@/components/settings/team-settings-section";
 import { UserProfileSection } from "@/components/settings/user-profile-section";
+import { ExportTemplatesSection } from "@/components/settings/export-templates-section";
 
-type SettingsTab = "profile" | "widget" | "ai" | "storage" | "integrations" | "webhooks" | "automation" | "api-keys" | "notifications" | "team" | "billing";
+type SettingsTab = "profile" | "widget" | "ai" | "storage" | "integrations" | "templates" | "webhooks" | "automation" | "api-keys" | "notifications" | "team" | "billing";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
@@ -83,6 +84,12 @@ export default function SettingsPage() {
       label: "Integrations",
       icon: Plug,
       description: "Connect Linear, Notion, and more",
+    },
+    {
+      id: "templates" as const,
+      label: "Export Templates",
+      icon: FileCode,
+      description: "Customize export formatting",
     },
     {
       id: "webhooks" as const,
@@ -337,6 +344,56 @@ export default function SettingsPage() {
 
                 {/* Notion Integration */}
                 <NotionConfigSection teamId={selectedTeamId} />
+              </div>
+            )}
+
+            {activeTab === "templates" && selectedProjectId && (
+              <ExportTemplatesSection projectId={selectedProjectId} />
+            )}
+
+            {activeTab === "templates" && !selectedProjectId && (
+              <div className="space-y-6">
+                <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border-2 border-retro-peach bg-retro-peach/10">
+                      <FileCode className="h-6 w-6 text-retro-peach" />
+                    </div>
+                    <div className="flex-1">
+                      <h2 className="text-xl font-semibold text-retro-black">
+                        Export Templates
+                      </h2>
+                      <p className="mt-1 text-sm text-stone-600">
+                        Customize how feedback is formatted when exported. Select a project to configure templates.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-6">
+                    <label className="mb-2 block text-sm font-medium text-stone-700">
+                      Select Project
+                    </label>
+                    <select
+                      value={selectedProjectId || ""}
+                      onChange={(e) => setSelectedProjectId(e.target.value as Id<"projects">)}
+                      className="w-full rounded border-2 border-stone-200 bg-white px-4 py-2.5 text-sm transition-colors focus:border-retro-black focus:outline-none"
+                    >
+                      {!projects ? (
+                        <option value="">Loading projects...</option>
+                      ) : projects.length === 0 ? (
+                        <option value="">No projects found</option>
+                      ) : (
+                        <>
+                          <option value="">Select a project...</option>
+                          {projects.map((project: { _id: Id<"projects">; name: string }) => (
+                            <option key={project._id} value={project._id}>
+                              {project.name}
+                            </option>
+                          ))}
+                        </>
+                      )}
+                    </select>
+                  </div>
+                </div>
               </div>
             )}
 
