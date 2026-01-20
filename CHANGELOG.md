@@ -81,6 +81,21 @@ All notable changes to FeedbackFlow will be documented in this file.
   - Widget size: ~69KB minified
   - New files: `submit-ui.ts`, `offline-queue.ts`
   - Updated icons.ts with bug, lightbulb, check, spinner, mail, user icons
+- **FF-012: Widget API Endpoint with Rate Limiting** - Complete feedback submission API:
+  - POST /api/widget/submit endpoint receives multipart form data
+  - Validates widget key exists and is active via Convex query
+  - IP-based rate limiting: 10 submissions per minute per IP
+  - Widget-based rate limiting: 100 submissions per day per widget
+  - Honeypot field "website" for basic spam detection (bots fill hidden fields)
+  - Screenshots uploaded to Convex file storage with generated URLs
+  - Videos uploaded to Convex storage (up to 10MB) with external storage placeholder for larger files
+  - Feedback record created in database with activity log entry
+  - Usage tracking updated for team billing purposes
+  - Returns feedback reference ID (FF-XXXXXX format) on success
+  - Appropriate HTTP status codes: 201 (success), 400 (bad request), 403 (inactive widget), 404 (invalid key), 429 (rate limited), 500 (server error)
+  - Full CORS support with OPTIONS preflight handler
+  - Rate limit headers: X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset
+  - New files: `app/api/widget/submit/route.ts`, `convex/feedback.ts`, `lib/rate-limit.ts`
 
 ---
 
@@ -102,7 +117,7 @@ All notable changes to FeedbackFlow will be documented in this file.
 - [x] FF-009: Screenshot capture
 - [x] FF-010: Screen recording with audio
 - [x] FF-011: Submission form & offline queue
-- [ ] FF-012: Widget API endpoint
+- [x] FF-012: Widget API endpoint
 
 ### Milestone 3: Dashboard Core
 
