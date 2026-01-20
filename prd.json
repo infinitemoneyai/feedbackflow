@@ -780,7 +780,7 @@
         "All E2E tests pass"
       ],
       "priority": 44,
-      "passes": false,
+      "passes": true,
       "notes": "Use Playwright. Focus on happy paths for critical user journeys."
     },
     {
