@@ -748,7 +748,7 @@
         "Typecheck passes"
       ],
       "priority": 42,
-      "passes": false,
+      "passes": true,
       "notes": "Use Handlebars or similar for templating. Allow custom formatting."
     },
     {

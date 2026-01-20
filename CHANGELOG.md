@@ -6,6 +6,25 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Added
 
+- **FF-042: Export Templates** - Customizable export formatting per project:
+  - New Export Templates tab in settings page
+  - Template editor with syntax highlighting and live preview
+  - Support for Linear, Notion, and JSON (prd.json) format templates
+  - Handlebars-like template syntax with variables, conditionals, and loops
+  - Available template variables panel with click-to-copy functionality
+  - Variable documentation showing name, description, and example values
+  - Sample feedback data for realistic preview rendering
+  - Save/reset template functionality with unsaved changes warning
+  - Default templates for each provider (Linear, Notion, JSON)
+  - Reset to default option to restore original template
+  - Template stored per project in exportTemplates table
+  - Admin-only permission for template modifications
+  - Convex mutations: saveExportTemplate, resetExportTemplate, deleteExportTemplate
+  - Convex queries: getExportTemplates, getExportTemplate, getTemplateVariables
+  - Uses existing exportTemplates schema with by_project index
+  - Retro design aesthetic with provider-specific color themes
+  - Typecheck passes with no errors
+
 - **FF-041: User Profile and Settings** - Complete user profile management interface:
   - New Profile tab in settings page as the default view
   - Profile information display with avatar, name, email, and member since date
