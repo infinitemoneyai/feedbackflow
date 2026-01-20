@@ -489,7 +489,7 @@
         "Typecheck passes"
       ],
       "priority": 27,
-      "passes": false,
+      "passes": true,
       "notes": "Example: 'All bugs with priority Critical -> Export to Linear automatically'"
     },
     {

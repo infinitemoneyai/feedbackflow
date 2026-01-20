@@ -344,7 +344,8 @@ export default defineSchema({
       v.literal("exported"),
       v.literal("commented"),
       v.literal("ai_analyzed"),
-      v.literal("ticket_drafted")
+      v.literal("ticket_drafted"),
+      v.literal("automation_executed")
     ),
     details: v.optional(
       v.object({
@@ -398,7 +399,7 @@ export default defineSchema({
    */
   exports: defineTable({
     feedbackId: v.id("feedback"),
-    userId: v.id("users"),
+    userId: v.optional(v.id("users")), // Optional for automation-created exports
     provider: v.union(
       v.literal("linear"),
       v.literal("notion"),

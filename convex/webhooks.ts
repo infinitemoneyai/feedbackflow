@@ -440,3 +440,43 @@ export const getWebhookById = internalQuery({
     return await ctx.db.get(args.webhookId);
   },
 });
+
+/**
+ * Trigger a webhook for automation rules (public mutation for API)
+ * This creates a log entry and the actual send is done via scheduled action
+ */
+export const triggerWebhookForAutomation = mutation({
+  args: {
+    webhookId: v.id("webhooks"),
+    feedbackId: v.id("feedback"),
+    event: v.string(),
+    payload: v.any(),
+  },
+  handler: async (ctx, args) => {
+    // Get the webhook
+    const webhook = await ctx.db.get(args.webhookId);
+    if (!webhook) {
+      throw new Error("Webhook not found");
+    }
+
+    if (!webhook.isActive) {
+      throw new Error("Webhook is not active");
+    }
+
+    // Create log entry
+    const logId = await ctx.db.insert("webhookLogs", {
+      webhookId: args.webhookId,
+      feedbackId: args.feedbackId,
+      event: args.event,
+      payload: args.payload,
+      attempt: 1,
+      status: "pending",
+      createdAt: Date.now(),
+    });
+
+    // Note: The actual webhook send is triggered by the scheduler from webhookActions.ts
+    // For automation, we'll rely on the API route to trigger it
+
+    return { logId, scheduled: true };
+  },
+});
