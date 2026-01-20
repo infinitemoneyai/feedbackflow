@@ -6,6 +6,67 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Added
 
+- **FF-043: Unit Tests for Core Functionality** - Comprehensive unit test suite with Vitest:
+  - Vitest testing framework configured with happy-dom environment
+  - Test setup file with global mocks and test utilities
+  - Test scripts: `npm run test`, `npm run test:watch`, `npm run test:coverage`
+  - **Rate Limiting Tests** (17 tests) - `lib/rate-limit.ts`:
+    - IP-based rate limit checking with sliding window
+    - Widget daily submission limits
+    - Client IP extraction from headers (X-Forwarded-For, X-Real-IP)
+  - **API Auth Tests** (21 tests) - `lib/api-auth.ts`:
+    - Permission checking for API keys
+    - API error and success response helpers
+    - API rate limit checking and header generation
+    - Bearer token extraction and validation
+  - **JSON Export Tests** (33 tests) - `lib/exports/json.ts`:
+    - Priority mapping (critical=1, high=2, medium=3, low=4)
+    - Acceptance criteria generation for bugs and features
+    - Export ID generation (FF-XXXXXX format)
+    - Export notes building with metadata, media, and submitter info
+    - User story conversion with ticket draft support
+    - PRD export formatting
+  - **AI Service Tests** (32 tests) - `lib/ai/index.ts`:
+    - OpenAI API integration with vision support
+    - Anthropic API integration with vision support
+    - Response parsing and error handling
+    - Analysis result validation and normalization
+    - Confidence clamping and array limiting
+  - **Linear Integration Tests** (23 tests) - `lib/integrations/linear.ts`:
+    - Priority mapping to Linear format
+    - Feedback formatting for Linear issues
+    - Connection testing and team/project/label fetching
+    - Issue creation with error handling
+  - **Notion Integration Tests** (19 tests) - `lib/integrations/notion.ts`:
+    - Priority mapping to Notion format
+    - Feedback formatting for Notion pages
+    - Connection testing and database operations
+    - Page creation with property mapping
+  - **Email Template Tests** (30 tests) - `lib/email/templates.ts`:
+    - New feedback notification emails
+    - Assignment notification emails
+    - Comment and mention notification emails
+    - Export status emails (success/failure)
+    - Magic link authentication emails
+    - Digest emails with multiple items
+    - HTML structure and content validation
+  - **Email Service Tests** (21 tests) - `lib/email/service.ts`:
+    - Notification email sending via Resend
+    - Digest email batching and formatting
+    - Magic link email generation
+    - Email configuration testing
+    - Error handling and API response processing
+  - **Widget Submit API Tests** (30 tests) - `app/api/widget/submit/route.ts`:
+    - User agent parsing for browser detection (Chrome, Firefox, Edge, Safari, Opera)
+    - OS detection (Windows, macOS, Linux, iOS, Android)
+    - Response format validation (success, error, rate limit, usage limit)
+    - Form data validation (widget key, title, type, honeypot)
+    - Metadata JSON parsing and handling
+  - Mocks for external services: Convex, Linear SDK, Notion SDK, Resend
+  - All 226 tests passing
+  - Bug fix: parseUserAgent now correctly detects iOS (before Mac OS X) and Android (before Linux)
+  - Typecheck passes with no errors
+
 - **FF-042: Export Templates** - Customizable export formatting per project:
   - New Export Templates tab in settings page
   - Template editor with syntax highlighting and live preview
@@ -815,12 +876,12 @@ All notable changes to FeedbackFlow will be documented in this file.
 - [x] FF-034: Usage tracking & limits
 - [x] FF-035: Pricing page
 - [x] FF-036: Widget customization UI
-- [ ] FF-037: Installation documentation
-- [ ] FF-038: External storage config
-- [ ] FF-039: Self-hosting documentation
-- [ ] FF-040: Team settings
-- [ ] FF-041: User profile & settings
-- [ ] FF-042: Export templates
-- [ ] FF-043: Unit tests
+- [x] FF-037: Installation documentation
+- [x] FF-038: External storage config
+- [x] FF-039: Self-hosting documentation
+- [x] FF-040: Team settings
+- [x] FF-041: User profile & settings
+- [x] FF-042: Export templates
+- [x] FF-043: Unit tests
 - [ ] FF-044: E2E tests
 - [ ] FF-045: Performance optimization
