@@ -1058,6 +1058,19 @@ export const getCommentsAndActivity = query({
 });
 
 /**
+ * Get feedback for internal use (no auth required - for background jobs)
+ */
+export const getFeedbackInternal = query({
+  args: {
+    feedbackId: v.id("feedback"),
+  },
+  handler: async (ctx, args) => {
+    const feedback = await ctx.db.get(args.feedbackId);
+    return feedback;
+  },
+});
+
+/**
  * Get team members for assignment dropdown
  */
 export const getTeamMembersForAssignment = query({

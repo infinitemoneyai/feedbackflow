@@ -1,0 +1,418 @@
+import { v } from "convex/values";
+import { action, internalAction } from "./_generated/server";
+import { internal, api } from "./_generated/api";
+
+/**
+ * AI Analysis Action - makes external API calls to AI providers
+ * This action is triggered when auto-categorization is requested
+ */
+export const analyzeFeedbackAction = internalAction({
+  args: {
+    feedbackId: v.id("feedback"),
+    teamId: v.id("teams"),
+    provider: v.union(v.literal("openai"), v.literal("anthropic")),
+    model: v.string(),
+    apiKey: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Fetch feedback data
+    const feedback = await ctx.runQuery(api.feedback.getFeedback, {
+      feedbackId: args.feedbackId,
+    });
+
+    if (!feedback) {
+      throw new Error("Feedback not found");
+    }
+
+    // Build the analysis prompt
+    const feedbackData = {
+      title: feedback.title,
+      description: feedback.description,
+      type: feedback.type,
+      screenshotUrl: feedback.screenshotUrl,
+      metadata: {
+        browser: feedback.metadata.browser,
+        os: feedback.metadata.os,
+        url: feedback.metadata.url,
+        screenWidth: feedback.metadata.screenWidth,
+        screenHeight: feedback.metadata.screenHeight,
+      },
+    };
+
+    // Fetch screenshot if available for vision analysis
+    let screenshotBase64: string | undefined;
+    if (feedback.screenshotUrl) {
+      try {
+        const imageResponse = await fetch(feedback.screenshotUrl);
+        if (imageResponse.ok) {
+          const arrayBuffer = await imageResponse.arrayBuffer();
+          screenshotBase64 = Buffer.from(arrayBuffer).toString("base64");
+        }
+      } catch (err) {
+        console.warn("Failed to fetch screenshot for AI analysis:", err);
+      }
+    }
+
+    // Call the AI API
+    let analysisResult;
+    if (args.provider === "openai") {
+      analysisResult = await callOpenAI(args.apiKey, args.model, feedbackData, screenshotBase64);
+    } else {
+      analysisResult = await callAnthropic(args.apiKey, args.model, feedbackData, screenshotBase64);
+    }
+
+    // Store the analysis result
+    await ctx.runMutation(internal.ai.storeAnalysisInternal, {
+      feedbackId: args.feedbackId,
+      analysis: {
+        suggestedType: analysisResult.suggestedType,
+        typeConfidence: analysisResult.typeConfidence,
+        suggestedPriority: analysisResult.suggestedPriority,
+        priorityConfidence: analysisResult.priorityConfidence,
+        suggestedTags: analysisResult.suggestedTags,
+        summary: analysisResult.summary,
+        affectedComponent: analysisResult.affectedComponent,
+        potentialCauses: analysisResult.potentialCauses,
+        suggestedSolutions: analysisResult.suggestedSolutions,
+      },
+      provider: args.provider,
+      model: args.model,
+    });
+
+    return { success: true };
+  },
+});
+
+/**
+ * System prompt for AI analysis
+ */
+const ANALYSIS_SYSTEM_PROMPT = `You are an expert software product analyst helping to triage user feedback. Analyze the following feedback and provide categorization and insights.
+
+Your task is to:
+1. Determine if this is a bug report or feature request
+2. Assess the priority level (low, medium, high, critical)
+3. Suggest relevant tags for categorization
+4. Provide a brief summary
+5. Identify the affected component/area if possible
+6. List potential causes (for bugs) or implementation considerations (for features)
+7. Suggest solutions or next steps
+
+Respond with a JSON object in the following exact format:
+{
+  "suggestedType": "bug" | "feature",
+  "typeConfidence": 0.0 to 1.0,
+  "suggestedPriority": "low" | "medium" | "high" | "critical",
+  "priorityConfidence": 0.0 to 1.0,
+  "suggestedTags": ["tag1", "tag2"],
+  "summary": "Brief 1-2 sentence summary",
+  "affectedComponent": "component name or null",
+  "potentialCauses": ["cause1", "cause2"],
+  "suggestedSolutions": ["solution1", "solution2"]
+}
+
+Priority guidelines:
+- critical: Production down, data loss, security vulnerability, blocks all users
+- high: Major feature broken, significant user impact, no workaround
+- medium: Feature partially broken, workaround exists, moderate impact
+- low: Minor issue, cosmetic, affects few users
+
+Be concise but thorough. Base your analysis on all available information.`;
+
+/**
+ * Build the user message for analysis
+ */
+function buildAnalysisPrompt(feedback: {
+  title: string;
+  description?: string;
+  type: string;
+  metadata: {
+    browser?: string;
+    os?: string;
+    url?: string;
+    screenWidth?: number;
+    screenHeight?: number;
+  };
+}): string {
+  let prompt = `# User Feedback to Analyze
+
+## Title
+${feedback.title}
+
+## Current Type
+${feedback.type === "bug" ? "Bug Report" : "Feature Request"}
+`;
+
+  if (feedback.description) {
+    prompt += `
+## Description
+${feedback.description}
+`;
+  }
+
+  if (feedback.metadata.url) {
+    prompt += `
+## Page URL
+${feedback.metadata.url}
+`;
+  }
+
+  const metadataParts: string[] = [];
+  if (feedback.metadata.browser) metadataParts.push(`Browser: ${feedback.metadata.browser}`);
+  if (feedback.metadata.os) metadataParts.push(`OS: ${feedback.metadata.os}`);
+  if (feedback.metadata.screenWidth && feedback.metadata.screenHeight) {
+    metadataParts.push(`Screen: ${feedback.metadata.screenWidth}x${feedback.metadata.screenHeight}`);
+  }
+
+  if (metadataParts.length > 0) {
+    prompt += `
+## Technical Context
+${metadataParts.join("\n")}
+`;
+  }
+
+  prompt += `
+Please analyze this feedback and provide your assessment in JSON format.`;
+
+  return prompt;
+}
+
+interface AIAnalysisResult {
+  suggestedType: "bug" | "feature";
+  typeConfidence: number;
+  suggestedPriority: "low" | "medium" | "high" | "critical";
+  priorityConfidence: number;
+  suggestedTags: string[];
+  summary: string;
+  affectedComponent?: string;
+  potentialCauses: string[];
+  suggestedSolutions: string[];
+}
+
+/**
+ * Call OpenAI API for analysis
+ */
+async function callOpenAI(
+  apiKey: string,
+  model: string,
+  feedback: {
+    title: string;
+    description?: string;
+    type: string;
+    metadata: {
+      browser?: string;
+      os?: string;
+      url?: string;
+      screenWidth?: number;
+      screenHeight?: number;
+    };
+  },
+  screenshotBase64?: string
+): Promise<AIAnalysisResult> {
+  const messages: Array<{
+    role: "system" | "user";
+    content: string | Array<{ type: string; text?: string; image_url?: { url: string } }>;
+  }> = [
+    {
+      role: "system",
+      content: ANALYSIS_SYSTEM_PROMPT,
+    },
+  ];
+
+  if (screenshotBase64) {
+    messages.push({
+      role: "user",
+      content: [
+        {
+          type: "text",
+          text: buildAnalysisPrompt(feedback),
+        },
+        {
+          type: "image_url",
+          image_url: {
+            url: `data:image/png;base64,${screenshotBase64}`,
+          },
+        },
+      ],
+    });
+  } else {
+    messages.push({
+      role: "user",
+      content: buildAnalysisPrompt(feedback),
+    });
+  }
+
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages,
+      temperature: 0.3,
+      response_format: { type: "json_object" },
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error?.message || `OpenAI API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+
+  if (!content) {
+    throw new Error("No response from OpenAI");
+  }
+
+  return normalizeResult(JSON.parse(content));
+}
+
+/**
+ * Call Anthropic API for analysis
+ */
+async function callAnthropic(
+  apiKey: string,
+  model: string,
+  feedback: {
+    title: string;
+    description?: string;
+    type: string;
+    metadata: {
+      browser?: string;
+      os?: string;
+      url?: string;
+      screenWidth?: number;
+      screenHeight?: number;
+    };
+  },
+  screenshotBase64?: string
+): Promise<AIAnalysisResult> {
+  const contentBlocks: Array<{
+    type: "text" | "image";
+    text?: string;
+    source?: { type: "base64"; media_type: string; data: string };
+  }> = [
+    {
+      type: "text",
+      text: buildAnalysisPrompt(feedback),
+    },
+  ];
+
+  if (screenshotBase64) {
+    contentBlocks.push({
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: "image/png",
+        data: screenshotBase64,
+      },
+    });
+  }
+
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: 1024,
+      system: ANALYSIS_SYSTEM_PROMPT,
+      messages: [
+        {
+          role: "user",
+          content: contentBlocks,
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error?.message || `Anthropic API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const textBlock = data.content?.find((block: { type: string }) => block.type === "text");
+  const content = textBlock?.text;
+
+  if (!content) {
+    throw new Error("No response from Anthropic");
+  }
+
+  // Try to extract JSON from the response
+  try {
+    return normalizeResult(JSON.parse(content));
+  } catch {
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      return normalizeResult(JSON.parse(jsonMatch[0]));
+    }
+    throw new Error("Failed to parse Anthropic response as JSON");
+  }
+}
+
+/**
+ * Normalize analysis result with defaults
+ */
+function normalizeResult(result: Partial<AIAnalysisResult>): AIAnalysisResult {
+  return {
+    suggestedType: result.suggestedType === "feature" ? "feature" : "bug",
+    typeConfidence: Math.min(1, Math.max(0, result.typeConfidence || 0.5)),
+    suggestedPriority: (["low", "medium", "high", "critical"].includes(result.suggestedPriority as string)
+      ? result.suggestedPriority
+      : "medium") as "low" | "medium" | "high" | "critical",
+    priorityConfidence: Math.min(1, Math.max(0, result.priorityConfidence || 0.5)),
+    suggestedTags: Array.isArray(result.suggestedTags) ? result.suggestedTags.slice(0, 10) : [],
+    summary: result.summary || "No summary available",
+    affectedComponent: result.affectedComponent || undefined,
+    potentialCauses: Array.isArray(result.potentialCauses) ? result.potentialCauses.slice(0, 5) : [],
+    suggestedSolutions: Array.isArray(result.suggestedSolutions) ? result.suggestedSolutions.slice(0, 5) : [],
+  };
+}
+
+/**
+ * Public action to trigger analysis (called from API routes)
+ */
+export const triggerAnalysis = action({
+  args: {
+    feedbackId: v.id("feedback"),
+    teamId: v.id("teams"),
+  },
+  handler: async (ctx, args) => {
+    // Get AI config for the team
+    const aiConfig = await ctx.runQuery(api.ai.getTeamAiConfig, {
+      teamId: args.teamId,
+    });
+
+    if (!aiConfig?.isConfigured || !aiConfig.preferredProvider || !aiConfig.preferredModel) {
+      return { success: false, error: "AI not configured" };
+    }
+
+    // Get the API key
+    const apiKeyData = await ctx.runQuery(api.apiKeys.getDecryptedApiKey, {
+      teamId: args.teamId,
+      provider: aiConfig.preferredProvider,
+    });
+
+    if (!apiKeyData?.key) {
+      return { success: false, error: "API key not found" };
+    }
+
+    // Schedule the analysis action
+    await ctx.scheduler.runAfter(0, internal.aiActions.analyzeFeedbackAction, {
+      feedbackId: args.feedbackId,
+      teamId: args.teamId,
+      provider: aiConfig.preferredProvider,
+      model: aiConfig.preferredModel,
+      apiKey: apiKeyData.key,
+    });
+
+    return { success: true };
+  },
+});
