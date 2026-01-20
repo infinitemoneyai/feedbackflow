@@ -6,6 +6,21 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Added
 
+- **FF-039: Self-Hosting Documentation** - Comprehensive self-hosting guide:
+  - Docs page at `/docs/self-hosting` with complete self-hosting instructions
+  - Quick start section with step-by-step local development setup
+  - Docker Compose configuration with production-ready setup
+  - Dockerfile with multi-stage build for optimized production images
+  - Environment variables table documenting all required and optional variables
+  - Convex database options: Cloud (recommended) vs self-hosted (advanced)
+  - Authentication options: Clerk (default) and alternatives (NextAuth.js, Supabase Auth, Keycloak, Convex Auth)
+  - Storage configuration guide for external video storage (S3, R2, GCS, MinIO)
+  - MinIO Docker example for fully self-hosted storage
+  - Privacy section confirming no telemetry, no phone home, no license checks
+  - All features available in self-hosted deployments without artificial limits
+  - Retro design aesthetic matching the app theme
+  - Typecheck passes with no errors
+
 - **FF-038: Configurable External Storage** - External storage configuration for video recordings:
   - Storage tab in settings page for configuring external storage providers
   - Support for Amazon S3 with region selector and custom endpoint option
