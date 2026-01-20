@@ -1,10 +1,13 @@
 "use client";
 
 import { useState, createContext, useContext, ReactNode } from "react";
+import { useQuery } from "convex/react";
 import { DashboardSidebar } from "./dashboard-sidebar";
 import { DashboardHeader } from "./dashboard-header";
 import { TicketDetailPanel } from "./ticket-detail-panel";
+import { OnboardingModal } from "../onboarding/onboarding-modal";
 import { Id } from "@/convex/_generated/dataModel";
+import { api } from "@/convex/_generated/api";
 
 interface DashboardContextType {
   selectedTeamId: Id<"teams"> | null;
@@ -42,6 +45,36 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [currentView, setCurrentView] = useState<"inbox" | "backlog" | "resolved">("inbox");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Get onboarding state
+  const onboardingState = useQuery(api.onboarding.getOnboardingState);
+  const teams = useQuery(api.teams.getMyTeams);
+
+  // Get first team and project for onboarding modal
+  const firstTeam = teams?.[0];
+  const projects = useQuery(
+    api.projects.getProjects,
+    firstTeam ? { teamId: firstTeam._id } : "skip"
+  );
+  const firstProject = projects?.[0];
+
+  // Get widget key for first project
+  const widgets = useQuery(
+    api.projects.getWidgets,
+    firstProject ? { projectId: firstProject._id } : "skip"
+  );
+  const widgetKey = widgets?.[0]?.widgetKey;
+
+  // Show onboarding modal for steps 4-7
+  const showOnboardingModal =
+    onboardingState &&
+    !onboardingState.isComplete &&
+    onboardingState.step !== undefined &&
+    onboardingState.step >= 4 &&
+    onboardingState.step <= 7 &&
+    firstTeam &&
+    firstProject &&
+    widgetKey;
 
   return (
     <DashboardContext.Provider
@@ -85,6 +118,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <TicketDetailPanel />
         </div>
       </div>
+
+      {/* Onboarding modal for steps 4-7 */}
+      {showOnboardingModal && (
+        <OnboardingModal
+          teamId={firstTeam._id}
+          projectId={firstProject._id}
+          widgetKey={widgetKey}
+        />
+      )}
     </DashboardContext.Provider>
   );
 }
