@@ -78,7 +78,7 @@
         "Typecheck passes"
       ],
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "notes": "Two roles only: admin (full access, billing, invites) and member (view/process feedback)"
     },
     {
