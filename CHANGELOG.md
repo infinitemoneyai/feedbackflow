@@ -4,6 +4,26 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **Onboarding Flow** - Complete 7-step blocking onboarding for new users:
+  - Step 1: Team name input (creates team, subscription, adds user as admin)
+  - Step 2: Animated walkthrough showing how FeedbackFlow works (4 auto-advancing panels)
+  - Step 3: Create first project (name, URL, type selection)
+  - Step 4: Install script modal with framework-specific code snippets
+  - Step 5: Verify installation with "Send Test Feedback" button and real-time verification
+  - Step 6: Invite teammate with email input
+  - Step 7: Upgrade prompt with Free vs Pro comparison
+  - Hybrid layout: Full-page for steps 1-3, modal over dashboard for steps 4-7
+  - Progress indicator with dots showing current step
+  - Skip allowed only after verification (steps 6-7)
+  - Route protection: redirects to /onboarding for steps 1-3, shows modal for steps 4-7
+  - New users with pending team invites skip onboarding
+  - Retro design aesthetic with thick borders, offset shadows, yellow accents
+  - Schema updates: onboardingStep and onboardingCompletedAt on users table
+  - Convex functions: getOnboardingState, startOnboarding, completeStep, skipToComplete, createOnboardingTeam, createOnboardingProject, sendTestFeedback
+  - 9 new components in components/onboarding/
+
 ### Changed
 
 - **Global Design System** - Established shared layout components as single source of truth:
