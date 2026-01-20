@@ -30,6 +30,7 @@ import { api } from "@/convex/_generated/api";
 import { useDashboard } from "./dashboard-layout";
 import { cn } from "@/lib/utils";
 import { Id } from "@/convex/_generated/dataModel";
+import { CommentsAndActivity } from "./comments-activity";
 
 type FeedbackStatus = "new" | "triaging" | "drafted" | "exported" | "resolved";
 type FeedbackPriority = "low" | "medium" | "high" | "critical";
@@ -901,31 +902,8 @@ export function TicketDetailPanel() {
         </div>
       </div>
 
-      {/* Comment input placeholder (to be implemented in FF-015) */}
-      <div className="border-t-2 border-retro-black p-4">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Add a comment..."
-            className="w-full rounded border-2 border-stone-200 bg-stone-50 py-2.5 pl-4 pr-10 text-sm outline-none transition-colors focus:border-retro-blue"
-          />
-          <button className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-stone-400 transition-colors hover:text-retro-blue">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-4 w-4"
-            >
-              <line x1="22" y1="2" x2="11" y2="13" />
-              <polygon points="22 2 15 22 11 13 2 9 22 2" />
-            </svg>
-          </button>
-        </div>
-      </div>
+      {/* Comments and Activity section */}
+      <CommentsAndActivity feedbackId={selectedFeedbackId} />
     </aside>
   );
 }
