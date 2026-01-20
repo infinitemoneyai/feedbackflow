@@ -1,4 +1,8 @@
 import Stripe from "stripe";
+import { STRIPE_PRICES, type SubscriptionStatus } from "./stripe-config";
+
+// Re-export config for convenience in server-side code
+export { PLANS, STRIPE_PRICES, type SubscriptionStatus } from "./stripe-config";
 
 // Initialize Stripe client
 // Note: This should only be used in server-side code (API routes, server actions)
@@ -7,43 +11,6 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   typescript: true,
 });
 
-// Stripe Price IDs - These will be created in Stripe Dashboard
-// Test mode prices for development
-export const STRIPE_PRICES = {
-  PRO_MONTHLY: process.env.STRIPE_PRICE_PRO_MONTHLY || "price_pro_monthly_test",
-} as const;
-
-// Plan configuration
-export const PLANS = {
-  free: {
-    name: "Free",
-    seats: 1,
-    feedbackLimit: 25,
-    features: [
-      "1 team seat",
-      "25 feedback/month",
-      "Screenshot capture",
-      "Basic analytics",
-      "Community support",
-    ],
-  },
-  pro: {
-    name: "Pro",
-    seats: "unlimited",
-    feedbackLimit: null, // unlimited
-    pricePerSeat: 12, // $12/seat/month
-    features: [
-      "Unlimited team seats",
-      "Unlimited feedback",
-      "Screen recording with audio",
-      "AI-powered triage",
-      "Linear & Notion export",
-      "Custom webhooks",
-      "Priority support",
-    ],
-  },
-} as const;
-
 /**
  * Create a Stripe Checkout session for upgrading to Pro
  */
@@ -51,30 +18,36 @@ export async function createCheckoutSession({
   teamId,
   customerId,
   seats,
+  billingInterval = "monthly",
   successUrl,
   cancelUrl,
 }: {
   teamId: string;
   customerId: string;
   seats: number;
+  billingInterval?: "monthly" | "yearly";
   successUrl: string;
   cancelUrl: string;
 }): Promise<Stripe.Checkout.Session> {
+  const priceId = billingInterval === "yearly" ? STRIPE_PRICES.PRO_YEARLY : STRIPE_PRICES.PRO_MONTHLY;
+
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
     mode: "subscription",
     line_items: [
       {
-        price: STRIPE_PRICES.PRO_MONTHLY,
+        price: priceId,
         quantity: seats,
       },
     ],
     metadata: {
       teamId,
+      billingInterval,
     },
     subscription_data: {
       metadata: {
         teamId,
+        billingInterval,
       },
     },
     success_url: successUrl,
@@ -224,13 +197,6 @@ export function constructWebhookEvent(
 ): Stripe.Event {
   return stripe.webhooks.constructEvent(payload, signature, webhookSecret);
 }
-
-// Type helper for subscription status
-export type SubscriptionStatus =
-  | "active"
-  | "canceled"
-  | "past_due"
-  | "trialing";
 
 export function mapStripeStatus(status: Stripe.Subscription.Status): SubscriptionStatus {
   switch (status) {

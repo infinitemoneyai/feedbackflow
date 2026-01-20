@@ -7,7 +7,7 @@ import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { PLANS } from "@/lib/stripe";
+import { PLANS } from "@/lib/stripe-config";
 import { Icon } from "@/components/ui/icon";
 import { PageLayout } from "@/components/layout";
 

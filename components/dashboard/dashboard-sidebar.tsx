@@ -52,19 +52,16 @@ export function DashboardSidebar() {
     {
       id: "inbox" as const,
       label: "Inbox",
-      icon: Inbox,
       description: "New and triaging feedback",
     },
     {
       id: "backlog" as const,
       label: "Backlog",
-      icon: Bookmark,
       description: "Drafted tickets",
     },
     {
       id: "resolved" as const,
       label: "Resolved",
-      icon: CheckCircle2,
       description: "Exported and resolved",
     },
   ];
