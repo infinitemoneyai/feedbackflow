@@ -6,6 +6,29 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Added
 
+- **FF-029: Email Notifications** - Complete email notification system with Resend:
+  - Email notifications sent on: new feedback, assignment, comment mention, export complete/failed
+  - Emails sent via Resend with branded HTML templates matching retro design system
+  - Emails include feedback summary and direct link to dashboard
+  - Notification preferences section in user settings
+  - Toggle to enable/disable email notifications
+  - Email frequency options: instant, daily digest, weekly digest
+  - Unsubscribe link in all emails with dedicated unsubscribe page
+  - Email digest queue system for batching notifications
+  - API routes for sending notifications and processing digests
+  - Notification preferences stored per user with event-level granularity
+  - Events configurable: new feedback, assignments, comments, mentions, exports
+  - Secure unsubscribe tokens generated per user
+  - Email templates: new feedback, assignment, comment, mention, export status, digest
+  - Resend SDK integration for reliable email delivery
+  - Public unsubscribe page at /unsubscribe with token validation
+  - Convex schema updates: notificationPreferences (with unsubscribeToken), emailDigestQueue
+  - Convex mutations: upsertNotificationPreferences, unsubscribeByToken, createNotification, queueForDigest, markDigestItemsSent, initializePreferences
+  - Convex queries: getNotificationPreferences, getPreferencesByUserId, getPendingDigestItems, getUsersForDigest, getUserByUnsubscribeToken
+  - API routes: /api/notifications/send (instant emails), /api/notifications/digest (batch digests)
+  - New components: NotificationPreferencesSection with toggle controls and frequency selector
+  - Typecheck passes with no errors
+
 - **FF-028: Analytics Dashboard** - Complete analytics dashboard with charts and metrics:
   - Analytics page accessible from sidebar navigation with BarChart3 icon
   - Feedback volume line chart (daily/weekly/monthly granularity)

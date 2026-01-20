@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import Link from "next/link";
-import { ArrowLeft, Bot, Settings as SettingsIcon, Users, CreditCard, Plug, Webhook, Key, Zap } from "lucide-react";
+import { ArrowLeft, Bot, Settings as SettingsIcon, Users, CreditCard, Plug, Webhook, Key, Zap, Bell } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { AiConfigSection } from "@/components/settings/ai-config-section";
@@ -12,8 +12,9 @@ import { NotionConfigSection } from "@/components/settings/notion-config-section
 import { WebhookConfigSection } from "@/components/settings/webhook-config-section";
 import { RestApiKeysSection } from "@/components/settings/rest-api-keys-section";
 import { AutomationRulesSection } from "@/components/settings/automation-rules-section";
+import { NotificationPreferencesSection } from "@/components/settings/notification-preferences-section";
 
-type SettingsTab = "ai" | "integrations" | "webhooks" | "automation" | "api-keys" | "team" | "billing";
+type SettingsTab = "ai" | "integrations" | "webhooks" | "automation" | "api-keys" | "notifications" | "team" | "billing";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("ai");
@@ -53,6 +54,12 @@ export default function SettingsPage() {
       label: "API Keys",
       icon: Key,
       description: "Manage REST API access",
+    },
+    {
+      id: "notifications" as const,
+      label: "Notifications",
+      icon: Bell,
+      description: "Email and in-app notification settings",
     },
     {
       id: "team" as const,
@@ -195,6 +202,10 @@ export default function SettingsPage() {
 
             {activeTab === "api-keys" && selectedTeamId && (
               <RestApiKeysSection teamId={selectedTeamId} />
+            )}
+
+            {activeTab === "notifications" && (
+              <NotificationPreferencesSection />
             )}
 
             {activeTab === "team" && (
