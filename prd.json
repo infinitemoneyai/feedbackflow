@@ -167,7 +167,7 @@
         "Typecheck passes"
       ],
       "priority": 9,
-      "passes": false,
+      "passes": true,
       "notes": "Keep annotation tools simple: pen (red), highlighter (yellow), shapes (circle, arrow). Canvas-based drawing."
     },
     {
