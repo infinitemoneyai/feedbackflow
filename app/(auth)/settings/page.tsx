@@ -16,6 +16,7 @@ import { NotificationPreferencesSection } from "@/components/settings/notificati
 import { BillingSection } from "@/components/settings/billing-section";
 import { WidgetCustomizationSection } from "@/components/settings/widget-customization-section";
 import { StorageConfigSection } from "@/components/settings/storage-config-section";
+import { TeamSettingsSection } from "@/components/settings/team-settings-section";
 
 type SettingsTab = "widget" | "ai" | "storage" | "integrations" | "webhooks" | "automation" | "api-keys" | "notifications" | "team" | "billing";
 
@@ -344,15 +345,8 @@ export default function SettingsPage() {
               <NotificationPreferencesSection />
             )}
 
-            {activeTab === "team" && (
-              <div className="rounded border-2 border-retro-black bg-white p-8 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
-                <h2 className="mb-4 text-xl font-semibold text-retro-black">
-                  Team Settings
-                </h2>
-                <p className="text-stone-500">
-                  Team management features coming soon.
-                </p>
-              </div>
+            {activeTab === "team" && selectedTeamId && (
+              <TeamSettingsSection teamId={selectedTeamId} />
             )}
 
             {activeTab === "billing" && selectedTeamId && (

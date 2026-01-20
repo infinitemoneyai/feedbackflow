@@ -6,6 +6,23 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Added
 
+- **FF-040: Team Settings Page** - Complete team management interface:
+  - Team settings section in settings page
+  - Team name editing with auto-generated slug
+  - Display team slug and owner information
+  - Member list showing all team members with roles
+  - Role badges (Owner, Admin, Member) with distinct icons
+  - Invite member form with email input and role selection
+  - Pending invites list with expiration dates
+  - Change member role dropdown (admin only)
+  - Remove member button with confirmation (admin only)
+  - Leave team option for non-owners
+  - Delete team with typed confirmation (owner only)
+  - Success/error message display
+  - Loading states for all operations
+  - Uses existing Convex backend (teams.ts)
+  - Typecheck passes with no errors
+
 - **FF-039: Self-Hosting Documentation** - Comprehensive self-hosting guide:
   - Docs page at `/docs/self-hosting` with complete self-hosting instructions
   - Quick start section with step-by-step local development setup

@@ -714,7 +714,7 @@
         "Typecheck passes"
       ],
       "priority": 40,
-      "passes": false,
+      "passes": true,
       "notes": "Admins can do everything except delete team. That requires owner."
     },
     {
