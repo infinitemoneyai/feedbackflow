@@ -386,6 +386,59 @@ export function exportEmail(
 }
 
 /**
+ * Magic link email for submitter status access
+ */
+export function magicLinkEmail(data: {
+  recipientName?: string;
+  feedbackTitle: string;
+  projectName?: string;
+  statusUrl: string;
+}): { subject: string; html: string } {
+  const subject = `Check the status of your feedback: ${data.feedbackTitle}`;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${subject}</title>
+  <style>${baseStyles}</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>FeedbackFlow</h1>
+    </div>
+    <div class="content">
+      <p>Hi${data.recipientName ? ` ${data.recipientName}` : ""},</p>
+      <p>You requested access to check the status of your feedback:</p>
+
+      <div class="feedback-card">
+        <h3 class="feedback-title">${data.feedbackTitle}</h3>
+        ${data.projectName ? `<p class="meta">Submitted to ${data.projectName}</p>` : ""}
+      </div>
+
+      <p>Click the button below to view the current status of your feedback:</p>
+
+      <a href="${data.statusUrl}" class="button">View Status</a>
+
+      <p style="margin-top: 24px; font-size: 14px; color: #737373;">
+        This link will expire in 7 days. If you didn't request this, you can safely ignore this email.
+      </p>
+    </div>
+    <div class="footer">
+      <p>FeedbackFlow • Privacy-first feedback collection</p>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+
+  return { subject, html };
+}
+
+/**
  * Digest email (daily/weekly summary)
  */
 export function digestEmail(data: DigestTemplateData): { subject: string; html: string } {

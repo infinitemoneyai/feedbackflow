@@ -6,6 +6,36 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Added
 
+- **FF-031: Submitter Status Page** - Public status tracking page for feedback submitters:
+  - Public page at `/status?token=xxx` with magic link authentication
+  - Magic link token system for secure submitter access (7-day expiration)
+  - Status timeline showing feedback progression (Received → Under Review → In Progress → In Development → Resolved)
+  - User-friendly status labels with descriptive messages
+  - Public notes section for team updates visible to submitters (not internal comments)
+  - Submitter can add additional context after initial submission
+  - Screenshot preview toggle for submitter reference
+  - Convex module `submitterPortal.ts` with:
+    - `createMagicLinkToken` mutation generates secure 32-char tokens
+    - `validateToken` query checks token validity and expiration
+    - `getPublicFeedbackStatus` query returns limited, public-safe feedback info
+    - `addSubmitterUpdate` mutation for submitter context additions
+    - `addPublicNote` mutation for team members to post public updates
+    - `getPublicNotes` / `getSubmitterUpdates` queries for team view
+    - `deletePublicNote` mutation with author/admin permissions
+    - `requestMagicLink` mutation for email sending flow
+    - `hasSubmitterEmail` query to check if status link can be sent
+  - API endpoint `/api/submitter/send-magic-link` for email delivery
+  - Magic link email template with retro design branding
+  - SubmitterPortalSection component in ticket detail panel:
+    - Send Status Link button for submitters with email addresses
+    - Public notes management (add, view, delete)
+    - View submitter's additional context
+    - Info message when no email available
+  - Activity logging for submitter updates
+  - Retro design aesthetic matching FeedbackFlow brand
+  - Loading and error states for invalid/expired tokens
+  - Typecheck passes with no errors
+
 - **FF-030: In-App Notifications** - Complete in-app notification system with real-time updates:
   - Notification bell icon in dashboard header with unread count badge
   - Dropdown component listing recent notifications in retro design style
@@ -542,12 +572,12 @@ All notable changes to FeedbackFlow will be documented in this file.
 ### Milestone 6: Analytics & Notifications
 
 - [x] FF-028: Analytics dashboard
-- [ ] FF-029: Email notifications
-- [ ] FF-030: In-app notifications
+- [x] FF-029: Email notifications
+- [x] FF-030: In-app notifications
 
 ### Milestone 7: Submitter Portal & Privacy
 
-- [ ] FF-031: Submitter status page
+- [x] FF-031: Submitter status page
 - [ ] FF-032: GDPR compliance
 
 ### Milestone 8: Billing & Polish

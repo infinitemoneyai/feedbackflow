@@ -37,6 +37,7 @@ import { AIConversationSection } from "./ai-conversation-section";
 import { LinearExportSection } from "./linear-export-section";
 import { NotionExportSection } from "./notion-export-section";
 import { JsonExportSection } from "./json-export-section";
+import { SubmitterPortalSection } from "./submitter-portal-section";
 
 type FeedbackStatus = "new" | "triaging" | "drafted" | "exported" | "resolved";
 type FeedbackPriority = "low" | "medium" | "high" | "critical";
@@ -964,6 +965,13 @@ export function TicketDetailPanel() {
           teamId={feedback.teamId}
           onCopyToComment={handleCopyToComment}
           onCopyToTicketDraft={handleCopyToTicketDraft}
+        />
+
+        {/* Submitter Portal Section */}
+        <SubmitterPortalSection
+          feedbackId={selectedFeedbackId}
+          hasSubmitterEmail={!!feedback.submitterEmail}
+          submitterEmail={feedback.submitterEmail}
         />
       </div>
 
