@@ -7,7 +7,6 @@ import {
   Bug,
   Lightbulb,
   MoreHorizontal,
-  Wand2,
   ChevronDown,
   User,
   Clock,
@@ -31,6 +30,7 @@ import { useDashboard } from "./dashboard-layout";
 import { cn } from "@/lib/utils";
 import { Id } from "@/convex/_generated/dataModel";
 import { CommentsAndActivity } from "./comments-activity";
+import { AIAnalysisSection } from "./ai-analysis-section";
 
 type FeedbackStatus = "new" | "triaging" | "drafted" | "exported" | "resolved";
 type FeedbackPriority = "low" | "medium" | "high" | "critical";
@@ -882,24 +882,14 @@ export function TicketDetailPanel() {
         {/* Submitter info */}
         <SubmitterSection name={feedback.submitterName} email={feedback.submitterEmail} />
 
-        {/* AI Actions placeholder */}
-        <div className="rounded border-2 border-retro-lavender bg-retro-lavender/10 p-4">
-          <div className="mb-3 flex items-center gap-2">
-            <Wand2 className="h-4 w-4 text-retro-lavender" />
-            <h3 className="text-sm font-medium text-retro-black">AI Actions</h3>
-          </div>
-          <div className="space-y-2">
-            <button className="w-full rounded border border-stone-200 bg-white px-3 py-2 text-left text-sm text-stone-600 transition-colors hover:border-retro-black hover:text-retro-black">
-              Auto-categorize
-            </button>
-            <button className="w-full rounded border border-stone-200 bg-white px-3 py-2 text-left text-sm text-stone-600 transition-colors hover:border-retro-black hover:text-retro-black">
-              Suggest solutions
-            </button>
-            <button className="w-full rounded border-2 border-retro-black bg-retro-black px-3 py-2 text-left text-sm font-medium text-white shadow-[2px_2px_0px_0px_#888] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_#888]">
-              Draft Ticket
-            </button>
-          </div>
-        </div>
+        {/* AI Analysis Section */}
+        <AIAnalysisSection
+          feedbackId={selectedFeedbackId}
+          teamId={feedback.teamId}
+          currentType={feedback.type}
+          currentPriority={feedback.priority}
+          currentTags={feedback.tags}
+        />
       </div>
 
       {/* Comments and Activity section */}

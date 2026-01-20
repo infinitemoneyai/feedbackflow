@@ -175,6 +175,29 @@ All notable changes to FeedbackFlow will be documented in this file.
   - API endpoint: /api/ai/test-key for connection testing
   - Admin-only access control for API key management
   - Retro design aesthetic matching dashboard
+- **FF-018: AI Auto-Categorization** - Complete AI-powered feedback analysis and categorization:
+  - AI analysis service wrapper (`lib/ai/index.ts`) supporting both OpenAI and Anthropic providers
+  - Vision API support for screenshot analysis using GPT-4o or Claude vision models
+  - Analyzes feedback to suggest: type (bug/feature) with confidence score, priority (low/medium/high/critical) with confidence, relevant tags, affected component, potential causes, and suggested solutions
+  - Results stored in `aiAnalysis` table linked to feedback
+  - Convex mutations: `storeAnalysis`, `storeAnalysisInternal`, `applyAnalysisSuggestions`
+  - Convex queries: `getAnalysis`, `getTeamAiConfig`
+  - API endpoint `/api/ai/analyze` for manual triggering with authentication
+  - API endpoint `/api/ai/auto-analyze` for background auto-analysis on new feedback
+  - Widget submission triggers auto-analysis when project has `autoTriage` enabled
+  - AIAnalysisSection component in feedback detail panel with:
+    - Type suggestion with confidence badge and apply button
+    - Priority suggestion with confidence badge and apply button
+    - Suggested tags with add all or individual add functionality
+    - Affected component display
+    - Potential causes list (for bugs)
+    - Suggested solutions list
+    - Summary section with AI-generated overview
+    - Re-analyze button to refresh analysis
+    - Apply all suggestions button for batch application
+  - Activity logging for AI analysis events
+  - Usage tracking for AI calls (aiCallCount in usageTracking table)
+  - Graceful fallback when AI not configured or API keys invalid
 
 ---
 
@@ -208,7 +231,7 @@ All notable changes to FeedbackFlow will be documented in this file.
 ### Milestone 4: AI Processing
 
 - [x] FF-017: API key management
-- [ ] FF-018: Auto-categorization
+- [x] FF-018: Auto-categorization
 - [ ] FF-019: Solution suggestions
 - [ ] FF-020: Ticket drafting (priority)
 - [ ] FF-021: AI conversation

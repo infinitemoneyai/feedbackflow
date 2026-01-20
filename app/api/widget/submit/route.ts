@@ -7,10 +7,10 @@ import {
   getClientIp,
 } from "@/lib/rate-limit";
 
-// Initialize Convex client
-const convex = new ConvexHttpClient(
-  process.env.NEXT_PUBLIC_CONVEX_URL || ""
-);
+// Lazy initialize Convex client
+function getConvexClient() {
+  return new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL || "");
+}
 
 // CORS headers for all responses
 const corsHeaders = {
@@ -142,6 +142,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         200
       );
     }
+
+    // Initialize Convex client
+    const convex = getConvexClient();
 
     // Validate widget exists and is active
     const widgetInfo = await convex.query(api.feedback.getWidgetByKey, {
@@ -321,6 +324,36 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       recordingDuration,
       metadata: feedbackMetadata,
     });
+
+    // Trigger background auto-analysis (fire and forget)
+    // This runs asynchronously after response is sent
+    try {
+      // Get project to find team ID for auto-analysis
+      const projectInfo = await convex.query(api.projects.getProjectInternal, {
+        projectId: widgetInfo.projectId,
+      });
+
+      if (projectInfo) {
+        // Fire and forget - don't wait for completion
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
+        fetch(`${baseUrl}/api/ai/auto-analyze`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-internal-key": process.env.INTERNAL_API_KEY || "",
+          },
+          body: JSON.stringify({
+            feedbackId: result.feedbackId,
+            teamId: projectInfo.teamId,
+            projectId: widgetInfo.projectId,
+          }),
+        }).catch((err) => {
+          console.warn("Auto-analysis trigger failed:", err);
+        });
+      }
+    } catch (err) {
+      console.warn("Failed to trigger auto-analysis:", err);
+    }
 
     // Return success response
     return jsonResponse(

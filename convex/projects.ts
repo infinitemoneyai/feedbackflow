@@ -176,6 +176,16 @@ export const getProject = query({
 });
 
 /**
+ * Get a project by ID (no auth required - for internal use)
+ */
+export const getProjectInternal = query({
+  args: { projectId: v.id("projects") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.projectId);
+  },
+});
+
+/**
  * Update a project
  */
 export const updateProject = mutation({
