@@ -552,3 +552,208 @@ export const hasSubmitterEmail = query({
     return !!feedback.submitterEmail;
   },
 });
+
+// ============================================================================
+// GDPR COMPLIANCE FUNCTIONS
+// ============================================================================
+
+/**
+ * Export all data for a submitter (GDPR data portability)
+ * Submitter can access their own data via magic link token
+ */
+export const exportSubmitterData = query({
+  args: {
+    token: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Validate token
+    const tokenRecord = await ctx.db
+      .query("submitterTokens")
+      .withIndex("by_token", (q) => q.eq("token", args.token))
+      .first();
+
+    if (!tokenRecord || tokenRecord.expiresAt < Date.now()) {
+      return { success: false, error: "Invalid or expired token" };
+    }
+
+    // Get feedback
+    const feedback = await ctx.db.get(tokenRecord.feedbackId);
+    if (!feedback) {
+      return { success: false, error: "Feedback not found" };
+    }
+
+    // Get project name
+    const project = await ctx.db.get(feedback.projectId);
+
+    // Get public notes
+    const publicNotes = await ctx.db
+      .query("publicNotes")
+      .withIndex("by_feedback", (q) => q.eq("feedbackId", feedback._id))
+      .collect();
+
+    // Get submitter updates
+    const submitterUpdates = await ctx.db
+      .query("submitterUpdates")
+      .withIndex("by_feedback", (q) => q.eq("feedbackId", feedback._id))
+      .collect();
+
+    // Build export data (only submitter-related information)
+    const exportData = {
+      exportedAt: new Date().toISOString(),
+      gdprExport: true,
+      dataSubject: {
+        email: tokenRecord.email,
+        name: feedback.submitterName || null,
+      },
+      feedback: {
+        id: feedback._id,
+        referenceId: feedback.referenceId,
+        title: feedback.title,
+        description: feedback.description,
+        type: feedback.type,
+        status: feedback.status,
+        createdAt: new Date(feedback.createdAt).toISOString(),
+        resolvedAt: feedback.resolvedAt ? new Date(feedback.resolvedAt).toISOString() : null,
+        projectName: project?.name || "Unknown",
+      },
+      media: {
+        screenshotUrl: feedback.screenshotUrl || null,
+        recordingUrl: feedback.recordingUrl || null,
+        recordingDuration: feedback.recordingDuration || null,
+      },
+      metadata: {
+        browser: feedback.metadata?.browser || null,
+        os: feedback.metadata?.os || null,
+        url: feedback.metadata?.url || null,
+        screenSize: feedback.metadata?.screenWidth && feedback.metadata?.screenHeight
+          ? `${feedback.metadata.screenWidth}x${feedback.metadata.screenHeight}`
+          : null,
+        submittedAt: feedback.metadata?.timestamp || null,
+      },
+      submitterUpdates: submitterUpdates.map((update) => ({
+        content: update.content,
+        createdAt: new Date(update.createdAt).toISOString(),
+      })),
+      publicNotes: publicNotes.map((note) => ({
+        content: note.content,
+        createdAt: new Date(note.createdAt).toISOString(),
+      })),
+    };
+
+    return {
+      success: true,
+      data: exportData,
+    };
+  },
+});
+
+/**
+ * Request deletion of submitter's personal data (GDPR right to erasure)
+ * Anonymizes the feedback but keeps it for historical records
+ */
+export const requestDataDeletion = mutation({
+  args: {
+    token: v.string(),
+    confirmDeletion: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    if (!args.confirmDeletion) {
+      throw new Error("You must confirm the deletion request");
+    }
+
+    // Validate token
+    const tokenRecord = await ctx.db
+      .query("submitterTokens")
+      .withIndex("by_token", (q) => q.eq("token", args.token))
+      .first();
+
+    if (!tokenRecord || tokenRecord.expiresAt < Date.now()) {
+      throw new Error("Invalid or expired token");
+    }
+
+    // Get feedback
+    const feedback = await ctx.db.get(tokenRecord.feedbackId);
+    if (!feedback) {
+      throw new Error("Feedback not found");
+    }
+
+    // Store the email before deletion for activity log
+    const submitterEmail = feedback.submitterEmail;
+
+    // Anonymize the feedback - remove PII but keep the feedback itself
+    await ctx.db.patch(feedback._id, {
+      submitterEmail: undefined,
+      submitterName: undefined,
+      // Keep: title, description, type, status, metadata (browser/os info)
+      // These are not personally identifiable
+    });
+
+    // Delete submitter updates (contains user-written content that may have PII)
+    const submitterUpdates = await ctx.db
+      .query("submitterUpdates")
+      .withIndex("by_feedback", (q) => q.eq("feedbackId", feedback._id))
+      .collect();
+
+    for (const update of submitterUpdates) {
+      await ctx.db.delete(update._id);
+    }
+
+    // Delete all magic link tokens for this feedback
+    const tokens = await ctx.db
+      .query("submitterTokens")
+      .withIndex("by_feedback", (q) => q.eq("feedbackId", feedback._id))
+      .collect();
+
+    for (const token of tokens) {
+      await ctx.db.delete(token._id);
+    }
+
+    // Create activity log entry for audit trail
+    await ctx.db.insert("activityLog", {
+      feedbackId: feedback._id,
+      action: "gdpr_data_deleted",
+      details: {
+        extra: `Submitter PII removed via GDPR deletion request. Original email: ${submitterEmail ? "[REDACTED]" : "none"}`,
+      },
+      createdAt: Date.now(),
+    });
+
+    return {
+      success: true,
+      message: "Your personal data has been deleted. The anonymized feedback record has been retained for historical purposes.",
+    };
+  },
+});
+
+/**
+ * Check if submitter data can still be deleted (for UI)
+ */
+export const canDeleteData = query({
+  args: {
+    token: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Validate token
+    const tokenRecord = await ctx.db
+      .query("submitterTokens")
+      .withIndex("by_token", (q) => q.eq("token", args.token))
+      .first();
+
+    if (!tokenRecord || tokenRecord.expiresAt < Date.now()) {
+      return { canDelete: false, reason: "Invalid or expired token" };
+    }
+
+    // Get feedback
+    const feedback = await ctx.db.get(tokenRecord.feedbackId);
+    if (!feedback) {
+      return { canDelete: false, reason: "Feedback not found" };
+    }
+
+    // Check if data is already deleted
+    if (!feedback.submitterEmail && !feedback.submitterName) {
+      return { canDelete: false, reason: "Personal data has already been deleted" };
+    }
+
+    return { canDelete: true };
+  },
+});
