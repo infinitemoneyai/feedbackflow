@@ -47,7 +47,7 @@
         "Typecheck passes"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": "feedback table: widgetId, projectId, teamId, type (bug/feature), title, description, screenshotUrl, recordingUrl, recordingDuration, status (new/triaging/drafted/exported/resolved), priority (low/medium/high/critical), tags[], submitterEmail?, submitterName?, assigneeId?, metadata {browser, os, url, timestamp}, createdAt. Also create: aiAnalysis, conversations, comments, activityLog, widgetConfig, exports, automationRules, integrations, storageConfig, apiKeys, usageTracking, subscriptions, notifications, webhookLogs, exportTemplates"
     },
     {
