@@ -13,6 +13,7 @@ All notable changes to FeedbackFlow will be documented in this file.
 - **FF-001: Project Foundation** - Next.js 15 with App Router, Convex configured, TypeScript strict mode, Tailwind CSS with retro design colors, shadcn/ui base components (Button, Badge, Card, Input), ESLint with Prettier
 - **FF-002: Database Schema** - Complete Convex schema with 25+ tables: users, teams, teamMembers, teamInvites, projects, widgets, widgetConfig, feedback, aiAnalysis, conversations, ticketDrafts, comments, activityLog, integrations, exports, exportTemplates, automationRules, webhooks, webhookLogs, apiKeys, storageConfig, notifications, notificationPreferences, subscriptions, usageTracking, restApiKeys, submitterTokens, submitterUpdates, publicNotes. Includes indexes for common queries and search index on feedback.
 - **FF-003: Clerk Authentication** - Integrated Clerk for authentication with middleware protecting routes, ClerkProvider with ConvexProviderWithClerk, user sync to Convex on sign-in, sign-in/sign-up pages with retro styling, protected dashboard layout with useStoreUser hook
+- **FF-004: Team Management** - Full team CRUD in convex/teams.ts: createTeam (generates unique slug, adds creator as admin, creates free subscription), inviteToTeam (creates invite with token), acceptInvite (validates token and email match), updateMemberRole (admin only, cannot change owner), removeMember (admin or self), getTeam/getMyTeams/getTeamMembers queries, getTeamInvites/cancelInvite for pending invites, updateTeam/deleteTeam mutations
 
 ---
 
@@ -23,7 +24,7 @@ All notable changes to FeedbackFlow will be documented in this file.
 - [x] FF-001: Project setup (Next.js 15, Convex, Tailwind)
 - [x] FF-002: Database schema
 - [x] FF-003: Clerk authentication
-- [ ] FF-004: Team management
+- [x] FF-004: Team management
 - [ ] FF-005: Landing page
 - [ ] FF-006: Dashboard layout
 
