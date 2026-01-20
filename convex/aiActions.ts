@@ -1360,3 +1360,481 @@ export const triggerTicketDraftGeneration = action({
     return { success: true };
   },
 });
+
+// =============================================================================
+// AI Conversation
+// =============================================================================
+
+/**
+ * System prompt for AI conversation
+ */
+const CONVERSATION_SYSTEM_PROMPT = `You are an AI assistant helping a product team analyze and understand user feedback. You have access to the feedback context including the title, description, screenshot (if provided), and technical metadata.
+
+Your role is to:
+1. Help the team understand the user's issue or request better
+2. Suggest potential causes or solutions
+3. Answer questions about the feedback
+4. Help clarify requirements or acceptance criteria
+5. Identify related issues or patterns
+
+Be helpful, concise, and technical when appropriate. If you're uncertain, say so. Focus on practical insights that help the team take action.
+
+When referring to visual elements from screenshots, be specific about what you observe.`;
+
+/**
+ * Build context message about the feedback for the AI
+ */
+function buildFeedbackContextForConversation(feedback: {
+  title: string;
+  description?: string;
+  type: string;
+  priority: string;
+  tags: string[];
+  metadata: {
+    browser?: string;
+    os?: string;
+    url?: string;
+  };
+  existingAnalysis?: {
+    summary?: string;
+    potentialCauses?: string[];
+    affectedComponent?: string;
+    suggestedSolutions?: string[];
+  };
+}): string {
+  let context = `# Feedback Context
+
+## Title
+${feedback.title}
+
+## Type
+${feedback.type === "bug" ? "Bug Report" : "Feature Request"}
+
+## Priority
+${feedback.priority}
+`;
+
+  if (feedback.description) {
+    context += `
+## Description
+${feedback.description}
+`;
+  }
+
+  if (feedback.tags && feedback.tags.length > 0) {
+    context += `
+## Tags
+${feedback.tags.join(", ")}
+`;
+  }
+
+  if (feedback.metadata.url) {
+    context += `
+## Page URL
+${feedback.metadata.url}
+`;
+  }
+
+  if (feedback.metadata.browser || feedback.metadata.os) {
+    context += `
+## Technical Context
+`;
+    if (feedback.metadata.browser) context += `- Browser: ${feedback.metadata.browser}\n`;
+    if (feedback.metadata.os) context += `- OS: ${feedback.metadata.os}\n`;
+  }
+
+  if (feedback.existingAnalysis) {
+    if (feedback.existingAnalysis.summary) {
+      context += `
+## AI Analysis Summary
+${feedback.existingAnalysis.summary}
+`;
+    }
+    if (feedback.existingAnalysis.affectedComponent) {
+      context += `
+## Affected Component
+${feedback.existingAnalysis.affectedComponent}
+`;
+    }
+    if (feedback.existingAnalysis.potentialCauses && feedback.existingAnalysis.potentialCauses.length > 0) {
+      context += `
+## Potential Causes
+${feedback.existingAnalysis.potentialCauses.map((c) => `- ${c}`).join("\n")}
+`;
+    }
+    if (feedback.existingAnalysis.suggestedSolutions && feedback.existingAnalysis.suggestedSolutions.length > 0) {
+      context += `
+## Suggested Solutions
+${feedback.existingAnalysis.suggestedSolutions.map((s) => `- ${s}`).join("\n")}
+`;
+    }
+  }
+
+  return context;
+}
+
+interface ConversationHistoryMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+/**
+ * Call OpenAI for conversation
+ */
+async function callOpenAIForConversation(
+  apiKey: string,
+  model: string,
+  feedbackContext: string,
+  conversationHistory: ConversationHistoryMessage[],
+  userMessage: string,
+  screenshotBase64?: string
+): Promise<string> {
+  const messages: Array<{
+    role: "system" | "user" | "assistant";
+    content: string | Array<{ type: string; text?: string; image_url?: { url: string } }>;
+  }> = [
+    {
+      role: "system",
+      content: CONVERSATION_SYSTEM_PROMPT,
+    },
+  ];
+
+  // Add feedback context as first user message with optional screenshot
+  if (screenshotBase64) {
+    messages.push({
+      role: "user",
+      content: [
+        {
+          type: "text",
+          text: feedbackContext + "\n\nA screenshot is attached showing the issue or context.",
+        },
+        {
+          type: "image_url",
+          image_url: {
+            url: `data:image/png;base64,${screenshotBase64}`,
+          },
+        },
+      ],
+    });
+  } else {
+    messages.push({
+      role: "user",
+      content: feedbackContext,
+    });
+  }
+
+  // Add a system acknowledgment of the context
+  messages.push({
+    role: "assistant",
+    content: "I've reviewed the feedback context. How can I help you understand or process this feedback?",
+  });
+
+  // Add conversation history
+  for (const msg of conversationHistory) {
+    messages.push({
+      role: msg.role,
+      content: msg.content,
+    });
+  }
+
+  // Add the new user message
+  messages.push({
+    role: "user",
+    content: userMessage,
+  });
+
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages,
+      temperature: 0.7,
+      max_tokens: 1500,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error?.message || `OpenAI API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+
+  if (!content) {
+    throw new Error("No response from OpenAI");
+  }
+
+  return content;
+}
+
+/**
+ * Call Anthropic for conversation
+ */
+async function callAnthropicForConversation(
+  apiKey: string,
+  model: string,
+  feedbackContext: string,
+  conversationHistory: ConversationHistoryMessage[],
+  userMessage: string,
+  screenshotBase64?: string
+): Promise<string> {
+  // Build messages array for Anthropic
+  const messages: Array<{
+    role: "user" | "assistant";
+    content: string | Array<{ type: "text" | "image"; text?: string; source?: { type: "base64"; media_type: string; data: string } }>;
+  }> = [];
+
+  // Add feedback context as first message with optional screenshot
+  if (screenshotBase64) {
+    messages.push({
+      role: "user",
+      content: [
+        {
+          type: "text",
+          text: feedbackContext + "\n\nA screenshot is attached showing the issue or context.",
+        },
+        {
+          type: "image",
+          source: {
+            type: "base64",
+            media_type: "image/png",
+            data: screenshotBase64,
+          },
+        },
+      ],
+    });
+  } else {
+    messages.push({
+      role: "user",
+      content: feedbackContext,
+    });
+  }
+
+  // Add a system acknowledgment of the context
+  messages.push({
+    role: "assistant",
+    content: "I've reviewed the feedback context. How can I help you understand or process this feedback?",
+  });
+
+  // Add conversation history
+  for (const msg of conversationHistory) {
+    messages.push({
+      role: msg.role,
+      content: msg.content,
+    });
+  }
+
+  // Add the new user message
+  messages.push({
+    role: "user",
+    content: userMessage,
+  });
+
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: 1500,
+      system: CONVERSATION_SYSTEM_PROMPT,
+      messages,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error?.message || `Anthropic API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const textBlock = data.content?.find((block: { type: string }) => block.type === "text");
+  const content = textBlock?.text;
+
+  if (!content) {
+    throw new Error("No response from Anthropic");
+  }
+
+  return content;
+}
+
+/**
+ * Internal action to process a conversation message
+ */
+export const processConversationMessage = internalAction({
+  args: {
+    feedbackId: v.id("feedback"),
+    teamId: v.id("teams"),
+    userId: v.id("users"),
+    userMessage: v.string(),
+    provider: v.union(v.literal("openai"), v.literal("anthropic")),
+    model: v.string(),
+    apiKey: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Fetch feedback data
+    const feedback = await ctx.runQuery(api.feedback.getFeedback, {
+      feedbackId: args.feedbackId,
+    });
+
+    if (!feedback) {
+      throw new Error("Feedback not found");
+    }
+
+    // Get existing AI analysis if available
+    const existingAnalysis = await ctx.runQuery(api.ai.getAnalysis, {
+      feedbackId: args.feedbackId,
+    });
+
+    // Get conversation history
+    const conversationHistory = await ctx.runQuery(api.ai.getConversationHistory, {
+      feedbackId: args.feedbackId,
+    });
+
+    // Filter to just user and assistant messages (skip the system context setup)
+    const historyMessages: ConversationHistoryMessage[] = conversationHistory
+      .map((msg: { role: string; content: string }) => ({
+        role: msg.role as "user" | "assistant",
+        content: msg.content,
+      }));
+
+    // Build feedback context
+    const feedbackContext = buildFeedbackContextForConversation({
+      title: feedback.title,
+      description: feedback.description,
+      type: feedback.type,
+      priority: feedback.priority,
+      tags: feedback.tags,
+      metadata: {
+        browser: feedback.metadata.browser,
+        os: feedback.metadata.os,
+        url: feedback.metadata.url,
+      },
+      existingAnalysis: existingAnalysis
+        ? {
+            summary: existingAnalysis.summary,
+            potentialCauses: existingAnalysis.potentialCauses,
+            affectedComponent: existingAnalysis.affectedComponent,
+            suggestedSolutions: existingAnalysis.suggestedSolutions,
+          }
+        : undefined,
+    });
+
+    // Fetch screenshot if available
+    let screenshotBase64: string | undefined;
+    if (feedback.screenshotUrl) {
+      try {
+        const imageResponse = await fetch(feedback.screenshotUrl);
+        if (imageResponse.ok) {
+          const arrayBuffer = await imageResponse.arrayBuffer();
+          screenshotBase64 = Buffer.from(arrayBuffer).toString("base64");
+        }
+      } catch (err) {
+        console.warn("Failed to fetch screenshot for conversation:", err);
+      }
+    }
+
+    // Call the AI API
+    let assistantResponse: string;
+    if (args.provider === "openai") {
+      assistantResponse = await callOpenAIForConversation(
+        args.apiKey,
+        args.model,
+        feedbackContext,
+        historyMessages,
+        args.userMessage,
+        screenshotBase64
+      );
+    } else {
+      assistantResponse = await callAnthropicForConversation(
+        args.apiKey,
+        args.model,
+        feedbackContext,
+        historyMessages,
+        args.userMessage,
+        screenshotBase64
+      );
+    }
+
+    // Store the assistant's response
+    await ctx.runMutation(internal.ai.storeAssistantMessage, {
+      feedbackId: args.feedbackId,
+      userId: args.userId,
+      content: assistantResponse,
+      provider: args.provider,
+      model: args.model,
+    });
+
+    return { success: true, response: assistantResponse };
+  },
+});
+
+/**
+ * Public action to send a conversation message
+ */
+export const sendConversationMessage = action({
+  args: {
+    feedbackId: v.id("feedback"),
+    teamId: v.id("teams"),
+    userMessage: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Get current user
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return { success: false, error: "Unauthenticated" };
+    }
+
+    // Get user from database
+    const user = await ctx.runQuery(api.users.getCurrentUser);
+    if (!user) {
+      return { success: false, error: "User not found" };
+    }
+
+    // Get AI config for the team
+    const aiConfig = await ctx.runQuery(api.ai.getTeamAiConfig, {
+      teamId: args.teamId,
+    });
+
+    if (!aiConfig?.isConfigured || !aiConfig.preferredProvider || !aiConfig.preferredModel) {
+      return { success: false, error: "AI not configured" };
+    }
+
+    // Get the API key
+    const apiKeyData = await ctx.runQuery(api.apiKeys.getDecryptedApiKey, {
+      teamId: args.teamId,
+      provider: aiConfig.preferredProvider,
+    });
+
+    if (!apiKeyData?.key) {
+      return { success: false, error: "API key not found" };
+    }
+
+    // First, store the user's message
+    await ctx.runMutation(api.ai.addUserMessage, {
+      feedbackId: args.feedbackId,
+      content: args.userMessage,
+    });
+
+    // Schedule the conversation processing action
+    await ctx.scheduler.runAfter(0, internal.aiActions.processConversationMessage, {
+      feedbackId: args.feedbackId,
+      teamId: args.teamId,
+      userId: user._id,
+      userMessage: args.userMessage,
+      provider: aiConfig.preferredProvider,
+      model: aiConfig.preferredModel,
+      apiKey: apiKeyData.key,
+    });
+
+    return { success: true };
+  },
+});
