@@ -36,6 +36,7 @@ import { TicketDraftSection } from "./ticket-draft-section";
 import { AIConversationSection } from "./ai-conversation-section";
 import { LinearExportSection } from "./linear-export-section";
 import { NotionExportSection } from "./notion-export-section";
+import { JsonExportSection } from "./json-export-section";
 
 type FeedbackStatus = "new" | "triaging" | "drafted" | "exported" | "resolved";
 type FeedbackPriority = "low" | "medium" | "high" | "critical";
@@ -947,6 +948,12 @@ export function TicketDetailPanel() {
 
         {/* Notion Export Section */}
         <NotionExportSection
+          feedbackId={selectedFeedbackId}
+          teamId={feedback.teamId}
+        />
+
+        {/* JSON Export Section */}
+        <JsonExportSection
           feedbackId={selectedFeedbackId}
           teamId={feedback.teamId}
         />

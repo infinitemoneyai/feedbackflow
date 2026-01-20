@@ -436,7 +436,7 @@
         "Typecheck passes"
       ],
       "priority": 24,
-      "passes": false,
+      "passes": true,
       "notes": "Format for AI dev workflows like Ralph. AI generates acceptance criteria from feedback."
     },
     {

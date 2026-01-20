@@ -6,6 +6,32 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Added
 
+- **FF-024: JSON Export in prd.json Format** - Export feedback as JSON for AI dev workflows:
+  - JSON export utility functions in `lib/exports/json.ts`
+  - Converts feedback to prd.json userStories structure with id, title, acceptanceCriteria, priority, notes
+  - Unique ID generation (FF-XXXXXX format)
+  - Priority mapping: critical=1, high=2, medium=3, low=4
+  - Acceptance criteria auto-generated from feedback type when no ticket draft exists
+  - For bugs: criteria include repro, root cause, fix verification
+  - For features: criteria include implementation, testing, documentation
+  - Notes field includes description, environment metadata, media links, submitter info
+  - Uses ticket draft content when available for richer exports
+  - JsonExportSection component in ticket detail panel with emerald/green design
+  - Expandable section with info box explaining prd.json format
+  - Download JSON button saves file as `feedback-FF-XXXXXX.json`
+  - Copy to clipboard button for quick paste into AI workflows
+  - Export records tracked in `exports` table with provider="json"
+  - Activity log entries for JSON exports
+  - Already exported state shows success with "Copy Again" button
+  - Bulk export functionality in feedback list
+  - Select multiple feedback items and click "Export JSON"
+  - Bulk export creates full prd.json with projectName, description, exportedAt, userStories array
+  - Downloads as `{project-name}-feedback-export.json`
+  - Export records created for each feedback item in bulk export
+  - Success toast shows count of exported items
+  - Selection cleared after successful bulk export
+  - Typecheck passes with no errors
+
 - **FF-023: Notion Integration** - Complete Notion integration for exporting feedback as pages:
   - Settings page Integrations tab with Notion configuration section
   - API key input with validation (keys must start with 'secret_' or 'ntn_')
