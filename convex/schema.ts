@@ -625,9 +625,44 @@ export default defineSchema({
       mentions: v.boolean(),
       exports: v.boolean(),
     }),
+    // Token for unsubscribe links in emails
+    unsubscribeToken: v.string(),
     createdAt: v.number(),
     updatedAt: v.number(),
-  }).index("by_user", ["userId"]),
+  })
+    .index("by_user", ["userId"])
+    .index("by_unsubscribe_token", ["unsubscribeToken"]),
+
+  /**
+   * Email digest queue - stores notifications to be sent in digests
+   */
+  emailDigestQueue: defineTable({
+    userId: v.id("users"),
+    notificationType: v.union(
+      v.literal("new_feedback"),
+      v.literal("assignment"),
+      v.literal("comment"),
+      v.literal("mention"),
+      v.literal("export_complete"),
+      v.literal("export_failed")
+    ),
+    feedbackId: v.optional(v.id("feedback")),
+    title: v.string(),
+    body: v.optional(v.string()),
+    projectName: v.optional(v.string()),
+    metadata: v.optional(
+      v.object({
+        feedbackTitle: v.optional(v.string()),
+        actorName: v.optional(v.string()),
+        commentPreview: v.optional(v.string()),
+      })
+    ),
+    createdAt: v.number(),
+    // Indicates if this has been included in a digest
+    sentAt: v.optional(v.number()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_and_sent", ["userId", "sentAt"]),
 
   // ==========================================================================
   // Billing & Usage

@@ -6,10 +6,12 @@ const isPublicRoute = createRouteMatcher([
   "/pricing(.*)",
   "/docs(.*)",
   "/status/(.*)",
+  "/unsubscribe(.*)",
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/api/widget/(.*)",
   "/api/webhooks/(.*)",
+  "/api/notifications/(.*)", // Internal notification API
   "/api/v1/(.*)", // REST API uses Bearer token auth, not Clerk
 ]);
 
