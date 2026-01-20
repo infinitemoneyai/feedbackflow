@@ -680,7 +680,7 @@
         "Typecheck passes"
       ],
       "priority": 38,
-      "passes": false,
+      "passes": true,
       "notes": "Critical for self-hosters who want full data control"
     },
     {
