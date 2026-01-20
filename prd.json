@@ -628,7 +628,7 @@
         "Typecheck passes"
       ],
       "priority": 35,
-      "passes": false,
+      "passes": true,
       "notes": "Keep pricing simple. Emphasize self-host as alternative to Pro."
     },
     {

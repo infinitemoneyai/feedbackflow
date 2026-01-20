@@ -6,6 +6,22 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Added
 
+- **FF-035: Pricing Page & Upgrade Flow** - Public pricing page with Stripe Checkout integration:
+  - Pricing page at `/pricing` with Free vs Pro plan comparison
+  - Feature comparison table with 18 feature rows comparing both plans
+  - Seat quantity selector (1-100) for Pro tier with live price calculation
+  - Upgrade button initiates Stripe Checkout with selected seat count
+  - Success redirect shows notification banner confirming subscription activation
+  - Cancel redirect shows friendly message to try again later
+  - Current plan indicator for logged-in users (Free or Pro with badge)
+  - Pro users see "Manage Subscription" button linking to Stripe Billing Portal
+  - Self-host section emphasizing open source alternative
+  - FAQ section with 6 common questions and answers
+  - Responsive design matching retro aesthetic
+  - Navigation bar with docs, pricing, GitHub links
+  - CTA footer with sign-up call to action
+  - Typecheck passes with no errors
+
 - **FF-034: Usage Tracking & Limits** - Complete usage tracking and enforcement system:
   - Monthly feedback count tracking per team via `usageTracking` table
   - Free tier limit enforcement: 25 feedback submissions per month
@@ -676,7 +692,7 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 - [x] FF-033: Stripe integration
 - [x] FF-034: Usage tracking & limits
-- [ ] FF-035: Pricing page
+- [x] FF-035: Pricing page
 - [ ] FF-036: Widget customization UI
 - [ ] FF-037: Installation documentation
 - [ ] FF-038: External storage config
