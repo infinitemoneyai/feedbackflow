@@ -232,3 +232,79 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Retro Grid Border Layout */
+.retro-grid {
+  @apply border-2 border-retro-black divide-retro-black;
+}
+
+.retro-grid-x {
+  @apply divide-x-2 divide-retro-black;
+}
+
+.retro-grid-y {
+  @apply divide-y-2 divide-retro-black;
+}
+
+/* Retro Button with Colored Shadows */
+.btn-retro {
+  @apply border-2 border-retro-black font-medium transition-all;
+  box-shadow: 4px 4px 0px 0px #888;
+}
+
+.btn-retro:hover {
+  box-shadow: 2px 2px 0px 0px #000;
+  transform: translate(2px, 2px);
+}
+
+.btn-retro-yellow {
+  box-shadow: 6px 6px 0px 0px var(--retro-yellow);
+}
+
+.btn-retro-yellow:hover {
+  box-shadow: 3px 3px 0px 0px var(--retro-yellow);
+  transform: translate(3px, 3px);
+}
+
+.btn-retro-red {
+  box-shadow: 6px 6px 0px 0px var(--retro-red);
+}
+
+.btn-retro-red:hover {
+  box-shadow: 3px 3px 0px 0px var(--retro-red);
+  transform: translate(3px, 3px);
+}
+
+.btn-retro-blue {
+  box-shadow: 6px 6px 0px 0px var(--retro-blue);
+}
+
+.btn-retro-blue:hover {
+  box-shadow: 3px 3px 0px 0px var(--retro-blue);
+  transform: translate(3px, 3px);
+}
+
+/* Dot pattern background */
+.bg-dots {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Animation utilities */
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 2s ease-in-out infinite;
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}

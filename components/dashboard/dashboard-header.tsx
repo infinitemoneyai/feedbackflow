@@ -2,10 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useQuery } from "convex/react";
-import { Menu, Search, Filter, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { api } from "@/convex/_generated/api";
 import { useDashboard } from "./dashboard-layout";
 import { NotificationDropdown } from "./notification-dropdown";
+import { cn } from "@/lib/utils";
 
 export function DashboardHeader() {
   const {
@@ -64,13 +66,16 @@ export function DashboardHeader() {
     }
   };
 
+  // Filter type state for header filter pills
+  const [filterType, setFilterType] = useState<"all" | "bugs" | "features">("all");
+
   return (
-    <header className="flex h-16 items-center justify-between border-b-2 border-retro-black bg-white px-4 lg:px-6">
+    <header className="flex h-16 flex-shrink-0 items-center justify-between border-b-2 border-retro-black bg-white px-6">
       {/* Mobile search overlay */}
       {mobileSearchOpen && (
         <div className="absolute inset-0 z-10 flex items-center bg-white px-4 sm:hidden">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+            <Icon name="solar:magnifer-linear" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
             <input
               ref={mobileInputRef}
               type="text"
@@ -97,7 +102,7 @@ export function DashboardHeader() {
         </div>
       )}
 
-      {/* Left side - menu button (mobile) and title */}
+      {/* Left side - menu button (mobile), title, and filter pills */}
       <div className="flex items-center gap-4">
         <button
           onClick={() => setSidebarOpen(true)}
@@ -106,42 +111,63 @@ export function DashboardHeader() {
           <Menu className="h-5 w-5" />
         </button>
 
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-lg font-medium tracking-tight text-retro-black lg:text-xl">
-              {searchQuery ? "Search Results" : viewTitles[currentView]}
-            </h1>
-            {project && !searchQuery && (
-              <span className="hidden rounded border border-stone-200 bg-stone-100 px-2 py-0.5 font-mono text-xs text-stone-500 sm:inline">
-                {project.name}
-              </span>
+        <h1 className="text-lg font-semibold tracking-tight text-retro-black">
+          {searchQuery ? "Search Results" : viewTitles[currentView]}
+        </h1>
+
+        {/* Divider */}
+        <div className="hidden h-6 w-px bg-stone-300 sm:block" />
+
+        {/* Filter pills */}
+        <div className="hidden gap-2 sm:flex">
+          <button
+            onClick={() => setFilterType("all")}
+            className={cn(
+              "rounded px-2 py-1 font-mono text-xs transition-colors",
+              filterType === "all"
+                ? "bg-retro-black text-white"
+                : "bg-stone-100 text-stone-600 hover:bg-stone-200"
             )}
-            {searchQuery && (
-              <span className="rounded border border-retro-yellow/30 bg-retro-yellow/10 px-2 py-0.5 font-mono text-xs text-retro-black">
-                &ldquo;{searchQuery}&rdquo;
-              </span>
+          >
+            All (12)
+          </button>
+          <button
+            onClick={() => setFilterType("bugs")}
+            className={cn(
+              "rounded px-2 py-1 font-mono text-xs transition-colors",
+              filterType === "bugs"
+                ? "bg-retro-black text-white"
+                : "bg-stone-100 text-stone-600 hover:bg-stone-200"
             )}
-          </div>
-          <p className="hidden text-xs text-stone-500 sm:block">
-            {searchQuery
-              ? "Searching across title, description, comments, and tags"
-              : viewDescriptions[currentView]}
-          </p>
+          >
+            Bugs
+          </button>
+          <button
+            onClick={() => setFilterType("features")}
+            className={cn(
+              "rounded px-2 py-1 font-mono text-xs transition-colors",
+              filterType === "features"
+                ? "bg-retro-black text-white"
+                : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+            )}
+          >
+            Features
+          </button>
         </div>
       </div>
 
       {/* Right side - search and actions */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         {/* Search input (desktop) */}
         <div className="relative hidden sm:block">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+          <Icon name="solar:magnifer-linear" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
           <input
             ref={desktopInputRef}
             type="text"
-            placeholder="Search feedback..."
+            placeholder="Search tickets..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-48 rounded-full border-2 border-stone-200 bg-stone-50 py-1.5 pl-9 pr-8 text-sm outline-none transition-colors focus:border-retro-black lg:w-64"
+            className="w-48 rounded-full border-2 border-stone-200 bg-stone-50 py-1.5 pl-9 pr-4 text-sm outline-none transition-colors focus:border-retro-black"
           />
           {searchQuery && (
             <button
@@ -157,18 +183,19 @@ export function DashboardHeader() {
         {/* Search button (mobile) */}
         <button
           onClick={() => setMobileSearchOpen(true)}
-          className={`rounded p-2 transition-colors sm:hidden ${
+          className={cn(
+            "rounded p-2 transition-colors sm:hidden",
             searchQuery
               ? "bg-retro-yellow/20 text-retro-black"
               : "text-stone-600 hover:bg-stone-100 hover:text-retro-black"
-          }`}
+          )}
         >
-          <Search className="h-5 w-5" />
+          <Icon name="solar:magnifer-linear" size={20} />
         </button>
 
-        {/* Filter button */}
-        <button className="rounded p-2 text-stone-600 transition-colors hover:bg-stone-100 hover:text-retro-black">
-          <Filter className="h-5 w-5" />
+        {/* Sort button */}
+        <button className="rounded border border-transparent p-2 text-stone-600 transition-colors hover:border-stone-200 hover:bg-stone-100">
+          <Icon name="solar:sort-vertical-linear" size={20} />
         </button>
 
         {/* Notifications */}

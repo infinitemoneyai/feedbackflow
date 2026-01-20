@@ -2,18 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  Book,
-  Copy,
-  Check,
-  Code,
-  Puzzle,
-  Settings,
-  AlertTriangle,
-  ChevronRight,
-  ExternalLink,
-} from "lucide-react";
+import { Icon } from "@/components/ui/icon";
+import { DocsLayout } from "@/components/layout";
 
 type Framework = "html" | "react" | "vue" | "nextjs";
 
@@ -28,34 +18,17 @@ export default function InstallationDocsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-retro-paper">
-      {/* Header */}
-      <header className="border-b-2 border-retro-black bg-white">
-        <div className="mx-auto flex h-16 max-w-4xl items-center gap-4 px-6">
-          <Link
-            href="/"
-            className="flex items-center gap-2 rounded p-2 text-stone-500 transition-colors hover:bg-stone-100 hover:text-retro-black"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded border-2 border-retro-black bg-retro-blue shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]">
-              <Book className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold text-retro-black">
-                Widget Installation Guide
-              </h1>
-              <p className="text-xs text-stone-500">Simple as adding Google Analytics</p>
-            </div>
-          </div>
-        </div>
-      </header>
+    <DocsLayout
+      title="Widget Installation Guide"
+      description="Simple as adding Google Analytics"
+      breadcrumb="Installation"
+      iconName="solar:download-minimalistic-bold"
+      iconBgColor="bg-retro-blue"
+    >
 
-      <div className="mx-auto max-w-4xl px-6 py-8">
         {/* Quick Navigation */}
-        <nav className="mb-8 rounded border-2 border-stone-200 bg-white p-4">
-          <div className="flex flex-wrap items-center gap-2 text-sm">
+        <nav className="mb-8 rounded border-2 border-retro-black bg-white p-4 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
+          <div className="flex flex-wrap items-center gap-3 text-sm">
             <span className="font-medium text-stone-600">Jump to:</span>
             <a href="#quick-start" className="text-retro-blue hover:underline">
               Quick Start
@@ -77,10 +50,10 @@ export default function InstallationDocsPage() {
 
         {/* Quick Start */}
         <section id="quick-start" className="mb-12">
-          <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
+          <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[6px_6px_0px_0px_rgba(26,26,26,1)]">
             <div className="flex items-start gap-4">
               <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-retro-yellow/20">
-                <Code className="h-6 w-6 text-retro-yellow" />
+                <Icon name="solar:code-bold" size={24} className="text-retro-yellow" />
               </div>
               <div className="flex-1">
                 <h2 className="mb-2 text-xl font-semibold text-retro-black">
@@ -89,7 +62,7 @@ export default function InstallationDocsPage() {
                 <p className="text-stone-600">
                   Add the FeedbackFlow widget to your website in under a minute.
                   Just copy and paste the script tag before your closing{" "}
-                  <code className="rounded bg-stone-100 px-1 text-sm">&lt;/body&gt;</code> tag.
+                  <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-sm">&lt;/body&gt;</code> tag.
                 </p>
               </div>
             </div>
@@ -110,14 +83,13 @@ export default function InstallationDocsPage() {
                 />
               </div>
               <CodeBlock
-                language="html"
                 code={`<script
   src="https://cdn.feedbackflow.dev/widget.js"
   data-widget-key="YOUR_WIDGET_KEY"
 ></script>`}
               />
               <p className="mt-3 text-sm text-stone-500">
-                Replace <code className="rounded bg-stone-100 px-1">YOUR_WIDGET_KEY</code> with
+                Replace <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono">YOUR_WIDGET_KEY</code> with
                 your actual widget key from the{" "}
                 <Link href="/settings" className="text-retro-blue hover:underline">
                   Settings page
@@ -126,11 +98,11 @@ export default function InstallationDocsPage() {
               </p>
             </div>
 
-            <div className="mt-6 rounded border border-retro-blue/30 bg-retro-blue/5 p-4">
+            <div className="mt-6 rounded border-2 border-retro-blue/30 bg-retro-blue/5 p-4">
               <div className="flex gap-3">
                 <div className="flex-shrink-0">
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-retro-blue/20">
-                    <ChevronRight className="h-4 w-4 text-retro-blue" />
+                    <Icon name="solar:question-circle-bold" size={16} className="text-retro-blue" />
                   </div>
                 </div>
                 <div className="text-sm">
@@ -143,7 +115,7 @@ export default function InstallationDocsPage() {
                       Settings &rarr; Widget
                     </Link>{" "}
                     and select your project. Your widget key starts with{" "}
-                    <code className="rounded bg-stone-100 px-1">wk_</code>.
+                    <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono">wk_</code>.
                   </p>
                 </div>
               </div>
@@ -161,10 +133,10 @@ export default function InstallationDocsPage() {
           <div className="mb-4 flex flex-wrap gap-2">
             {(
               [
-                { id: "html", label: "HTML / Vanilla JS", icon: "🌐" },
-                { id: "react", label: "React", icon: "⚛️" },
-                { id: "vue", label: "Vue.js", icon: "💚" },
-                { id: "nextjs", label: "Next.js", icon: "▲" },
+                { id: "html", label: "HTML / Vanilla JS", icon: "solar:global-linear" },
+                { id: "react", label: "React", icon: "solar:atom-linear" },
+                { id: "vue", label: "Vue.js", icon: "solar:widget-linear" },
+                { id: "nextjs", label: "Next.js", icon: "solar:triangle-linear" },
               ] as const
             ).map((fw) => (
               <button
@@ -176,7 +148,7 @@ export default function InstallationDocsPage() {
                     : "border-stone-200 bg-white text-stone-600 hover:border-stone-300"
                 }`}
               >
-                <span>{fw.icon}</span>
+                <Icon name={fw.icon} size={18} />
                 {fw.label}
               </button>
             ))}
@@ -186,7 +158,7 @@ export default function InstallationDocsPage() {
           {selectedFramework === "html" && (
             <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
               <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-retro-black">
-                <span className="text-2xl">🌐</span> HTML / Vanilla JavaScript
+                <Icon name="solar:global-bold" size={24} /> HTML / Vanilla JavaScript
               </h3>
               <p className="mb-4 text-stone-600">
                 The simplest installation method. Works with any website, CMS, or static HTML.
@@ -212,7 +184,6 @@ export default function InstallationDocsPage() {
                     />
                   </div>
                   <CodeBlock
-                    language="html"
                     code={`<!-- FeedbackFlow Widget -->
 <script
   src="https://cdn.feedbackflow.dev/widget.js"
@@ -223,10 +194,9 @@ export default function InstallationDocsPage() {
                   />
                 </div>
 
-                <div className="rounded border border-stone-200 bg-stone-50 p-4">
+                <div className="rounded border-2 border-stone-200 bg-stone-50 p-4">
                   <h4 className="mb-2 font-medium text-stone-700">Full Example</h4>
                   <CodeBlock
-                    language="html"
                     code={`<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -258,7 +228,7 @@ export default function InstallationDocsPage() {
           {selectedFramework === "react" && (
             <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
               <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-retro-black">
-                <span className="text-2xl">⚛️</span> React
+                <Icon name="solar:atom-bold" size={24} /> React
               </h3>
               <p className="mb-4 text-stone-600">
                 Use a custom hook or load the widget in your App component.
@@ -305,7 +275,6 @@ export function useFeedbackFlow(widgetKey: string) {
                     />
                   </div>
                   <CodeBlock
-                    language="typescript"
                     code={`import { useEffect } from 'react';
 
 export function useFeedbackFlow(widgetKey: string) {
@@ -356,7 +325,6 @@ function App() {
                     />
                   </div>
                   <CodeBlock
-                    language="typescript"
                     code={`import { useFeedbackFlow } from './useFeedbackFlow';
 
 function App() {
@@ -372,12 +340,11 @@ function App() {
                 </div>
 
                 {/* Method 2: Component */}
-                <div className="rounded border border-stone-200 bg-stone-50 p-4">
+                <div className="rounded border-2 border-stone-200 bg-stone-50 p-4">
                   <h4 className="mb-2 font-medium text-stone-700">
                     Method 2: Script Component
                   </h4>
                   <CodeBlock
-                    language="typescript"
                     code={`// Add to your index.html or use react-helmet
 <script
   src="https://cdn.feedbackflow.dev/widget.js"
@@ -394,7 +361,7 @@ function App() {
           {selectedFramework === "vue" && (
             <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
               <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-retro-black">
-                <span className="text-2xl">💚</span> Vue.js
+                <Icon name="solar:widget-bold" size={24} /> Vue.js
               </h3>
               <p className="mb-4 text-stone-600">
                 Load the widget using a composable or in your main App component.
@@ -442,7 +409,6 @@ export function useFeedbackFlow(widgetKey: string) {
                     />
                   </div>
                   <CodeBlock
-                    language="typescript"
                     code={`import { onMounted, onUnmounted } from 'vue';
 
 export function useFeedbackFlow(widgetKey: string) {
@@ -494,7 +460,6 @@ useFeedbackFlow('wk_your_widget_key');
                     />
                   </div>
                   <CodeBlock
-                    language="vue"
                     code={`<script setup lang="ts">
 import { useFeedbackFlow } from './composables/useFeedbackFlow';
 
@@ -516,7 +481,7 @@ useFeedbackFlow('wk_your_widget_key');
           {selectedFramework === "nextjs" && (
             <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
               <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-retro-black">
-                <span className="text-2xl">▲</span> Next.js
+                <Icon name="solar:triangle-bold" size={24} /> Next.js
               </h3>
               <p className="mb-4 text-stone-600">
                 Use the built-in Script component for optimal loading.
@@ -562,7 +527,6 @@ export default function RootLayout({
                     />
                   </div>
                   <CodeBlock
-                    language="typescript"
                     code={`import Script from 'next/script';
 
 export default function RootLayout({
@@ -590,7 +554,7 @@ export default function RootLayout({
                 </div>
 
                 {/* Pages Router */}
-                <div className="rounded border border-stone-200 bg-stone-50 p-4">
+                <div className="rounded border-2 border-stone-200 bg-stone-50 p-4">
                   <h4 className="mb-2 font-medium text-stone-700">
                     Pages Router
                   </h4>
@@ -621,7 +585,6 @@ export default function App({ Component, pageProps }: AppProps) {
                     />
                   </div>
                   <CodeBlock
-                    language="typescript"
                     code={`import Script from 'next/script';
 import type { AppProps } from 'next/app';
 
@@ -642,12 +605,12 @@ export default function App({ Component, pageProps }: AppProps) {
                 </div>
 
                 {/* Environment variable tip */}
-                <div className="rounded border border-retro-blue/30 bg-retro-blue/5 p-4">
+                <div className="rounded border-2 border-retro-blue/30 bg-retro-blue/5 p-4">
                   <p className="text-sm text-stone-600">
                     <strong className="text-retro-blue">Pro tip:</strong> Store your widget key in an
                     environment variable:
                   </p>
-                  <code className="mt-2 block rounded bg-stone-100 p-2 text-sm">
+                  <code className="mt-2 block rounded bg-stone-100 p-2 font-mono text-sm">
                     data-widget-key={"{process.env.NEXT_PUBLIC_FEEDBACKFLOW_KEY}"}
                   </code>
                 </div>
@@ -664,7 +627,7 @@ export default function App({ Component, pageProps }: AppProps) {
 
           <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
             <div className="flex items-start gap-3 mb-6">
-              <Settings className="mt-1 h-5 w-5 text-retro-peach" />
+              <Icon name="solar:settings-bold" size={20} className="mt-1 text-retro-peach" />
               <p className="text-stone-600">
                 Configure the widget using data attributes on the script tag.
                 All options can also be set in the{" "}
@@ -696,7 +659,7 @@ export default function App({ Component, pageProps }: AppProps) {
                 <tbody>
                   <tr className="border-b border-stone-200">
                     <td className="py-3 pr-4">
-                      <code className="rounded bg-stone-100 px-1.5 py-0.5">
+                      <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-xs">
                         data-widget-key
                       </code>
                     </td>
@@ -704,36 +667,36 @@ export default function App({ Component, pageProps }: AppProps) {
                     <td className="py-3 pr-4 text-stone-500">—</td>
                     <td className="py-3 text-stone-600">
                       <strong>Required.</strong> Your unique widget key (starts with{" "}
-                      <code className="rounded bg-stone-100 px-1">wk_</code>)
+                      <code className="rounded bg-stone-100 px-1 font-mono">wk_</code>)
                     </td>
                   </tr>
                   <tr className="border-b border-stone-200">
                     <td className="py-3 pr-4">
-                      <code className="rounded bg-stone-100 px-1.5 py-0.5">
+                      <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-xs">
                         data-position
                       </code>
                     </td>
                     <td className="py-3 pr-4 text-stone-500">string</td>
                     <td className="py-3 pr-4">
-                      <code className="rounded bg-stone-100 px-1">bottom-right</code>
+                      <code className="rounded bg-stone-100 px-1 font-mono text-xs">bottom-right</code>
                     </td>
                     <td className="py-3 text-stone-600">
                       Widget position:{" "}
-                      <code className="rounded bg-stone-100 px-1">bottom-right</code>,{" "}
-                      <code className="rounded bg-stone-100 px-1">bottom-left</code>,{" "}
-                      <code className="rounded bg-stone-100 px-1">top-right</code>,{" "}
-                      <code className="rounded bg-stone-100 px-1">top-left</code>
+                      <code className="rounded bg-stone-100 px-1 font-mono text-xs">bottom-right</code>,{" "}
+                      <code className="rounded bg-stone-100 px-1 font-mono text-xs">bottom-left</code>,{" "}
+                      <code className="rounded bg-stone-100 px-1 font-mono text-xs">top-right</code>,{" "}
+                      <code className="rounded bg-stone-100 px-1 font-mono text-xs">top-left</code>
                     </td>
                   </tr>
                   <tr className="border-b border-stone-200">
                     <td className="py-3 pr-4">
-                      <code className="rounded bg-stone-100 px-1.5 py-0.5">
+                      <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-xs">
                         data-primary-color
                       </code>
                     </td>
                     <td className="py-3 pr-4 text-stone-500">string</td>
                     <td className="py-3 pr-4">
-                      <code className="rounded bg-stone-100 px-1">#1a1a1a</code>
+                      <code className="rounded bg-stone-100 px-1 font-mono text-xs">#1a1a1a</code>
                     </td>
                     <td className="py-3 text-stone-600">
                       Primary button/accent color (hex code)
@@ -741,13 +704,13 @@ export default function App({ Component, pageProps }: AppProps) {
                   </tr>
                   <tr className="border-b border-stone-200">
                     <td className="py-3 pr-4">
-                      <code className="rounded bg-stone-100 px-1.5 py-0.5">
+                      <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-xs">
                         data-background-color
                       </code>
                     </td>
                     <td className="py-3 pr-4 text-stone-500">string</td>
                     <td className="py-3 pr-4">
-                      <code className="rounded bg-stone-100 px-1">#ffffff</code>
+                      <code className="rounded bg-stone-100 px-1 font-mono text-xs">#ffffff</code>
                     </td>
                     <td className="py-3 text-stone-600">
                       Modal background color (hex code)
@@ -755,13 +718,13 @@ export default function App({ Component, pageProps }: AppProps) {
                   </tr>
                   <tr className="border-b border-stone-200">
                     <td className="py-3 pr-4">
-                      <code className="rounded bg-stone-100 px-1.5 py-0.5">
+                      <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-xs">
                         data-text-color
                       </code>
                     </td>
                     <td className="py-3 pr-4 text-stone-500">string</td>
                     <td className="py-3 pr-4">
-                      <code className="rounded bg-stone-100 px-1">#1a1a1a</code>
+                      <code className="rounded bg-stone-100 px-1 font-mono text-xs">#1a1a1a</code>
                     </td>
                     <td className="py-3 text-stone-600">
                       Text color in the modal (hex code)
@@ -769,13 +732,13 @@ export default function App({ Component, pageProps }: AppProps) {
                   </tr>
                   <tr className="border-b border-stone-200">
                     <td className="py-3 pr-4">
-                      <code className="rounded bg-stone-100 px-1.5 py-0.5">
+                      <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-xs">
                         data-button-text
                       </code>
                     </td>
                     <td className="py-3 pr-4 text-stone-500">string</td>
                     <td className="py-3 pr-4">
-                      <code className="rounded bg-stone-100 px-1">Send Feedback</code>
+                      <code className="rounded bg-stone-100 px-1 font-mono text-xs">Send Feedback</code>
                     </td>
                     <td className="py-3 text-stone-600">
                       Text displayed on the floating button
@@ -783,13 +746,13 @@ export default function App({ Component, pageProps }: AppProps) {
                   </tr>
                   <tr>
                     <td className="py-3 pr-4">
-                      <code className="rounded bg-stone-100 px-1.5 py-0.5">
+                      <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono text-xs">
                         data-disable-recording
                       </code>
                     </td>
                     <td className="py-3 pr-4 text-stone-500">boolean</td>
                     <td className="py-3 pr-4">
-                      <code className="rounded bg-stone-100 px-1">false</code>
+                      <code className="rounded bg-stone-100 px-1 font-mono text-xs">false</code>
                     </td>
                     <td className="py-3 text-stone-600">
                       Disable screen recording feature
@@ -802,7 +765,6 @@ export default function App({ Component, pageProps }: AppProps) {
             <div className="mt-6">
               <h4 className="mb-2 font-medium text-stone-700">Example with all options</h4>
               <CodeBlock
-                language="html"
                 code={`<script
   src="https://cdn.feedbackflow.dev/widget.js"
   data-widget-key="wk_your_widget_key"
@@ -826,10 +788,10 @@ export default function App({ Component, pageProps }: AppProps) {
 
           <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
             <div className="flex items-start gap-3 mb-6">
-              <Puzzle className="mt-1 h-5 w-5 text-retro-lavender" />
+              <Icon name="solar:programming-bold" size={20} className="mt-1 text-retro-lavender" />
               <p className="text-stone-600">
                 After the widget loads, you can interact with it programmatically
-                using the <code className="rounded bg-stone-100 px-1">window.FeedbackFlow</code> object.
+                using the <code className="rounded bg-stone-100 px-1.5 py-0.5 font-mono">window.FeedbackFlow</code> object.
               </p>
             </div>
 
@@ -837,7 +799,6 @@ export default function App({ Component, pageProps }: AppProps) {
               <div>
                 <h4 className="mb-2 font-medium text-stone-700">Open the widget</h4>
                 <CodeBlock
-                  language="javascript"
                   code={`// Open the feedback modal
 window.FeedbackFlow.open();
 
@@ -849,16 +810,12 @@ window.FeedbackFlow.open({ type: 'feature' });`}
 
               <div>
                 <h4 className="mb-2 font-medium text-stone-700">Close the widget</h4>
-                <CodeBlock
-                  language="javascript"
-                  code={`window.FeedbackFlow.close();`}
-                />
+                <CodeBlock code={`window.FeedbackFlow.close();`} />
               </div>
 
               <div>
                 <h4 className="mb-2 font-medium text-stone-700">Set user info</h4>
                 <CodeBlock
-                  language="javascript"
                   code={`// Pre-fill submitter info (e.g., from your auth system)
 window.FeedbackFlow.identify({
   email: 'user@example.com',
@@ -870,7 +827,6 @@ window.FeedbackFlow.identify({
               <div>
                 <h4 className="mb-2 font-medium text-stone-700">Destroy the widget</h4>
                 <CodeBlock
-                  language="javascript"
                   code={`// Remove the widget completely
 window.FeedbackFlow.destroy();`}
                 />
@@ -889,15 +845,15 @@ window.FeedbackFlow.destroy();`}
             {/* Issue 1 */}
             <details className="group rounded border-2 border-retro-black bg-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
               <summary className="flex cursor-pointer items-center gap-3 p-4 font-medium text-retro-black">
-                <AlertTriangle className="h-5 w-5 text-retro-peach" />
+                <Icon name="solar:danger-triangle-bold" size={20} className="text-retro-peach" />
                 Widget doesn&apos;t appear on my site
-                <ChevronRight className="ml-auto h-5 w-5 transition-transform group-open:rotate-90" />
+                <Icon name="solar:alt-arrow-right-linear" size={20} className="ml-auto transition-transform group-open:rotate-90" />
               </summary>
-              <div className="border-t border-stone-200 p-4 text-sm text-stone-600">
+              <div className="border-t-2 border-stone-200 p-4 text-sm text-stone-600">
                 <ol className="list-inside list-decimal space-y-2">
                   <li>
                     <strong>Check the widget key</strong> - Make sure your{" "}
-                    <code className="rounded bg-stone-100 px-1">data-widget-key</code> matches
+                    <code className="rounded bg-stone-100 px-1 font-mono">data-widget-key</code> matches
                     the key in your FeedbackFlow dashboard.
                   </li>
                   <li>
@@ -906,13 +862,13 @@ window.FeedbackFlow.destroy();`}
                   </li>
                   <li>
                     <strong>Check Content Security Policy</strong> - If you have a strict CSP,
-                    add <code className="rounded bg-stone-100 px-1">cdn.feedbackflow.dev</code> to
+                    add <code className="rounded bg-stone-100 px-1 font-mono">cdn.feedbackflow.dev</code> to
                     your allowed script sources.
                   </li>
                   <li>
                     <strong>Ensure the script is in the body</strong> - The script should be
                     placed before the closing{" "}
-                    <code className="rounded bg-stone-100 px-1">&lt;/body&gt;</code> tag.
+                    <code className="rounded bg-stone-100 px-1 font-mono">&lt;/body&gt;</code> tag.
                   </li>
                 </ol>
               </div>
@@ -921,11 +877,11 @@ window.FeedbackFlow.destroy();`}
             {/* Issue 2 */}
             <details className="group rounded border-2 border-retro-black bg-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
               <summary className="flex cursor-pointer items-center gap-3 p-4 font-medium text-retro-black">
-                <AlertTriangle className="h-5 w-5 text-retro-peach" />
+                <Icon name="solar:danger-triangle-bold" size={20} className="text-retro-peach" />
                 Screen recording permission denied
-                <ChevronRight className="ml-auto h-5 w-5 transition-transform group-open:rotate-90" />
+                <Icon name="solar:alt-arrow-right-linear" size={20} className="ml-auto transition-transform group-open:rotate-90" />
               </summary>
-              <div className="border-t border-stone-200 p-4 text-sm text-stone-600">
+              <div className="border-t-2 border-stone-200 p-4 text-sm text-stone-600">
                 <ol className="list-inside list-decimal space-y-2">
                   <li>
                     <strong>User must grant permission</strong> - Screen recording requires
@@ -946,11 +902,11 @@ window.FeedbackFlow.destroy();`}
             {/* Issue 3 */}
             <details className="group rounded border-2 border-retro-black bg-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
               <summary className="flex cursor-pointer items-center gap-3 p-4 font-medium text-retro-black">
-                <AlertTriangle className="h-5 w-5 text-retro-peach" />
+                <Icon name="solar:danger-triangle-bold" size={20} className="text-retro-peach" />
                 Screenshot looks different from the actual page
-                <ChevronRight className="ml-auto h-5 w-5 transition-transform group-open:rotate-90" />
+                <Icon name="solar:alt-arrow-right-linear" size={20} className="ml-auto transition-transform group-open:rotate-90" />
               </summary>
-              <div className="border-t border-stone-200 p-4 text-sm text-stone-600">
+              <div className="border-t-2 border-stone-200 p-4 text-sm text-stone-600">
                 <p className="mb-2">
                   The widget uses html2canvas for screenshots, which has some limitations:
                 </p>
@@ -977,11 +933,11 @@ window.FeedbackFlow.destroy();`}
             {/* Issue 4 */}
             <details className="group rounded border-2 border-retro-black bg-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
               <summary className="flex cursor-pointer items-center gap-3 p-4 font-medium text-retro-black">
-                <AlertTriangle className="h-5 w-5 text-retro-peach" />
+                <Icon name="solar:danger-triangle-bold" size={20} className="text-retro-peach" />
                 Feedback submission failed
-                <ChevronRight className="ml-auto h-5 w-5 transition-transform group-open:rotate-90" />
+                <Icon name="solar:alt-arrow-right-linear" size={20} className="ml-auto transition-transform group-open:rotate-90" />
               </summary>
-              <div className="border-t border-stone-200 p-4 text-sm text-stone-600">
+              <div className="border-t-2 border-stone-200 p-4 text-sm text-stone-600">
                 <ol className="list-inside list-decimal space-y-2">
                   <li>
                     <strong>Check network connectivity</strong> - The widget queues submissions
@@ -1002,11 +958,11 @@ window.FeedbackFlow.destroy();`}
             {/* Issue 5 */}
             <details className="group rounded border-2 border-retro-black bg-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
               <summary className="flex cursor-pointer items-center gap-3 p-4 font-medium text-retro-black">
-                <AlertTriangle className="h-5 w-5 text-retro-peach" />
+                <Icon name="solar:danger-triangle-bold" size={20} className="text-retro-peach" />
                 Widget conflicts with my site&apos;s styles
-                <ChevronRight className="ml-auto h-5 w-5 transition-transform group-open:rotate-90" />
+                <Icon name="solar:alt-arrow-right-linear" size={20} className="ml-auto transition-transform group-open:rotate-90" />
               </summary>
-              <div className="border-t border-stone-200 p-4 text-sm text-stone-600">
+              <div className="border-t-2 border-stone-200 p-4 text-sm text-stone-600">
                 <p className="mb-2">
                   The widget uses Shadow DOM to isolate its styles from your page.
                   However, if you&apos;re experiencing conflicts:
@@ -1018,7 +974,7 @@ window.FeedbackFlow.destroy();`}
                   </li>
                   <li>
                     Global CSS resets that target all elements (e.g.,{" "}
-                    <code className="rounded bg-stone-100 px-1">* {"{}"}</code>) should
+                    <code className="rounded bg-stone-100 px-1 font-mono">* {"{}"}</code>) should
                     not affect the widget.
                   </li>
                 </ul>
@@ -1026,36 +982,14 @@ window.FeedbackFlow.destroy();`}
             </details>
           </div>
         </section>
-
-        {/* Help Footer */}
-        <div className="rounded border-2 border-stone-200 bg-white p-6 text-center">
-          <p className="text-stone-600">
-            Still having issues?{" "}
-            <a
-              href="https://github.com/feedbackflow/feedbackflow/issues"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-retro-blue hover:underline"
-            >
-              Open an issue on GitHub
-              <ExternalLink className="h-4 w-4" />
-            </a>{" "}
-            or check out the{" "}
-            <Link href="/docs/api" className="text-retro-blue hover:underline">
-              REST API documentation
-            </Link>
-            .
-          </p>
-        </div>
-      </div>
-    </div>
+    </DocsLayout>
   );
 }
 
-function CodeBlock({ code, language }: { code: string; language: string }) {
+function CodeBlock({ code }: { code: string }) {
   return (
-    <pre className="overflow-x-auto rounded border border-stone-200 bg-stone-900 p-4 text-sm text-stone-100">
-      <code className={`language-${language}`}>{code}</code>
+    <pre className="overflow-x-auto rounded border-2 border-stone-800 bg-stone-900 p-4 font-mono text-sm text-stone-100">
+      <code>{code}</code>
     </pre>
   );
 }
@@ -1073,16 +1007,16 @@ function CopyButton({ text, snippetId, copiedSnippet, onCopy }: CopyButtonProps)
   return (
     <button
       onClick={() => onCopy(text, snippetId)}
-      className="flex items-center gap-1 rounded border border-stone-200 bg-white px-2 py-1 text-xs font-medium text-stone-600 transition-colors hover:border-stone-300 hover:bg-stone-50"
+      className="flex items-center gap-1.5 rounded border-2 border-stone-200 bg-white px-2.5 py-1 text-xs font-medium text-stone-600 transition-colors hover:border-stone-300 hover:bg-stone-50"
     >
       {isCopied ? (
         <>
-          <Check className="h-3 w-3 text-green-600" />
+          <Icon name="solar:check-circle-bold" size={14} className="text-green-600" />
           <span className="text-green-600">Copied!</span>
         </>
       ) : (
         <>
-          <Copy className="h-3 w-3" />
+          <Icon name="solar:copy-linear" size={14} />
           Copy
         </>
       )}

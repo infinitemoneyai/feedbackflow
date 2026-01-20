@@ -6,12 +6,7 @@ import Image from "next/image";
 import {
   Bug,
   Lightbulb,
-  Clock,
-  MoreHorizontal,
   Check,
-  Image as ImageIcon,
-  Video,
-  ArrowUpDown,
   X,
   MessageSquare,
   Tag,
@@ -19,6 +14,7 @@ import {
   FileJson,
   Loader2,
 } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { api } from "@/convex/_generated/api";
 import { useDashboard } from "./dashboard-layout";
 import { cn } from "@/lib/utils";
@@ -552,139 +548,100 @@ export function FeedbackList() {
           </p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {displayedFeedback.map((feedback: FeedbackItem) => (
-            <button
+            <div
               key={feedback._id}
               onClick={() => setSelectedFeedbackId(feedback._id)}
               className={cn(
-                "group w-full rounded border-2 bg-white p-4 text-left transition-all",
+                "group relative cursor-pointer border-2 bg-white p-4 transition-all",
                 selectedFeedbackId === feedback._id
                   ? "translate-x-[2px] translate-y-[2px] border-retro-blue shadow-[4px_4px_0px_0px_#6B9AC4]"
-                  : "border-transparent hover:border-retro-black hover:shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]"
+                  : "border-transparent hover:border-retro-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]",
+                selectedFeedbackId !== feedback._id && "border-b border-stone-200"
               )}
             >
-              <div className="flex items-start gap-3">
-                {/* Checkbox */}
-                <div
-                  onClick={(e) => handleToggleSelect(feedback._id, e)}
-                  className={cn(
-                    "mt-1 flex h-5 w-5 flex-shrink-0 cursor-pointer items-center justify-center rounded border-2 transition-colors",
-                    selectedIds.has(feedback._id)
-                      ? "border-retro-blue bg-retro-blue"
-                      : "border-stone-300 bg-white group-hover:border-stone-400"
-                  )}
-                >
-                  {selectedIds.has(feedback._id) && (
-                    <Check className="h-3 w-3 text-white" />
-                  )}
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <div className="mb-2 flex items-center gap-2">
-                    {/* Type badge */}
-                    {feedback.type === "bug" ? (
-                      <span className="flex items-center gap-1 rounded border border-retro-red/20 bg-retro-red/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-retro-red">
-                        <Bug className="h-3 w-3" />
-                        Bug
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1 rounded border border-retro-blue/20 bg-retro-blue/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-retro-blue">
-                        <Lightbulb className="h-3 w-3" />
-                        Feature
-                      </span>
+              <div className="flex items-start gap-4">
+                {/* Status indicator */}
+                <div className="mt-1">
+                  <div
+                    onClick={(e) => handleToggleSelect(feedback._id, e)}
+                    className={cn(
+                      "flex h-4 w-4 cursor-pointer items-center justify-center rounded-full border transition-colors",
+                      selectedIds.has(feedback._id)
+                        ? "border-retro-blue bg-retro-blue"
+                        : feedback.priority === "critical" || feedback.priority === "high"
+                          ? "border-retro-black bg-retro-red"
+                          : "border-stone-300 hover:border-retro-black"
                     )}
-
-                    {/* Priority badge */}
-                    <span
-                      className={cn(
-                        "rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
-                        priorityColors[feedback.priority]
-                      )}
-                    >
-                      {feedback.priority}
-                    </span>
-
-                    {/* Media indicators */}
-                    {feedback.screenshotUrl && (
-                      <span className="flex items-center rounded border border-stone-200 bg-stone-100 px-1 py-0.5">
-                        <ImageIcon className="h-3 w-3 text-stone-500" />
-                      </span>
+                  >
+                    {selectedIds.has(feedback._id) && (
+                      <Check className="h-2.5 w-2.5 text-white" />
                     )}
-                    {feedback.recordingUrl && (
-                      <span className="flex items-center rounded border border-stone-200 bg-stone-100 px-1 py-0.5">
-                        <Video className="h-3 w-3 text-stone-500" />
-                      </span>
-                    )}
-
-                    {/* Search match indicators (only show when searching) */}
-                    {effectiveSearchQuery && feedback._searchMeta && (
-                      <div className="flex items-center gap-1">
-                        {feedback._searchMeta.matchedFields.includes("comments") && (
-                          <span
-                            className="flex items-center rounded border border-retro-yellow/30 bg-retro-yellow/10 px-1 py-0.5"
-                            title="Match found in comments"
-                          >
-                            <MessageSquare className="h-3 w-3 text-retro-yellow" />
-                          </span>
-                        )}
-                        {feedback._searchMeta.matchedFields.includes("tags") && (
-                          <span
-                            className="flex items-center rounded border border-retro-yellow/30 bg-retro-yellow/10 px-1 py-0.5"
-                            title="Match found in tags"
-                          >
-                            <Tag className="h-3 w-3 text-retro-yellow" />
-                          </span>
-                        )}
-                        {feedback._searchMeta.matchedFields.includes("submitter") && (
-                          <span
-                            className="flex items-center rounded border border-retro-yellow/30 bg-retro-yellow/10 px-1 py-0.5"
-                            title="Match found in submitter info"
-                          >
-                            <User className="h-3 w-3 text-retro-yellow" />
-                          </span>
-                        )}
-                      </div>
+                    {!selectedIds.has(feedback._id) && (feedback.priority === "critical" || feedback.priority === "high") && (
+                      <div className="h-1.5 w-1.5 rounded-full bg-white" />
                     )}
                   </div>
+                </div>
 
-                  <h3 className="mb-1 truncate font-medium text-retro-black">
+                {/* Content */}
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="font-mono text-xs text-stone-400">
+                      #{feedback._id.slice(-3).toUpperCase()} • {formatTimeAgo(feedback.createdAt, currentTime)}
+                    </span>
+                    <div className="flex gap-2">
+                      {/* Priority badge */}
+                      <span
+                        className={cn(
+                          "rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                          priorityColors[feedback.priority]
+                        )}
+                      >
+                        {feedback.priority === "critical" ? "High Priority" : feedback.priority}
+                      </span>
+                    </div>
+                  </div>
+
+                  <h3 className="mb-1 truncate text-base font-medium text-retro-black">
                     {effectiveSearchQuery
                       ? highlightText(feedback.title, effectiveSearchQuery)
                       : feedback.title}
                   </h3>
 
                   {feedback.description && (
-                    <p className="line-clamp-2 text-sm text-stone-500">
+                    <p className="truncate text-sm text-stone-500">
                       {effectiveSearchQuery
                         ? highlightText(feedback.description, effectiveSearchQuery)
                         : feedback.description}
                     </p>
                   )}
 
-                  {/* Tags */}
-                  {feedback.tags && feedback.tags.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {feedback.tags.slice(0, 3).map((tag) => (
+                  {/* Search match indicators (only show when searching) */}
+                  {effectiveSearchQuery && feedback._searchMeta && (
+                    <div className="mt-2 flex items-center gap-1">
+                      {feedback._searchMeta.matchedFields.includes("comments") && (
                         <span
-                          key={tag}
-                          className={cn(
-                            "rounded border px-1.5 py-0.5 text-[10px] font-medium",
-                            effectiveSearchQuery &&
-                              feedback._searchMeta?.matchedFields.includes("tags") &&
-                              tag.toLowerCase().includes(effectiveSearchQuery.toLowerCase())
-                              ? "border-retro-yellow/50 bg-retro-yellow/20 text-retro-black"
-                              : "border-retro-lavender/30 bg-retro-lavender/10 text-retro-lavender"
-                          )}
+                          className="flex items-center rounded border border-retro-yellow/30 bg-retro-yellow/10 px-1 py-0.5"
+                          title="Match found in comments"
                         >
-                          {effectiveSearchQuery
-                            ? highlightText(tag, effectiveSearchQuery)
-                            : tag}
+                          <MessageSquare className="h-3 w-3 text-retro-yellow" />
                         </span>
-                      ))}
-                      {feedback.tags.length > 3 && (
-                        <span className="text-[10px] text-stone-400">
-                          +{feedback.tags.length - 3} more
+                      )}
+                      {feedback._searchMeta.matchedFields.includes("tags") && (
+                        <span
+                          className="flex items-center rounded border border-retro-yellow/30 bg-retro-yellow/10 px-1 py-0.5"
+                          title="Match found in tags"
+                        >
+                          <Tag className="h-3 w-3 text-retro-yellow" />
+                        </span>
+                      )}
+                      {feedback._searchMeta.matchedFields.includes("submitter") && (
+                        <span
+                          className="flex items-center rounded border border-retro-yellow/30 bg-retro-yellow/10 px-1 py-0.5"
+                          title="Match found in submitter info"
+                        >
+                          <User className="h-3 w-3 text-retro-yellow" />
                         </span>
                       )}
                     </div>
@@ -693,60 +650,23 @@ export function FeedbackList() {
 
                 {/* Thumbnail */}
                 {feedback.screenshotUrl ? (
-                  <div className="relative hidden h-16 w-24 flex-shrink-0 overflow-hidden rounded border border-stone-200 sm:block">
+                  <div className="relative hidden h-12 w-16 flex-shrink-0 overflow-hidden border border-stone-200 bg-stone-100 sm:block">
                     <Image
                       src={feedback.screenshotUrl}
                       alt="Screenshot thumbnail"
                       fill
-                      sizes="96px"
+                      sizes="64px"
                       className="object-cover"
                       loading="lazy"
                     />
                   </div>
                 ) : (
-                  <div className="hidden h-16 w-24 flex-shrink-0 rounded border border-stone-200 bg-stone-100 sm:block">
-                    <div className="flex h-full w-full items-center justify-center text-stone-400">
-                      <svg
-                        className="h-6 w-6"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <rect x="3" y="3" width="18" height="18" rx="2" strokeWidth="2" />
-                        <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" />
-                        <path d="M21 15l-5-5L5 21" strokeWidth="2" />
-                      </svg>
-                    </div>
+                  <div className="hidden h-12 w-16 flex-shrink-0 items-center justify-center border border-stone-200 bg-stone-100 text-stone-300 sm:flex">
+                    <Icon name="solar:gallery-wide-linear" size={16} />
                   </div>
                 )}
               </div>
-
-              {/* Footer with metadata */}
-              <div className="mt-3 flex items-center justify-between border-t border-stone-100 pt-3">
-                <div className="flex items-center gap-2 text-xs text-stone-500">
-                  <Clock className="h-3 w-3" />
-                  <span>{formatTimeAgo(feedback.createdAt, currentTime)}</span>
-                  {(feedback.submitterName || feedback.submitterEmail) && (
-                    <>
-                      <span className="text-stone-300">•</span>
-                      <span>
-                        {feedback.submitterName || feedback.submitterEmail}
-                      </span>
-                    </>
-                  )}
-                </div>
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    // TODO: Open actions menu
-                  }}
-                  className="rounded p-1 text-stone-400 transition-colors hover:bg-stone-100 hover:text-retro-black"
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </button>
-              </div>
-            </button>
+            </div>
           ))}
         </div>
       )}

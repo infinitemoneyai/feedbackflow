@@ -7,7 +7,6 @@ import {
   X,
   Bug,
   Lightbulb,
-  MoreHorizontal,
   ChevronDown,
   User,
   Clock,
@@ -27,6 +26,7 @@ import {
   ExternalLink,
   Loader2,
 } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { api } from "@/convex/_generated/api";
 import { useDashboard } from "./dashboard-layout";
 import { cn } from "@/lib/utils";
@@ -142,21 +142,14 @@ function ScreenshotViewer({ url }: { url: string }) {
 
   return (
     <>
-      <div className="group relative overflow-hidden rounded border-2 border-stone-200 bg-stone-100">
-        <img
-          src={url}
-          alt="Screenshot"
-          className="h-auto w-full cursor-pointer object-contain"
-          onClick={() => setIsFullscreen(true)}
-        />
-        <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-          <button
+      <div className="group relative cursor-zoom-in overflow-hidden border-2 border-retro-black bg-stone-200 p-2">
+        <div className="relative aspect-video overflow-hidden bg-white">
+          <img
+            src={url}
+            alt="Screenshot"
+            className="h-full w-full object-contain"
             onClick={() => setIsFullscreen(true)}
-            className="rounded border border-stone-300 bg-white p-1.5 shadow-sm transition-colors hover:bg-stone-50"
-            title="View fullscreen"
-          >
-            <Maximize2 className="h-4 w-4 text-stone-600" />
-          </button>
+          />
         </div>
       </div>
 
@@ -793,7 +786,7 @@ export function TicketDetailPanel() {
   // If no feedback selected, show empty state
   if (!selectedFeedbackId) {
     return (
-      <aside className="hidden w-[480px] flex-col border-l-2 border-retro-black bg-white lg:flex">
+      <aside className="relative z-10 hidden w-[480px] flex-shrink-0 flex-col border-l-2 border-retro-black bg-retro-paper lg:flex">
         <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2 border-stone-200 bg-stone-50">
             <Bug className="h-8 w-8 text-stone-400" />
@@ -810,7 +803,7 @@ export function TicketDetailPanel() {
   // Loading state
   if (feedback === undefined) {
     return (
-      <aside className="hidden w-[480px] flex-col border-l-2 border-retro-black bg-white lg:flex">
+      <aside className="relative z-10 hidden w-[480px] flex-shrink-0 flex-col border-l-2 border-retro-black bg-retro-paper lg:flex">
         <div className="flex flex-1 flex-col items-center justify-center p-8">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-stone-200 border-t-retro-black" />
           <p className="mt-4 text-sm text-stone-500">Loading feedback...</p>
@@ -822,7 +815,7 @@ export function TicketDetailPanel() {
   // Error state - feedback not found
   if (feedback === null) {
     return (
-      <aside className="hidden w-[480px] flex-col border-l-2 border-retro-black bg-white lg:flex">
+      <aside className="relative z-10 hidden w-[480px] flex-shrink-0 flex-col border-l-2 border-retro-black bg-retro-paper lg:flex">
         <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2 border-retro-red/20 bg-retro-red/10">
             <X className="h-8 w-8 text-retro-red" />
@@ -843,45 +836,61 @@ export function TicketDetailPanel() {
   }
 
   return (
-    <aside className="hidden w-[480px] flex-col border-l-2 border-retro-black bg-white lg:flex">
+    <aside className="relative z-10 hidden w-[480px] flex-shrink-0 flex-col border-l-2 border-retro-black bg-retro-paper lg:flex">
       {/* Panel header */}
-      <div className="flex items-center justify-between border-b-2 border-retro-black px-4 py-3">
-        <div className="flex items-center gap-2">
-          {feedback.type === "bug" ? (
-            <span className="flex items-center gap-1 rounded border border-retro-red/20 bg-retro-red/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-retro-red">
-              <Bug className="h-3 w-3" />
-              Bug
-            </span>
-          ) : (
-            <span className="flex items-center gap-1 rounded border border-retro-blue/20 bg-retro-blue/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-retro-blue">
-              <Lightbulb className="h-3 w-3" />
-              Feature
-            </span>
-          )}
-          <span className="font-mono text-xs text-stone-400">
-            {formatTimeAgo(feedback.createdAt)}
+      <div className="flex h-16 items-center justify-between border-b-2 border-retro-black bg-white px-6">
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-lg font-bold">
+            #{selectedFeedbackId.slice(-3).toUpperCase()}
           </span>
+          <span className="h-4 w-px bg-stone-300" />
+          <div className="flex items-center gap-2 text-sm text-stone-500">
+            <Icon name="solar:user-circle-linear" size={16} />
+            <span>
+              {feedback.submitterName || feedback.submitterEmail || "Anonymous"}
+            </span>
+          </div>
         </div>
-        <div className="flex items-center gap-1">
-          <button className="rounded p-1.5 text-stone-400 transition-colors hover:bg-stone-100 hover:text-retro-black">
-            <MoreHorizontal className="h-4 w-4" />
+        <div className="flex gap-2">
+          <button className="rounded p-2 text-stone-500 transition-colors hover:bg-stone-100 hover:text-retro-black">
+            <Icon name="solar:link-linear" size={20} />
+          </button>
+          <button className="rounded p-2 text-stone-500 transition-colors hover:bg-stone-100 hover:text-retro-black">
+            <Icon name="solar:menu-dots-linear" size={20} />
           </button>
           <button
             onClick={() => setSelectedFeedbackId(null)}
-            className="rounded p-1.5 text-stone-400 transition-colors hover:bg-stone-100 hover:text-retro-black"
+            className="rounded p-2 text-stone-500 transition-colors hover:bg-red-50 hover:text-retro-red"
           >
-            <X className="h-4 w-4" />
+            <Icon name="solar:close-square-linear" size={20} />
           </button>
         </div>
       </div>
 
       {/* Panel content */}
-      <div className="flex-1 space-y-4 overflow-y-auto p-4">
+      <div className="flex-1 space-y-6 overflow-y-auto p-6">
         {/* Title and description */}
         <div>
-          <h2 className="mb-2 text-lg font-medium text-retro-black">{feedback.title}</h2>
+          <h2 className="mb-3 text-2xl font-semibold leading-tight tracking-tight text-retro-black">
+            {feedback.title}
+          </h2>
+          {/* Device tags */}
+          {(feedback.metadata?.browser || feedback.metadata?.os) && (
+            <div className="mb-4 flex gap-2">
+              {feedback.metadata.browser && (
+                <span className="border border-retro-black bg-white px-2 py-1 font-mono text-xs uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                  {feedback.metadata.browser}
+                </span>
+              )}
+              {feedback.metadata.os && (
+                <span className="border border-retro-black bg-white px-2 py-1 font-mono text-xs uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                  {feedback.metadata.os}
+                </span>
+              )}
+            </div>
+          )}
           {feedback.description && (
-            <p className="text-sm leading-relaxed text-stone-600">{feedback.description}</p>
+            <p className="leading-relaxed text-stone-600">{feedback.description}</p>
           )}
         </div>
 
@@ -1017,10 +1026,47 @@ export function TicketDetailPanel() {
           hasSubmitterEmail={!!feedback.submitterEmail}
           submitterEmail={feedback.submitterEmail}
         />
+
+        {/* Comments and Activity section */}
+        <CommentsAndActivity feedbackId={selectedFeedbackId} />
       </div>
 
-      {/* Comments and Activity section */}
-      <CommentsAndActivity feedbackId={selectedFeedbackId} />
+      {/* Footer: Actions */}
+      <div className="z-20 space-y-3 border-t-2 border-retro-black bg-white p-4 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
+        {/* Chat Input */}
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Discuss with AI or team..."
+            className="w-full rounded border-2 border-stone-200 bg-stone-50 py-3 pl-4 pr-10 text-sm outline-none transition-colors focus:border-retro-blue"
+          />
+          <button className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-stone-400 hover:text-retro-blue">
+            <Icon name="solar:plain-3-linear" size={20} />
+          </button>
+        </div>
+
+        {/* Export Actions */}
+        <div className="grid grid-cols-2 gap-3">
+          <button className="group flex items-center justify-center gap-2 border-2 border-retro-black bg-retro-black p-3 text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:border-retro-blue hover:bg-retro-blue hover:shadow-none">
+            <Icon name="solar:export-linear" size={18} />
+            <span className="font-medium">Linear</span>
+          </button>
+          <div className="flex gap-2">
+            <button
+              className="flex flex-1 items-center justify-center gap-2 border-2 border-stone-200 p-3 transition-all hover:border-retro-black hover:bg-stone-50"
+              title="Send to Notion"
+            >
+              <Icon name="solar:notes-linear" size={20} />
+            </button>
+            <button
+              className="flex flex-1 items-center justify-center gap-2 border-2 border-stone-200 p-3 transition-all hover:border-retro-black hover:bg-stone-50"
+              title="Download JSON"
+            >
+              <Icon name="solar:code-file-linear" size={20} />
+            </button>
+          </div>
+        </div>
+      </div>
     </aside>
   );
 }

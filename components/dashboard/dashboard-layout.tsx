@@ -60,7 +60,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         setSearchQuery,
       }}
     >
-      <div className="flex h-screen bg-stone-100">
+      {/* Outer wrapper with retro background */}
+      <div className="flex h-screen flex-col bg-[#e8e6e1] p-2 font-sans antialiased overflow-hidden">
         {/* Mobile sidebar overlay */}
         {sidebarOpen && (
           <div
@@ -69,17 +70,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           />
         )}
 
-        {/* Left sidebar */}
-        <DashboardSidebar />
+        {/* Main application shell with retro border and shadow */}
+        <div className="mx-auto flex w-full max-w-[1800px] flex-1 flex-col overflow-hidden border-2 border-retro-black bg-retro-paper shadow-[8px_8px_0px_0px_rgba(26,26,26,1)] md:flex-row">
+          {/* Left sidebar */}
+          <DashboardSidebar />
 
-        {/* Main content area */}
-        <main className="flex flex-1 flex-col overflow-hidden">
-          <DashboardHeader />
-          <div className="flex-1 overflow-y-auto p-4 lg:p-6">{children}</div>
-        </main>
+          {/* Main content area */}
+          <main className="flex min-w-0 flex-1 flex-col bg-stone-100">
+            <DashboardHeader />
+            <div className="flex-1 overflow-y-auto p-4">{children}</div>
+          </main>
 
-        {/* Right sidebar for ticket detail (desktop only) */}
-        <TicketDetailPanel />
+          {/* Right sidebar for ticket detail (desktop only) */}
+          <TicketDetailPanel />
+        </div>
       </div>
     </DashboardContext.Provider>
   );
