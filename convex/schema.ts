@@ -289,7 +289,11 @@ export default defineSchema({
     updatedAt: v.optional(v.number()),
   })
     .index("by_feedback", ["feedbackId"])
-    .index("by_feedback_and_created", ["feedbackId", "createdAt"]),
+    .index("by_feedback_and_created", ["feedbackId", "createdAt"])
+    .searchIndex("search_content", {
+      searchField: "content",
+      filterFields: ["feedbackId"],
+    }),
 
   /**
    * Activity log (audit trail)

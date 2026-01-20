@@ -142,6 +142,20 @@ All notable changes to FeedbackFlow will be documented in this file.
   - Empty states for each tab (no comments, no activity, no items)
   - Count badges showing number of comments and activity entries
   - Matches retro design aesthetic with tabs, borders, and avatar styling
+- **FF-016: Full-Text Search** - Complete search across feedback title, description, comments, tags, and submitter info:
+  - Enhanced `searchFeedback` query with relevance-based scoring algorithm
+  - Title matches weighted highest (10 points per term), description (5 points), tags (4 points), submitter (3 points), comments (2 points)
+  - Bonus scoring for exact phrase matches
+  - Search across all feedback comments with `_searchMeta` returned for UI highlighting
+  - Added search index on comments table for future optimization
+  - Dashboard header search input with clear button
+  - Mobile search with fullscreen overlay UI
+  - Header updates to show "Search Results" with query badge when searching
+  - `highlightText` utility function for marking matched terms with yellow highlight
+  - Visual indicators in feedback list for match location (comments, tags, submitter icons)
+  - Tag highlighting when search matches tag content
+  - Filters (type, status, priority) combine with search results
+  - Real-time search via Convex subscriptions
 
 ---
 
@@ -170,7 +184,7 @@ All notable changes to FeedbackFlow will be documented in this file.
 - [x] FF-013: Feedback inbox
 - [x] FF-014: Feedback detail view
 - [x] FF-015: Comments & activity log
-- [ ] FF-016: Full-text search
+- [x] FF-016: Full-text search
 
 ### Milestone 4: AI Processing
 

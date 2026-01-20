@@ -295,7 +295,7 @@
         "Typecheck passes"
       ],
       "priority": 16,
-      "passes": false,
+      "passes": true,
       "notes": "Use Convex search indexes. Consider adding search across tags and submitter info."
     },
     {

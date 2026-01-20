@@ -337,7 +337,8 @@ export const listFeedback = query({
 });
 
 /**
- * Search feedback using full-text search
+ * Search feedback using full-text search across title, description, comments, and tags
+ * Returns results ranked by relevance with match information for highlighting
  */
 export const searchFeedback = query({
   args: {
@@ -393,53 +394,157 @@ export const searchFeedback = query({
       return [];
     }
 
-    // Search feedback with text search
-    let searchResults = await ctx.db
+    const searchLower = args.searchQuery.toLowerCase().trim();
+    if (searchLower.length === 0) {
+      return [];
+    }
+
+    // Search terms for multi-word queries
+    const searchTerms = searchLower.split(/\s+/).filter((t) => t.length > 0);
+
+    // Get all feedback for the project
+    const allFeedback = await ctx.db
       .query("feedback")
-      .withSearchIndex("search_content", (q) => {
-        let search = q.search("title", args.searchQuery);
-        search = search.eq("projectId", args.projectId);
-        if (args.status) {
-          search = search.eq("status", args.status);
-        }
-        if (args.type) {
-          search = search.eq("type", args.type);
-        }
-        if (args.priority) {
-          search = search.eq("priority", args.priority);
-        }
-        return search;
-      })
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
       .collect();
 
-    // Also search in descriptions (manual filter since search index is on title)
-    // Get all feedback and filter by description if no results from title search
-    if (searchResults.length === 0 && args.searchQuery.length > 0) {
-      const allFeedback = await ctx.db
-        .query("feedback")
-        .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
-        .collect();
+    // Get all comments for feedback in this project
+    const allComments = await Promise.all(
+      allFeedback.map(async (f) => {
+        const comments = await ctx.db
+          .query("comments")
+          .withIndex("by_feedback", (q) => q.eq("feedbackId", f._id))
+          .collect();
+        return { feedbackId: f._id, comments };
+      })
+    );
 
-      const searchLower = args.searchQuery.toLowerCase();
-      searchResults = allFeedback.filter((f) => {
-        const titleMatch = f.title.toLowerCase().includes(searchLower);
-        const descMatch = f.description?.toLowerCase().includes(searchLower);
-        return titleMatch || descMatch;
-      });
+    // Create a map of feedbackId to comments
+    const commentsMap = new Map(
+      allComments.map((c) => [c.feedbackId.toString(), c.comments])
+    );
 
-      // Apply filters
-      if (args.type) {
-        searchResults = searchResults.filter((f) => f.type === args.type);
+    // Score each feedback item based on search matches
+    type FeedbackWithScore = {
+      feedback: (typeof allFeedback)[0];
+      score: number;
+      matchedFields: string[];
+      matchedCommentIds: string[];
+    };
+
+    const scoredResults: FeedbackWithScore[] = [];
+
+    for (const feedback of allFeedback) {
+      // Apply filters first
+      if (args.type && feedback.type !== args.type) continue;
+      if (args.status && feedback.status !== args.status) continue;
+      if (args.priority && feedback.priority !== args.priority) continue;
+
+      let score = 0;
+      const matchedFields: string[] = [];
+      const matchedCommentIds: string[] = [];
+
+      // Check title (highest weight: 10 points per term)
+      const titleLower = feedback.title.toLowerCase();
+      for (const term of searchTerms) {
+        if (titleLower.includes(term)) {
+          score += 10;
+          if (!matchedFields.includes("title")) matchedFields.push("title");
+        }
       }
-      if (args.status) {
-        searchResults = searchResults.filter((f) => f.status === args.status);
+      // Bonus for exact phrase match in title
+      if (titleLower.includes(searchLower)) {
+        score += 5;
       }
-      if (args.priority) {
-        searchResults = searchResults.filter((f) => f.priority === args.priority);
+
+      // Check description (medium weight: 5 points per term)
+      if (feedback.description) {
+        const descLower = feedback.description.toLowerCase();
+        for (const term of searchTerms) {
+          if (descLower.includes(term)) {
+            score += 5;
+            if (!matchedFields.includes("description")) matchedFields.push("description");
+          }
+        }
+        // Bonus for exact phrase match in description
+        if (descLower.includes(searchLower)) {
+          score += 3;
+        }
+      }
+
+      // Check tags (medium weight: 4 points per term)
+      if (feedback.tags && feedback.tags.length > 0) {
+        for (const tag of feedback.tags) {
+          const tagLower = tag.toLowerCase();
+          for (const term of searchTerms) {
+            if (tagLower.includes(term)) {
+              score += 4;
+              if (!matchedFields.includes("tags")) matchedFields.push("tags");
+            }
+          }
+        }
+      }
+
+      // Check submitter info (lower weight: 3 points per term)
+      if (feedback.submitterName) {
+        const nameLower = feedback.submitterName.toLowerCase();
+        for (const term of searchTerms) {
+          if (nameLower.includes(term)) {
+            score += 3;
+            if (!matchedFields.includes("submitter")) matchedFields.push("submitter");
+          }
+        }
+      }
+      if (feedback.submitterEmail) {
+        const emailLower = feedback.submitterEmail.toLowerCase();
+        for (const term of searchTerms) {
+          if (emailLower.includes(term)) {
+            score += 3;
+            if (!matchedFields.includes("submitter")) matchedFields.push("submitter");
+          }
+        }
+      }
+
+      // Check comments (lower weight: 2 points per term)
+      const comments = commentsMap.get(feedback._id.toString()) || [];
+      for (const comment of comments) {
+        const contentLower = comment.content.toLowerCase();
+        let commentMatched = false;
+        for (const term of searchTerms) {
+          if (contentLower.includes(term)) {
+            score += 2;
+            commentMatched = true;
+          }
+        }
+        if (commentMatched) {
+          matchedCommentIds.push(comment._id.toString());
+          if (!matchedFields.includes("comments")) matchedFields.push("comments");
+        }
+      }
+
+      // Only include if there's at least one match
+      if (score > 0) {
+        scoredResults.push({
+          feedback,
+          score,
+          matchedFields,
+          matchedCommentIds,
+        });
       }
     }
 
-    return searchResults;
+    // Sort by score (descending)
+    scoredResults.sort((a, b) => b.score - a.score);
+
+    // Return feedback with match info for highlighting
+    return scoredResults.map((r) => ({
+      ...r.feedback,
+      _searchMeta: {
+        score: r.score,
+        matchedFields: r.matchedFields,
+        matchedCommentIds: r.matchedCommentIds,
+      },
+    }));
   },
 });
 
