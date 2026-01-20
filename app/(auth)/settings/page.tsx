@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import Link from "next/link";
-import { ArrowLeft, Bot, Settings as SettingsIcon, Users, CreditCard, Plug, Webhook, Key, Zap, Bell } from "lucide-react";
+import { ArrowLeft, Bot, Settings as SettingsIcon, Users, CreditCard, Plug, Webhook, Key, Zap, Bell, Palette } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { AiConfigSection } from "@/components/settings/ai-config-section";
@@ -14,18 +14,49 @@ import { RestApiKeysSection } from "@/components/settings/rest-api-keys-section"
 import { AutomationRulesSection } from "@/components/settings/automation-rules-section";
 import { NotificationPreferencesSection } from "@/components/settings/notification-preferences-section";
 import { BillingSection } from "@/components/settings/billing-section";
+import { WidgetCustomizationSection } from "@/components/settings/widget-customization-section";
 
-type SettingsTab = "ai" | "integrations" | "webhooks" | "automation" | "api-keys" | "notifications" | "team" | "billing";
+type SettingsTab = "widget" | "ai" | "integrations" | "webhooks" | "automation" | "api-keys" | "notifications" | "team" | "billing";
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<SettingsTab>("ai");
+  const [activeTab, setActiveTab] = useState<SettingsTab>("widget");
+  const [selectedProjectId, setSelectedProjectId] = useState<Id<"projects"> | null>(null);
+  const [selectedWidgetId, setSelectedWidgetId] = useState<Id<"widgets"> | null>(null);
   const teams = useQuery(api.teams.getMyTeams);
 
   // Use first team for now (team selector can be added later)
   const selectedTeamId = teams?.[0]?._id as Id<"teams"> | undefined;
   const selectedTeam = teams?.[0];
 
+  // Get projects for the selected team
+  const projects = useQuery(
+    api.projects.getProjects,
+    selectedTeamId ? { teamId: selectedTeamId } : "skip"
+  );
+
+  // Get widgets for the selected project
+  const widgets = useQuery(
+    api.projects.getWidgets,
+    selectedProjectId ? { projectId: selectedProjectId } : "skip"
+  );
+
+  // Auto-select first project and widget when data loads
+  const firstProject = projects?.[0];
+  const firstWidget = widgets?.[0];
+  if (firstProject && !selectedProjectId) {
+    setSelectedProjectId(firstProject._id);
+  }
+  if (firstWidget && !selectedWidgetId) {
+    setSelectedWidgetId(firstWidget._id);
+  }
+
   const tabs = [
+    {
+      id: "widget" as const,
+      label: "Widget",
+      icon: Palette,
+      description: "Customize widget appearance",
+    },
     {
       id: "ai" as const,
       label: "AI Configuration",
@@ -161,6 +192,98 @@ export default function SettingsPage() {
 
           {/* Main content */}
           <main className="flex-1">
+            {activeTab === "widget" && (
+              <div className="space-y-6">
+                {/* Project/Widget selector */}
+                <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border-2 border-retro-yellow bg-retro-yellow/10">
+                      <Palette className="h-6 w-6 text-retro-yellow" />
+                    </div>
+                    <div className="flex-1">
+                      <h2 className="text-xl font-semibold text-retro-black">
+                        Widget Customization
+                      </h2>
+                      <p className="mt-1 text-sm text-stone-600">
+                        Customize how the feedback widget appears on your website.
+                        Select a project and widget to configure.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Project and Widget selectors */}
+                  <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-stone-700">
+                        Project
+                      </label>
+                      <select
+                        value={selectedProjectId || ""}
+                        onChange={(e) => {
+                          const newProjectId = e.target.value as Id<"projects">;
+                          setSelectedProjectId(newProjectId);
+                          setSelectedWidgetId(null); // Reset widget when project changes
+                        }}
+                        className="w-full rounded border-2 border-stone-200 bg-white px-4 py-2.5 text-sm transition-colors focus:border-retro-black focus:outline-none"
+                      >
+                        {!projects ? (
+                          <option value="">Loading projects...</option>
+                        ) : projects.length === 0 ? (
+                          <option value="">No projects found</option>
+                        ) : (
+                          projects.map((project: { _id: Id<"projects">; name: string }) => (
+                            <option key={project._id} value={project._id}>
+                              {project.name}
+                            </option>
+                          ))
+                        )}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-stone-700">
+                        Widget
+                      </label>
+                      <select
+                        value={selectedWidgetId || ""}
+                        onChange={(e) => setSelectedWidgetId(e.target.value as Id<"widgets">)}
+                        className="w-full rounded border-2 border-stone-200 bg-white px-4 py-2.5 text-sm transition-colors focus:border-retro-black focus:outline-none"
+                        disabled={!selectedProjectId}
+                      >
+                        {!widgets ? (
+                          <option value="">Loading widgets...</option>
+                        ) : widgets.length === 0 ? (
+                          <option value="">No widgets found</option>
+                        ) : (
+                          widgets.map((widget: { _id: Id<"widgets">; widgetKey: string; siteUrl?: string }) => (
+                            <option key={widget._id} value={widget._id}>
+                              {widget.siteUrl || widget.widgetKey}
+                            </option>
+                          ))
+                        )}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Widget customization form */}
+                {selectedWidgetId ? (
+                  <WidgetCustomizationSection
+                    widgetId={selectedWidgetId}
+                    projectName={projects?.find((p: { _id: Id<"projects"> }) => p._id === selectedProjectId)?.name}
+                    hideHeader={true}
+                  />
+                ) : (
+                  <div className="rounded border-2 border-stone-200 bg-stone-50 p-8 text-center">
+                    <Palette className="mx-auto mb-3 h-10 w-10 text-stone-300" />
+                    <p className="text-stone-500">
+                      Select a project and widget to customize
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
             {activeTab === "ai" && selectedTeamId && (
               <AiConfigSection teamId={selectedTeamId} />
             )}

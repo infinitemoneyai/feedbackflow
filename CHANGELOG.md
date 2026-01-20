@@ -6,6 +6,27 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Added
 
+- **FF-036: Widget Customization UI** - Complete widget customization interface:
+  - Widget settings tab in project settings page
+  - Project and widget selector for managing multiple widgets
+  - Position selector (bottom-right, bottom-left, top-right, top-left)
+  - Button text customization with character limit
+  - Color pickers for primary color, background color, and text color
+  - Hex color input alongside visual color picker
+  - Logo upload option with drag-and-drop interface
+  - Logo preview with remove button
+  - File validation (images only, max 2MB)
+  - Live preview component showing widget appearance
+  - Preview shows floating button in selected position
+  - Preview opens interactive modal matching widget design
+  - Reset to defaults button with confirmation
+  - Save changes button with success feedback
+  - Convex mutations: `saveWidgetConfig`, `resetWidgetConfig`, `uploadLogo`, `generateLogoUploadUrl`, `removeLogo`
+  - Convex queries: `getWidgetConfig`, `getWidgetConfigByKey` (public for widget script)
+  - Configuration persisted to `widgetConfig` table
+  - Retro design aesthetic matching dashboard theme
+  - Typecheck passes with no errors
+
 - **FF-035: Pricing Page & Upgrade Flow** - Public pricing page with Stripe Checkout integration:
   - Pricing page at `/pricing` with Free vs Pro plan comparison
   - Feature comparison table with 18 feature rows comparing both plans
@@ -693,7 +714,7 @@ All notable changes to FeedbackFlow will be documented in this file.
 - [x] FF-033: Stripe integration
 - [x] FF-034: Usage tracking & limits
 - [x] FF-035: Pricing page
-- [ ] FF-036: Widget customization UI
+- [x] FF-036: Widget customization UI
 - [ ] FF-037: Installation documentation
 - [ ] FF-038: External storage config
 - [ ] FF-039: Self-hosting documentation
