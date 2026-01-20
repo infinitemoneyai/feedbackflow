@@ -6,6 +6,45 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Added
 
+- **FF-033: Stripe Billing Integration** - Complete Stripe integration for subscription billing:
+  - Stripe SDK installed and configured with 2025-12-15.clover API version
+  - `lib/stripe.ts` module with:
+    - Stripe client initialization for server-side use
+    - Plan configuration: Free (1 seat, 25 feedback/month) and Pro ($12/seat/month, unlimited)
+    - `createCheckoutSession` for Stripe Checkout flow
+    - `getOrCreateCustomer` for Stripe customer management
+    - `createBillingPortalSession` for subscription management
+    - `getSubscription`, `cancelSubscription`, `resumeSubscription` utilities
+    - `updateSubscriptionSeats` for changing seat quantity
+    - `constructWebhookEvent` for webhook signature verification
+    - `mapStripeStatus` for status normalization
+  - `convex/billing.ts` module with:
+    - `getSubscription` query for authenticated team subscription access
+    - `getSubscriptionPublic` query for API route access
+    - `getUsage` query returns feedback count, AI calls, storage, member count
+    - `updateStripeCustomerId` mutation for linking Stripe customer
+    - Internal mutations for webhook handling: `updateSubscriptionFromStripe`, `cancelSubscriptionFromStripe`, `createSubscriptionFromStripe`, `updateSubscriptionStatus`
+    - Helper functions: `canAddSeat`, `canSubmitFeedback` for enforcing limits
+  - Webhook handler at `/api/webhooks/stripe/route.ts`:
+    - Handles checkout.session.completed, customer.subscription.created/updated/deleted
+    - Handles invoice.payment_succeeded/failed for status updates
+    - HMAC signature verification for security
+    - Subscription lifecycle management (create, update, cancel, payment events)
+  - API routes for billing flows:
+    - `POST /api/billing/checkout` creates Stripe Checkout session for upgrading
+    - `POST /api/billing/portal` creates Stripe Billing Portal session for management
+  - `BillingSection` component in settings:
+    - Current plan display (Free/Pro) with status badges
+    - Usage tracking with progress bars for free tier limits
+    - Upgrade to Pro button initiating Checkout flow
+    - Manage Billing button opening Stripe portal
+    - Plan comparison section with feature lists
+    - Self-host info note for open source users
+    - Period info showing next billing date or cancellation date
+  - Settings page updated to include BillingSection component
+  - Middleware already allows /api/webhooks/* for Stripe
+  - Typecheck passes with no errors
+
 - **FF-032: GDPR Compliance Features** - Complete GDPR compliance implementation:
   - **Widget Privacy Enhancements:**
     - Privacy policy link support in widget modal footer (`data-privacy-policy-url` attribute)
@@ -606,11 +645,11 @@ All notable changes to FeedbackFlow will be documented in this file.
 ### Milestone 7: Submitter Portal & Privacy
 
 - [x] FF-031: Submitter status page
-- [ ] FF-032: GDPR compliance
+- [x] FF-032: GDPR compliance
 
 ### Milestone 8: Billing & Polish
 
-- [ ] FF-033: Stripe integration
+- [x] FF-033: Stripe integration
 - [ ] FF-034: Usage tracking & limits
 - [ ] FF-035: Pricing page
 - [ ] FF-036: Widget customization UI
