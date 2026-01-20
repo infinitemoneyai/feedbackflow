@@ -8,6 +8,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { AiConfigSection } from "@/components/settings/ai-config-section";
 import { LinearConfigSection } from "@/components/settings/linear-config-section";
+import { NotionConfigSection } from "@/components/settings/notion-config-section";
 
 type SettingsTab = "ai" | "integrations" | "team" | "billing";
 
@@ -158,24 +159,8 @@ export default function SettingsPage() {
                 {/* Linear Integration */}
                 <LinearConfigSection teamId={selectedTeamId} />
 
-                {/* Notion placeholder */}
-                <div className="rounded border-2 border-stone-200 bg-stone-50 p-6">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-stone-300 bg-white">
-                      <svg
-                        viewBox="0 0 24 24"
-                        className="h-5 w-5 text-stone-600"
-                        fill="currentColor"
-                      >
-                        <path d="M4.459 4.208c.746.606 1.026.56 2.428.466l13.215-.793c.28 0 .047-.28-.046-.326L17.86 1.968c-.42-.326-.98-.7-2.055-.607L3.01 2.295c-.466.046-.56.28-.374.466zm.793 3.08v13.904c0 .747.373 1.027 1.214.98l14.523-.84c.84-.046.933-.56.933-1.167V6.354c0-.606-.233-.933-.746-.886l-15.177.887c-.56.047-.747.327-.747.933zm14.337.745c.093.42 0 .84-.42.888l-.7.14v10.264c-.608.327-1.168.514-1.635.514-.746 0-.933-.234-1.494-.933l-4.577-7.186v6.952l1.448.327s0 .84-1.168.84l-3.22.186c-.094-.187 0-.653.327-.746l.84-.233V9.854L7.822 9.76c-.094-.42.14-1.026.793-1.073l3.454-.233 4.764 7.279v-6.44l-1.215-.14c-.093-.513.28-.886.747-.933zM2.1 1.408l13.028-.887c1.634-.14 2.055-.047 3.082.7l4.249 2.986c.7.513.933.653.933 1.213v15.063c0 .933-.327 1.493-1.494 1.586L5.79 23.086c-.886.047-1.306-.093-1.773-.7L.944 18.107c-.56-.746-.793-1.306-.793-1.96V2.529c0-.653.327-1.214 1.166-1.12z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-stone-600">Notion</h3>
-                      <p className="text-xs text-stone-400">Coming soon</p>
-                    </div>
-                  </div>
-                </div>
+                {/* Notion Integration */}
+                <NotionConfigSection teamId={selectedTeamId} />
               </div>
             )}
 

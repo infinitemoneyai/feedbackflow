@@ -420,7 +420,7 @@
         "Typecheck passes"
       ],
       "priority": 23,
-      "passes": false,
+      "passes": true,
       "notes": "Use Notion SDK. Require user to share specific database with integration."
     },
     {

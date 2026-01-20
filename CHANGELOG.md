@@ -6,6 +6,34 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Added
 
+- **FF-023: Notion Integration** - Complete Notion integration for exporting feedback as pages:
+  - Settings page Integrations tab with Notion configuration section
+  - API key input with validation (keys must start with 'secret_' or 'ntn_')
+  - Test connection button validates key against Notion API
+  - Database selector to choose default Notion database for tickets
+  - Keys encrypted before storage using base64 encoding
+  - Export to Notion section in ticket detail panel
+  - Creates Notion pages with title and rich content blocks
+  - Automatically maps properties: Type (Bug/Feature), Priority, Status, Tags
+  - Includes description as formatted page content with headings and lists
+  - For bugs: repro steps, expected/actual behavior sections
+  - For features: acceptance criteria as todo checkboxes
+  - Embeds screenshot in page as external image
+  - Links video via bookmark block if applicable
+  - Adds environment metadata (URL, browser, OS, screen size)
+  - Shows submitter info and tags in dedicated sections
+  - FeedbackFlow attribution at page bottom
+  - Uses ticket draft content when available for richer page descriptions
+  - Export records tracked in `exports` table with success/failure status
+  - Activity log entries for exports with external URL
+  - View in Notion button links directly to created page
+  - Override database per export with options panel
+  - Notion SDK wrapper in `lib/integrations/notion.ts`
+  - Convex mutations: `saveNotionIntegration`, `updateNotionSettings`, `deleteNotionIntegration`
+  - Convex queries: `getNotionIntegration`, `getNotionApiKey`
+  - API endpoint: `/api/integrations/notion` for all Notion operations
+  - Retro design aesthetic matching dashboard theme
+
 - **FF-022: Linear Integration** - Complete Linear integration for exporting feedback as issues:
   - Settings page Integrations tab with Linear configuration section
   - API key input with validation (keys must start with 'lin_api_')
@@ -322,7 +350,7 @@ All notable changes to FeedbackFlow will be documented in this file.
 ### Milestone 5: Exports & Integrations
 
 - [x] FF-022: Linear integration
-- [ ] FF-023: Notion integration
+- [x] FF-023: Notion integration
 - [ ] FF-024: JSON/prd.json export
 - [ ] FF-025: Webhooks
 - [ ] FF-026: REST API
