@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, ReactNode } from "react";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import {
   Bug,
   Lightbulb,
@@ -15,11 +15,20 @@ import {
   MessageSquare,
   Tag,
   User,
+  FileJson,
+  Loader2,
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { useDashboard } from "./dashboard-layout";
 import { cn } from "@/lib/utils";
 import { Id } from "@/convex/_generated/dataModel";
+import {
+  feedbackToPrdExport,
+  formatPrdExportJson,
+  downloadJson,
+  type FeedbackForExport,
+  type TicketDraftForExport,
+} from "@/lib/exports/json";
 
 /**
  * Highlight matching search terms in text
@@ -125,6 +134,21 @@ export function FeedbackList() {
     sortBy: "createdAt",
     sortOrder: "desc",
   });
+  const [isBulkExporting, setIsBulkExporting] = useState(false);
+  const [bulkExportResult, setBulkExportResult] = useState<{
+    success: boolean;
+    count: number;
+    error?: string;
+  } | null>(null);
+
+  // Mutation to create export records
+  const createExport = useMutation(api.integrations.createExport);
+
+  // Get project details for export
+  const project = useQuery(
+    api.projects.getProject,
+    selectedProjectId ? { projectId: selectedProjectId } : "skip"
+  );
 
   // Use searchQuery from dashboard context
   const effectiveSearchQuery = searchQuery || "";
@@ -216,6 +240,98 @@ export function FeedbackList() {
     });
   }, []);
 
+  // Bulk export handler
+  const handleBulkExport = useCallback(async () => {
+    if (!displayedFeedback || selectedIds.size === 0 || !project) return;
+
+    setIsBulkExporting(true);
+    setBulkExportResult(null);
+
+    try {
+      // Get selected feedback items
+      const selectedFeedback = displayedFeedback.filter((f: FeedbackItem) =>
+        selectedIds.has(f._id)
+      );
+
+      // Fetch ticket drafts for each feedback (if available)
+      // Note: We need to fetch these one by one since we don't have a bulk query
+      const feedbackWithDrafts: Array<{
+        feedback: FeedbackForExport;
+        ticketDraft: TicketDraftForExport | null;
+      }> = [];
+
+      for (const fb of selectedFeedback) {
+        const feedbackForExport: FeedbackForExport = {
+          _id: fb._id,
+          type: fb.type,
+          title: fb.title,
+          description: fb.description,
+          priority: fb.priority,
+          status: fb.status,
+          tags: fb.tags || [],
+          screenshotUrl: fb.screenshotUrl,
+          recordingUrl: fb.recordingUrl,
+          submitterEmail: fb.submitterEmail,
+          submitterName: fb.submitterName,
+          createdAt: fb.createdAt,
+        };
+
+        feedbackWithDrafts.push({
+          feedback: feedbackForExport,
+          ticketDraft: null, // Ticket drafts would need individual fetches
+        });
+      }
+
+      // Generate prd.json export
+      const prdExport = feedbackToPrdExport(
+        feedbackWithDrafts,
+        project.name,
+        project.description
+      );
+
+      const jsonContent = formatPrdExportJson(prdExport);
+      const filename = `${project.name.toLowerCase().replace(/\s+/g, "-")}-feedback-export.json`;
+
+      // Download the file
+      downloadJson(jsonContent, filename);
+
+      // Create export records for each feedback item
+      for (const { feedback } of feedbackWithDrafts) {
+        await createExport({
+          feedbackId: feedback._id,
+          provider: "json",
+          exportedData: { bulkExport: true, projectName: project.name },
+          status: "success",
+        });
+      }
+
+      setBulkExportResult({
+        success: true,
+        count: selectedFeedback.length,
+      });
+
+      // Clear selection after successful export
+      setSelectedIds(new Set());
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Bulk export failed";
+      setBulkExportResult({
+        success: false,
+        count: 0,
+        error: errorMessage,
+      });
+    } finally {
+      setIsBulkExporting(false);
+    }
+  }, [displayedFeedback, selectedIds, project, createExport]);
+
+  // Clear bulk export result after a delay
+  useEffect(() => {
+    if (bulkExportResult) {
+      const timer = setTimeout(() => setBulkExportResult(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [bulkExportResult]);
+
   const hasActiveFilters =
     filters.type !== null ||
     filters.status !== null ||
@@ -261,18 +377,57 @@ export function FeedbackList() {
     <div className="space-y-4">
       {/* Filter bar */}
       <div className="flex flex-wrap items-center gap-2">
-        {/* Bulk selection indicator */}
+        {/* Bulk selection indicator and actions */}
         {selectedIds.size > 0 && (
-          <div className="mr-2 flex items-center gap-2 rounded border-2 border-retro-blue bg-retro-blue/10 px-3 py-1.5">
-            <span className="text-sm font-medium text-retro-blue">
-              {selectedIds.size} selected
-            </span>
+          <div className="mr-2 flex items-center gap-2">
+            <div className="flex items-center gap-2 rounded border-2 border-retro-blue bg-retro-blue/10 px-3 py-1.5">
+              <span className="text-sm font-medium text-retro-blue">
+                {selectedIds.size} selected
+              </span>
+              <button
+                onClick={() => setSelectedIds(new Set())}
+                className="text-retro-blue hover:text-retro-black"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            {/* Bulk export button */}
             <button
-              onClick={() => setSelectedIds(new Set())}
-              className="text-retro-blue hover:text-retro-black"
+              onClick={handleBulkExport}
+              disabled={isBulkExporting}
+              className="flex items-center gap-1.5 rounded border-2 border-emerald-600 bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white shadow-[2px_2px_0px_0px_rgba(5,150,105,0.5)] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(5,150,105,0.5)] disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0"
             >
-              <X className="h-4 w-4" />
+              {isBulkExporting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <FileJson className="h-4 w-4" />
+              )}
+              Export JSON
             </button>
+          </div>
+        )}
+
+        {/* Bulk export result toast */}
+        {bulkExportResult && (
+          <div
+            className={cn(
+              "flex items-center gap-2 rounded border-2 px-3 py-1.5 text-sm",
+              bulkExportResult.success
+                ? "border-green-300 bg-green-50 text-green-700"
+                : "border-red-300 bg-red-50 text-red-700"
+            )}
+          >
+            {bulkExportResult.success ? (
+              <>
+                <Check className="h-4 w-4" />
+                <span>Exported {bulkExportResult.count} items as prd.json</span>
+              </>
+            ) : (
+              <>
+                <X className="h-4 w-4" />
+                <span>{bulkExportResult.error}</span>
+              </>
+            )}
           </div>
         )}
 
