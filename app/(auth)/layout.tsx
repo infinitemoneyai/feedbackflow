@@ -26,11 +26,11 @@ export default function AuthLayout({
   const teams = useQuery(api.teams.getMyTeams, user ? {} : "skip");
   const projects = useQuery(
     api.projects.getProjects,
-    teams && teams.length > 0 ? { teamId: teams[0]._id } : "skip"
+    teams && teams.length > 0 && teams[0]?._id ? { teamId: teams[0]._id } : "skip"
   );
   const widgets = useQuery(
     api.projects.getWidgets,
-    projects && projects.length > 0 ? { projectId: projects[0]._id } : "skip"
+    projects && projects.length > 0 && projects[0]?._id ? { projectId: projects[0]._id } : "skip"
   );
 
   useEffect(() => {

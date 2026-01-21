@@ -783,6 +783,16 @@ export function TicketDetailPanel() {
     }
   }, []);
 
+  // Refs for scrolling to sections
+  const linearExportRef = useRef<HTMLDivElement>(null);
+  const notionExportRef = useRef<HTMLDivElement>(null);
+  const jsonExportRef = useRef<HTMLDivElement>(null);
+
+  // Helper function to scroll to a section
+  const scrollToSection = (ref: React.RefObject<HTMLDivElement | null>) => {
+    ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   // If no feedback selected, show empty state
   if (!selectedFeedbackId) {
     return (
