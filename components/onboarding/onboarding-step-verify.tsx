@@ -103,33 +103,33 @@ export function OnboardingStepVerify({ projectId }: OnboardingStepVerifyProps) {
               <p className="mb-2 text-sm font-medium text-stone-700">
                 Or send a simulated test ticket:
               </p>
-              <button
-                onClick={handleSendTest}
-                disabled={isSending || hasSent}
-                className={cn(
+            <button
+              onClick={handleSendTest}
+              disabled={isSending || hasSent}
+              className={cn(
                   "flex w-full items-center justify-center gap-3 border-2 border-retro-black px-6 py-3 font-bold transition-all",
-                  hasSent
-                    ? "bg-stone-100 text-stone-500"
+                hasSent
+                  ? "bg-stone-100 text-stone-500"
                     : "bg-retro-lavender hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]"
-                )}
-              >
-                {isSending ? (
-                  <>
+              )}
+            >
+              {isSending ? (
+                <>
                     <Icon name="solar:refresh-linear" size={20} className="animate-spin" />
-                    Sending...
-                  </>
-                ) : hasSent ? (
-                  <>
+                  Sending...
+                </>
+              ) : hasSent ? (
+                <>
                     <Icon name="solar:hourglass-linear" size={20} className="animate-pulse" />
-                    Waiting for ticket...
-                  </>
-                ) : (
-                  <>
+                  Waiting for ticket...
+                </>
+              ) : (
+                <>
                     <Icon name="solar:play-linear" size={20} />
                     Send Simulated Test
-                  </>
-                )}
-              </button>
+                </>
+              )}
+            </button>
               <p className="mt-2 text-xs text-stone-500">
                 This creates a test ticket server-side (doesn&apos;t verify widget installation)
               </p>

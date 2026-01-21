@@ -56,6 +56,12 @@ export function NotionConfigSection({ teamId }: NotionConfigSectionProps) {
 
   const hasKey = integration?.hasApiKey;
 
+  // Debug: log integration state
+  useEffect(() => {
+    console.log("[notion-config] Integration:", integration);
+    console.log("[notion-config] Has key:", hasKey);
+  }, [integration, hasKey]);
+
   // Load existing settings
   useEffect(() => {
     if (integration?.settings) {
@@ -75,18 +81,21 @@ export function NotionConfigSection({ teamId }: NotionConfigSectionProps) {
         body: JSON.stringify({
           action: "getDatabases",
           apiKey: key || "stored",
+          teamId: teamId,
         }),
       });
       const data = await response.json();
       if (data.databases) {
         setNotionDatabases(data.databases);
+      } else if (data.error) {
+        console.error("Error fetching databases:", data.error);
       }
     } catch (error) {
       console.error("Failed to fetch Notion databases:", error);
     } finally {
       setIsLoadingDatabases(false);
     }
-  }, []);
+  }, [teamId]);
 
   // Test connection
   const handleTestConnection = useCallback(async () => {
@@ -102,6 +111,7 @@ export function NotionConfigSection({ teamId }: NotionConfigSectionProps) {
         body: JSON.stringify({
           action: "test",
           apiKey: apiKey || "stored",
+          teamId: teamId, // Convex team ID for retrieving stored key
         }),
       });
 
@@ -206,6 +216,13 @@ export function NotionConfigSection({ teamId }: NotionConfigSectionProps) {
       setIsDeleting(false);
     }
   }, [teamId, deleteIntegration]);
+
+  // Auto-load databases when integration exists
+  useEffect(() => {
+    if (hasKey && notionDatabases.length === 0) {
+      fetchDatabases();
+    }
+  }, [hasKey, notionDatabases.length, fetchDatabases]);
 
   // Notion icon component
   const NotionIcon = () => (

@@ -38,10 +38,10 @@ export default function RootLayout({ children }) {
     <html>
       <body>
         {children}
-        <Script
+<Script
           src="${widgetUrl}"
-          data-widget-key="${widgetKey}"
-          strategy="lazyOnload"
+  data-widget-key="${widgetKey}"
+  strategy="lazyOnload"
         />
       </body>
     </html>
@@ -52,12 +52,12 @@ export default function RootLayout({ children }) {
 import { useEffect } from 'react';
 
 function App() {
-  useEffect(() => {
-    const script = document.createElement('script');
+useEffect(() => {
+  const script = document.createElement('script');
     script.src = '${widgetUrl}';
-    script.dataset.widgetKey = '${widgetKey}';
-    script.async = true;
-    document.body.appendChild(script);
+  script.dataset.widgetKey = '${widgetKey}';
+  script.async = true;
+  document.body.appendChild(script);
     
     return () => {
       document.body.removeChild(script);
@@ -146,8 +146,8 @@ function App() {
                   </button>
                 </div>
                 <pre className="overflow-x-auto rounded-b border border-stone-200 bg-stone-50 p-3 text-xs text-stone-700">
-                  <code>{nextjsSnippet}</code>
-                </pre>
+                <code>{nextjsSnippet}</code>
+              </pre>
               </>
             )}
 
@@ -175,8 +175,8 @@ function App() {
                   </button>
                 </div>
                 <pre className="overflow-x-auto rounded-b border border-stone-200 bg-stone-50 p-3 text-xs text-stone-700">
-                  <code>{reactSnippet}</code>
-                </pre>
+                <code>{reactSnippet}</code>
+              </pre>
               </>
             )}
           </div>

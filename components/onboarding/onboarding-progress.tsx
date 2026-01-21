@@ -18,11 +18,11 @@ export function OnboardingProgress({ currentStep, totalSteps, onStepClick }: Onb
 
         return (
           <button
-            key={step}
+          key={step}
             onClick={() => isClickable && onStepClick(step)}
             disabled={!isClickable}
-            className={cn(
-              "h-2.5 w-2.5 rounded-full border-2 border-retro-black transition-all duration-300",
+          className={cn(
+            "h-2.5 w-2.5 rounded-full border-2 border-retro-black transition-all duration-300",
               isCurrent && "scale-125 bg-retro-yellow",
               isCompleted && "bg-retro-black",
               !isCurrent && !isCompleted && "bg-transparent",
@@ -31,7 +31,7 @@ export function OnboardingProgress({ currentStep, totalSteps, onStepClick }: Onb
             )}
             title={isClickable ? `Go to step ${step}` : undefined}
             aria-label={`Step ${step}${isCurrent ? ' (current)' : isCompleted ? ' (completed)' : ''}`}
-          />
+        />
         );
       })}
     </div>
