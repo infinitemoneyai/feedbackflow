@@ -62,10 +62,13 @@ export default defineConfig({
 
   // Run local dev server before starting the tests
   // Uses port 3001 to avoid conflicts with other projects
-  webServer: {
-    command: "npm run dev -- -p 3001",
-    url: "http://localhost:3001",
-    reuseExistingServer: !process.env.CI,
-    timeout: 120000,
-  },
+  // Set SKIP_WEBSERVER=true to use an existing server
+  webServer: process.env.SKIP_WEBSERVER
+    ? undefined
+    : {
+        command: "npm run dev -- -p 3001",
+        url: "http://localhost:3001",
+        reuseExistingServer: !process.env.CI,
+        timeout: 120000,
+      },
 });
