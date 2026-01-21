@@ -1,20 +1,22 @@
 import Link from "next/link";
-import { Icon } from "@/components/ui/icon";
+import { Icon, RubberDuckIcon } from "@/components/ui/icon";
 import { PageLayout } from "@/components/layout";
+import { ScrollReveal } from "@/components/ui/scroll-reveal";
 
 export default function Home() {
   return (
     <PageLayout>
       {/* Hero Section */}
-        <div className="grid grid-cols-1 divide-y-2 divide-retro-black border-b-2 border-retro-black lg:grid-cols-12 lg:divide-x-2 lg:divide-y-0">
+        <ScrollReveal>
+          <div className="grid grid-cols-1 divide-y-2 divide-retro-black border-b-2 border-retro-black lg:grid-cols-12 lg:divide-x-2 lg:divide-y-0">
           {/* Hero Content */}
           <div className="flex flex-col justify-center gap-10 p-8 md:p-16 lg:col-span-8">
-            <div className="inline-flex w-fit items-center gap-3 rounded border border-retro-red/30 bg-retro-red/5 px-3 py-1 font-mono text-xs uppercase tracking-widest text-retro-red">
+            <div className="animate-ff-fade-up inline-flex w-fit items-center gap-3 rounded border border-retro-red/30 bg-retro-red/5 px-3 py-1 font-mono text-xs uppercase tracking-widest text-retro-red">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-retro-red"></span>
-              System Online v2.0
+              System Online v.01
             </div>
 
-            <h1 className="-ml-1 text-5xl font-medium leading-[0.9] tracking-tighter md:text-7xl lg:text-8xl">
+            <h1 className="animate-ff-fade-up -ml-1 text-5xl font-medium leading-[0.9] tracking-tighter md:text-7xl lg:text-8xl [animation-delay:60ms]">
               Your Users <br />
               <span className="text-stone-400">Are Talking.</span>
               <br />
@@ -22,16 +24,16 @@ export default function Home() {
               Listening.
             </h1>
 
-            <p className="max-w-2xl text-xl font-light leading-relaxed tracking-tight text-stone-600 md:text-2xl">
+            <p className="animate-ff-fade-up max-w-2xl text-xl font-light leading-relaxed tracking-tight text-stone-600 md:text-2xl [animation-delay:120ms]">
               Turn screenshots into tickets. Automatically. <br />
               A feedback widget for people shipping faster than their attention
               span allows.
             </p>
 
-            <div className="flex flex-col gap-4 pt-6 sm:flex-row">
+            <div className="animate-ff-fade-up flex flex-col gap-4 pt-6 sm:flex-row [animation-delay:180ms]">
               <Link
                 href="/sign-up"
-                className="group flex items-center justify-center gap-3 border-2 border-retro-black bg-retro-black px-8 py-4 text-lg font-medium text-white shadow-[4px_4px_0px_0px_#888] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-retro-blue hover:text-retro-black hover:shadow-[2px_2px_0px_0px_#000]"
+                className="ff-cta-sheen group flex items-center justify-center gap-3 border-2 border-retro-black bg-retro-black px-8 py-4 text-lg font-medium text-white shadow-[4px_4px_0px_0px_#888] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-retro-blue hover:text-retro-black hover:shadow-[2px_2px_0px_0px_#000]"
               >
                 <span>Install the Script</span>
                 <Icon
@@ -51,9 +53,9 @@ export default function Home() {
           </div>
 
           {/* Hero Graphic/Sidebar */}
-          <div className="relative flex flex-col justify-between overflow-hidden bg-retro-blue lg:col-span-4">
+          <div className="ff-scanline-noise relative flex flex-col justify-between overflow-hidden bg-retro-blue lg:col-span-4">
             {/* Abstract UI Representation */}
-            <div className="flex h-full flex-col border-b-2 border-retro-black bg-white/20 p-8 backdrop-blur-sm">
+            <div className="relative z-10 flex h-full flex-col border-b-2 border-retro-black bg-white/20 p-8 backdrop-blur-sm">
               <div className="mb-6 flex items-center justify-between">
                 <span className="border border-retro-black bg-white px-2 py-1 font-mono text-[10px] uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                   New Ticket #402
@@ -65,41 +67,80 @@ export default function Home() {
                 />
               </div>
 
-              <div className="relative transform space-y-4 border-2 border-retro-black bg-white p-5 font-mono text-sm shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-transform duration-300 hover:-translate-y-1">
-                <div className="flex items-center gap-2 border-b border-stone-100 pb-2 text-xs text-stone-500">
-                  <Icon name="solar:user-circle-linear" size={14} />
-                  <span>@user_209</span>
-                  <span className="ml-auto text-[10px]">2m ago</span>
-                </div>
-                <p className="text-base font-semibold leading-snug tracking-tight">
-                  &ldquo;The checkout button is broken on mobile&rdquo;
-                </p>
-
-                {/* Mock Screenshot */}
-                <div className="group relative flex aspect-video flex-col items-center justify-center gap-2 overflow-hidden border border-stone-300 bg-stone-100 text-stone-400">
-                  <div className="absolute inset-0 flex items-center justify-center bg-stone-50 opacity-0 transition-opacity group-hover:opacity-100">
-                    <Icon
-                      name="solar:magnifer-zoom-in-linear"
-                      size={24}
-                      className="text-retro-black"
-                    />
+              <div className="animate-ff-float will-change-transform">
+                <div className="relative transform space-y-4 border-2 border-retro-black bg-white p-5 font-mono text-sm shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-transform duration-300 hover:-translate-y-1">
+                  <div className="flex items-center gap-2 border-b border-stone-100 pb-2 text-xs text-stone-500">
+                    <Icon name="solar:user-circle-linear" size={14} />
+                    <span>@user_209</span>
+                    <span className="ml-auto text-[10px]">2m ago</span>
                   </div>
-                  <Icon name="solar:gallery-wide-linear" size={24} />
-                  <span className="text-xs">[Screenshot.png]</span>
-                </div>
+                  <p className="text-base font-semibold leading-snug tracking-tight">
+                    &ldquo;The checkout button is broken on mobile&rdquo;
+                  </p>
 
-                <div className="mt-2 flex gap-2 pt-2">
-                  <span className="border border-retro-red/30 bg-retro-red/10 px-2 py-1 text-[10px] font-bold uppercase text-retro-red">
-                    High Priority
-                  </span>
-                  <span className="border border-stone-300 bg-stone-100 px-2 py-1 text-[10px] font-bold uppercase text-stone-600">
-                    Bug
-                  </span>
+                  {/* Mock Screenshot */}
+                  <div className="group relative aspect-video overflow-hidden border border-stone-300 bg-stone-100">
+                    {/* Hover affordance */}
+                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-stone-50/70 opacity-0 transition-opacity group-hover:opacity-100">
+                      <Icon
+                        name="solar:magnifer-zoom-in-linear"
+                        size={24}
+                        className="text-retro-black"
+                      />
+                    </div>
+
+                    {/* “Screenshot-like” thumbnail (no binary assets in repo) */}
+                    <div className="absolute inset-0 p-2">
+                      <div className="h-full w-full overflow-hidden rounded-sm border border-stone-200 bg-white">
+                        {/* Mobile browser top bar */}
+                        <div className="flex items-center gap-1 border-b border-stone-100 bg-stone-50 px-2 py-1">
+                          <span className="h-1.5 w-1.5 rounded-full bg-stone-300" />
+                          <span className="h-1.5 w-1.5 rounded-full bg-stone-300" />
+                          <span className="h-1.5 w-1.5 rounded-full bg-stone-300" />
+                          <div className="ml-2 h-2 flex-1 rounded bg-white" />
+                        </div>
+
+                        {/* Page content */}
+                        <div className="grid h-[calc(100%-22px)] grid-cols-5 gap-2 p-2">
+                          {/* Product image */}
+                          <div className="col-span-2 rounded border border-stone-200 bg-stone-100" />
+
+                          {/* Text + CTA */}
+                          <div className="col-span-3 flex flex-col gap-1">
+                            <div className="h-2 w-4/5 rounded bg-stone-200" />
+                            <div className="h-2 w-3/5 rounded bg-stone-200" />
+                            <div className="mt-1 h-2 w-2/5 rounded bg-stone-100" />
+
+                            {/* Broken checkout button */}
+                            <div className="mt-auto rounded border-2 border-retro-red bg-retro-red/10 px-2 py-1 text-center font-mono text-[10px] font-bold uppercase tracking-wider text-retro-red">
+                              Checkout
+                            </div>
+                            <div className="-mt-1 h-[3px] w-full bg-retro-red/30" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* File label */}
+                    <div className="absolute bottom-2 left-2 z-20 inline-flex items-center gap-2 rounded border border-stone-300 bg-white/90 px-2 py-1 font-mono text-[10px] uppercase text-stone-500">
+                      <Icon name="solar:gallery-wide-linear" size={14} />
+                      Screenshot.png
+                    </div>
+                  </div>
+
+                  <div className="mt-2 flex gap-2 pt-2">
+                    <span className="border border-retro-red/30 bg-retro-red/10 px-2 py-1 text-[10px] font-bold uppercase text-retro-red">
+                      High Priority
+                    </span>
+                    <span className="border border-stone-300 bg-stone-100 px-2 py-1 text-[10px] font-bold uppercase text-stone-600">
+                      Bug
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {/* AI Processing Indicator */}
-              <div className="mt-6 flex items-center gap-3 rounded border border-retro-black/20 bg-retro-black/10 p-3 font-mono text-xs">
+              <div className="animate-ff-fade-in mt-6 flex items-center gap-3 rounded border border-retro-black/20 bg-retro-black/10 p-3 font-mono text-xs [animation-delay:220ms]">
                 <Icon
                   name="solar:magic-stick-3-linear"
                   size={16}
@@ -109,7 +150,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="border-t-2 border-retro-black bg-retro-yellow/90 p-6 backdrop-blur">
+            <div className="relative z-10 border-t-2 border-retro-black bg-retro-yellow/90 p-6 backdrop-blur">
               <div className="flex items-center gap-4">
                 <div className="rounded-full border-2 border-retro-black bg-retro-black p-3 text-retro-yellow">
                   <Icon name="solar:eye-linear" size={24} />
@@ -123,10 +164,12 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </div>
+          </div>
+        </ScrollReveal>
 
         {/* The Problem Section */}
-        <div className="grid grid-cols-1 divide-y-2 divide-retro-black border-b-2 border-retro-black md:grid-cols-2 md:divide-x-2 md:divide-y-0">
+        <ScrollReveal>
+          <div className="grid grid-cols-1 divide-y-2 divide-retro-black border-b-2 border-retro-black md:grid-cols-2 md:divide-x-2 md:divide-y-0">
           <div className="relative flex flex-col justify-center overflow-hidden bg-retro-red p-10 text-white md:p-16">
             {/* Background Pattern */}
             <div
@@ -205,10 +248,12 @@ export default function Home() {
               </p>
             </div>
           </div>
-        </div>
+          </div>
+        </ScrollReveal>
 
         {/* Features Grid (Bento Style) */}
-        <div className="border-b-2 border-retro-black bg-retro-paper">
+        <ScrollReveal>
+          <div className="border-b-2 border-retro-black bg-retro-paper">
           <div className="flex flex-col items-start justify-between gap-4 border-b-2 border-retro-black p-8 md:flex-row md:items-center md:p-10">
             <div>
               <h2 className="text-3xl font-medium tracking-tight">
@@ -259,11 +304,7 @@ export default function Home() {
             {/* Feature 3 */}
             <div className="group flex cursor-default flex-col justify-between p-8 transition-colors hover:bg-stone-50">
               <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-amber-600 bg-retro-yellow/20 transition-transform group-hover:-translate-y-1">
-                <Icon
-                  name="solar:robot-2-linear"
-                  size={24}
-                  className="text-amber-600"
-                />
+                <RubberDuckIcon size={24} className="text-amber-600" />
               </div>
               <div>
                 <h3 className="mb-2 text-xl font-medium tracking-tight">
@@ -295,10 +336,12 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </div>
+          </div>
+        </ScrollReveal>
 
         {/* Workflow Section */}
-        <div className="grid grid-cols-1 divide-y-2 divide-retro-black border-b-2 border-retro-black lg:grid-cols-2 lg:divide-x-2 lg:divide-y-0">
+        <ScrollReveal>
+          <div className="grid grid-cols-1 divide-y-2 divide-retro-black border-b-2 border-retro-black lg:grid-cols-2 lg:divide-x-2 lg:divide-y-0">
           <div className="p-10 md:p-16">
             <h2 className="mb-10 text-3xl font-medium tracking-tight">
               What Happens Next{" "}
@@ -402,10 +445,12 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </div>
+          </div>
+        </ScrollReveal>
 
         {/* Technical / Speed Section */}
-        <div className="border-b-2 border-retro-black bg-retro-yellow p-10 md:p-16">
+        <ScrollReveal>
+          <div className="border-b-2 border-retro-black bg-retro-yellow p-10 md:p-16">
           <div className="max-w-4xl">
             <h2 className="mb-8 text-4xl font-medium tracking-tight md:text-5xl">
               One Script. Many Projects. Mildly Concerning Speed.
@@ -447,10 +492,12 @@ export default function Home() {
               your lack of sleep.
             </p>
           </div>
-        </div>
+          </div>
+        </ScrollReveal>
 
         {/* Open Source / Trust */}
-        <div className="grid grid-cols-1 divide-y-2 divide-retro-black border-b-2 border-retro-black md:grid-cols-2 md:divide-x-2 md:divide-y-0">
+        <ScrollReveal>
+          <div className="grid grid-cols-1 divide-y-2 divide-retro-black border-b-2 border-retro-black md:grid-cols-2 md:divide-x-2 md:divide-y-0">
           <div className="bg-retro-black p-10 text-white md:p-16">
             <h2 className="mb-8 text-3xl font-medium tracking-tight">
               Open Source Because Obviously
@@ -540,10 +587,12 @@ export default function Home() {
               </ul>
             </div>
           </div>
-        </div>
+          </div>
+        </ScrollReveal>
 
         {/* CTA / Footer */}
-        <div className="flex flex-col items-center gap-8 bg-white p-10 text-center md:p-24">
+        <ScrollReveal>
+          <div className="flex flex-col items-center gap-8 bg-white p-10 text-center md:p-24">
           <h2 className="text-6xl font-medium tracking-tighter md:text-9xl">
             Get It
           </h2>
@@ -581,7 +630,8 @@ export default function Home() {
               [ Use Hosted Version ]
             </Link>
           </div>
-        </div>
+          </div>
+        </ScrollReveal>
 
     </PageLayout>
   );

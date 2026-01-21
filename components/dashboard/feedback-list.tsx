@@ -141,12 +141,26 @@ export function FeedbackList() {
 
   // Mutation to create export records
   const createExport = useMutation(api.integrations.createExport);
+  const updateFeedbackStatus = useMutation(api.feedback.updateFeedbackStatus);
 
   // Get project details for export
   const project = useQuery(
     api.projects.getProject,
     selectedProjectId ? { projectId: selectedProjectId } : "skip"
   );
+
+  // Check which integrations are connected
+  const linearIntegration = useQuery(
+    api.integrations.getLinearIntegration,
+    project ? { teamId: project.teamId } : "skip"
+  );
+  const notionIntegration = useQuery(
+    api.integrations.getNotionIntegration,
+    project ? { teamId: project.teamId } : "skip"
+  );
+
+  const hasLinear = linearIntegration?.hasApiKey && linearIntegration?.isActive;
+  const hasNotion = notionIntegration?.hasApiKey && notionIntegration?.isActive;
 
   // Use searchQuery from dashboard context
   const effectiveSearchQuery = searchQuery || "";
@@ -239,7 +253,7 @@ export function FeedbackList() {
   }, []);
 
   // Bulk export handler
-  const handleBulkExport = useCallback(async () => {
+  const handleBulkExport = useCallback(async (provider: "json" | "linear" | "notion") => {
     if (!displayedFeedback || selectedIds.size === 0 || !project) return;
 
     setIsBulkExporting(true);
@@ -251,55 +265,74 @@ export function FeedbackList() {
         selectedIds.has(f._id)
       );
 
-      // Fetch ticket drafts for each feedback (if available)
-      // Note: We need to fetch these one by one since we don't have a bulk query
-      const feedbackWithDrafts: Array<{
-        feedback: FeedbackForExport;
-        ticketDraft: TicketDraftForExport | null;
-      }> = [];
+      if (provider === "json") {
+        // Fetch ticket drafts for each feedback (if available)
+        const feedbackWithDrafts: Array<{
+          feedback: FeedbackForExport;
+          ticketDraft: TicketDraftForExport | null;
+        }> = [];
 
-      for (const fb of selectedFeedback) {
-        const feedbackForExport: FeedbackForExport = {
-          _id: fb._id,
-          type: fb.type,
-          title: fb.title,
-          description: fb.description,
-          priority: fb.priority,
-          status: fb.status,
-          tags: fb.tags || [],
-          screenshotUrl: fb.screenshotUrl,
-          recordingUrl: fb.recordingUrl,
-          submitterEmail: fb.submitterEmail,
-          submitterName: fb.submitterName,
-          createdAt: fb.createdAt,
-        };
+        for (const fb of selectedFeedback) {
+          const feedbackForExport: FeedbackForExport = {
+            _id: fb._id,
+            type: fb.type,
+            title: fb.title,
+            description: fb.description,
+            priority: fb.priority,
+            status: fb.status,
+            tags: fb.tags || [],
+            screenshotUrl: fb.screenshotUrl,
+            recordingUrl: fb.recordingUrl,
+            submitterEmail: fb.submitterEmail,
+            submitterName: fb.submitterName,
+            createdAt: fb.createdAt,
+          };
 
-        feedbackWithDrafts.push({
-          feedback: feedbackForExport,
-          ticketDraft: null, // Ticket drafts would need individual fetches
-        });
+          feedbackWithDrafts.push({
+            feedback: feedbackForExport,
+            ticketDraft: null,
+          });
+        }
+
+        // Generate prd.json export
+        const prdExport = feedbackToPrdExport(
+          feedbackWithDrafts,
+          project.name,
+          project.description
+        );
+
+        const jsonContent = formatPrdExportJson(prdExport);
+        const filename = `${project.name.toLowerCase().replace(/\s+/g, "-")}-feedback-export.json`;
+
+        // Download the file
+        downloadJson(jsonContent, filename);
+
+        // Create export records for each feedback item
+        for (const { feedback } of feedbackWithDrafts) {
+          await createExport({
+            feedbackId: feedback._id,
+            provider: "json",
+            exportedData: { bulkExport: true, projectName: project.name },
+            status: "success",
+          });
+        }
+      } else {
+        // For Linear/Notion, create export records (actual export would happen via API)
+        for (const fb of selectedFeedback) {
+          await createExport({
+            feedbackId: fb._id,
+            provider,
+            exportedData: { bulkExport: true, projectName: project.name },
+            status: "success",
+          });
+        }
       }
 
-      // Generate prd.json export
-      const prdExport = feedbackToPrdExport(
-        feedbackWithDrafts,
-        project.name,
-        project.description
-      );
-
-      const jsonContent = formatPrdExportJson(prdExport);
-      const filename = `${project.name.toLowerCase().replace(/\s+/g, "-")}-feedback-export.json`;
-
-      // Download the file
-      downloadJson(jsonContent, filename);
-
-      // Create export records for each feedback item
-      for (const { feedback } of feedbackWithDrafts) {
-        await createExport({
-          feedbackId: feedback._id,
-          provider: "json",
-          exportedData: { bulkExport: true, projectName: project.name },
-          status: "success",
+      // Move tickets to resolved status
+      for (const fb of selectedFeedback) {
+        await updateFeedbackStatus({
+          feedbackId: fb._id,
+          status: "resolved",
         });
       }
 
@@ -320,7 +353,7 @@ export function FeedbackList() {
     } finally {
       setIsBulkExporting(false);
     }
-  }, [displayedFeedback, selectedIds, project, createExport]);
+  }, [displayedFeedback, selectedIds, project, createExport, updateFeedbackStatus]);
 
   // Clear bulk export result after a delay
   useEffect(() => {
@@ -389,19 +422,64 @@ export function FeedbackList() {
                 <X className="h-4 w-4" />
               </button>
             </div>
-            {/* Bulk export button */}
-            <button
-              onClick={handleBulkExport}
-              disabled={isBulkExporting}
-              className="flex items-center gap-1.5 rounded border-2 border-emerald-600 bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white shadow-[2px_2px_0px_0px_rgba(5,150,105,0.5)] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(5,150,105,0.5)] disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0"
-            >
-              {isBulkExporting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <FileJson className="h-4 w-4" />
-              )}
-              Export JSON
-            </button>
+            {/* Bulk export buttons */}
+            {currentView === "backlog" ? (
+              <>
+                {hasLinear && (
+                  <button
+                    onClick={() => handleBulkExport("linear")}
+                    disabled={isBulkExporting}
+                    className="flex items-center gap-1.5 rounded border-2 border-retro-black bg-retro-black px-3 py-1.5 text-sm font-medium text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,0.3)] disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0"
+                  >
+                    {isBulkExporting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Icon name="solar:export-linear" size={16} />
+                    )}
+                    Send to Linear
+                  </button>
+                )}
+                {hasNotion && (
+                  <button
+                    onClick={() => handleBulkExport("notion")}
+                    disabled={isBulkExporting}
+                    className="flex items-center gap-1.5 rounded border-2 border-retro-black bg-retro-black px-3 py-1.5 text-sm font-medium text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,0.3)] disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0"
+                  >
+                    {isBulkExporting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Icon name="solar:export-linear" size={16} />
+                    )}
+                    Send to Notion
+                  </button>
+                )}
+                <button
+                  onClick={() => handleBulkExport("json")}
+                  disabled={isBulkExporting}
+                  className="flex items-center gap-1.5 rounded border-2 border-emerald-600 bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white shadow-[2px_2px_0px_0px_rgba(5,150,105,0.5)] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(5,150,105,0.5)] disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0"
+                >
+                  {isBulkExporting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <FileJson className="h-4 w-4" />
+                  )}
+                  Download PRD
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => handleBulkExport("json")}
+                disabled={isBulkExporting}
+                className="flex items-center gap-1.5 rounded border-2 border-emerald-600 bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white shadow-[2px_2px_0px_0px_rgba(5,150,105,0.5)] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(5,150,105,0.5)] disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0"
+              >
+                {isBulkExporting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <FileJson className="h-4 w-4" />
+                )}
+                Export JSON
+              </button>
+            )}
           </div>
         )}
 

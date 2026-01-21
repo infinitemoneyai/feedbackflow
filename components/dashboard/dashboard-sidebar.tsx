@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useQuery } from "convex/react";
 import { useUser, UserButton } from "@clerk/nextjs";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Plus, Settings, FolderKanban, BarChart3 } from "lucide-react";
 import { Icon } from "@/components/ui/icon";
@@ -14,6 +15,7 @@ import { UsageIndicator } from "./usage-indicator";
 
 export function DashboardSidebar() {
   const { user } = useUser();
+  const pathname = usePathname();
   const teams = useQuery(api.teams.getMyTeams);
   const {
     selectedTeamId,
@@ -167,7 +169,7 @@ export function DashboardSidebar() {
 
           <nav className="space-y-1">
             {navItems.map((item) => {
-              const isActive = currentView === item.id;
+              const isActive = pathname === "/dashboard" && currentView === item.id;
               const iconName = item.id === "inbox"
                 ? "solar:inbox-linear"
                 : item.id === "backlog"
@@ -175,8 +177,9 @@ export function DashboardSidebar() {
                   : "solar:check-circle-linear";
 
               return (
-                <button
+                <Link
                   key={item.id}
+                  href="/dashboard"
                   onClick={() => {
                     setCurrentView(item.id);
                     setSidebarOpen(false);
@@ -190,7 +193,7 @@ export function DashboardSidebar() {
                 >
                   <Icon name={iconName} size={18} />
                   {item.label}
-                </button>
+                </Link>
               );
             })}
 
@@ -198,7 +201,12 @@ export function DashboardSidebar() {
             <Link
               href="/analytics"
               onClick={() => setSidebarOpen(false)}
-              className="flex w-full items-center gap-3 rounded px-3 py-1.5 text-sm font-medium text-stone-500 transition-colors hover:bg-stone-100 hover:text-retro-black"
+              className={cn(
+                "flex w-full items-center gap-3 rounded px-3 py-1.5 text-sm font-medium transition-colors",
+                pathname === "/analytics"
+                  ? "border border-retro-lavender bg-retro-lavender/30 text-retro-black"
+                  : "text-stone-500 hover:bg-stone-100 hover:text-retro-black"
+              )}
             >
               <BarChart3 className="h-[18px] w-[18px]" />
               Analytics

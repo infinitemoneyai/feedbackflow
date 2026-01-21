@@ -135,7 +135,7 @@ export default function ManifestoPage() {
             <div className="p-8 md:p-12">
               <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-full border-2 border-retro-yellow bg-retro-yellow/10">
                 <Icon
-                  name="solar:robot-2-linear"
+                  name="solar:magic-stick-3-linear"
                   size={28}
                   className="text-amber-600"
                 />

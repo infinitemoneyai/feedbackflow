@@ -96,29 +96,53 @@ async function handleCheckoutSessionCompleted(
     return;
   }
 
-  // The subscription will be created/updated by the subscription webhook
-  // We just need to update the customer ID on the subscription
-  if (session.customer) {
-    const customerId =
-      typeof session.customer === "string"
-        ? session.customer
-        : session.customer.id;
+  const customerId =
+    typeof session.customer === "string"
+      ? session.customer
+      : session.customer?.id;
 
-    try {
-      // Find the subscription for this team and update the customer ID
-      const subscription = await convex.query(api.billing.getSubscriptionPublic, {
-        teamId: teamId as Id<"teams">,
+  if (!customerId) {
+    console.error("No customer ID in checkout session");
+    return;
+  }
+
+  try {
+    // Update the customer ID on the subscription
+    await convex.mutation(api.billing.updateStripeCustomerIdPublic, {
+      teamId: teamId as Id<"teams">,
+      stripeCustomerId: customerId,
+    });
+
+    // If we have a subscription ID, fetch it from Stripe and update the subscription
+    if (session.subscription) {
+      const stripeSubscriptionId = typeof session.subscription === "string" 
+        ? session.subscription 
+        : session.subscription.id;
+      
+      // Fetch the full subscription from Stripe
+      const { stripe } = await import("@/lib/stripe");
+      const stripeSubscription = await stripe.subscriptions.retrieve(stripeSubscriptionId);
+      
+      const subscriptionItem = stripeSubscription.items.data[0];
+      const priceId = subscriptionItem?.price.id;
+      const quantity = subscriptionItem?.quantity || 1;
+      
+      // Update the subscription to Pro
+      await convex.mutation(api.billing.updateSubscriptionFromStripe, {
+        stripeCustomerId: customerId,
+        stripeSubscriptionId: stripeSubscription.id,
+        stripePriceId: priceId || "",
+        plan: "pro",
+        seats: quantity,
+        status: mapStripeStatus(stripeSubscription.status),
+        currentPeriodStart: subscriptionItem?.current_period_start ? subscriptionItem.current_period_start * 1000 : Date.now(),
+        currentPeriodEnd: subscriptionItem?.current_period_end ? subscriptionItem.current_period_end * 1000 : Date.now() + 30 * 24 * 60 * 60 * 1000,
+        cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
       });
-
-      if (subscription && !subscription.stripeCustomerId) {
-        await convex.mutation(api.billing.updateStripeCustomerId, {
-          teamId: teamId as Id<"teams">,
-          stripeCustomerId: customerId,
-        });
-      }
-    } catch (error) {
-      console.error("Error updating customer ID:", error);
     }
+  } catch (error) {
+    console.error("Error handling checkout session:", error);
+    throw error;
   }
 }
 
@@ -135,6 +159,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
   // Get team ID from subscription metadata
   const teamId = subscription.metadata?.teamId;
+  
   if (!teamId) {
     console.error("No teamId in subscription metadata");
     return;

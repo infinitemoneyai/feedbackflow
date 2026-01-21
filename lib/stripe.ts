@@ -6,7 +6,11 @@ export { PLANS, STRIPE_PRICES, type SubscriptionStatus } from "./stripe-config";
 
 // Initialize Stripe client
 // Note: This should only be used in server-side code (API routes, server actions)
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error("STRIPE_SECRET_KEY is not set in environment variables");
+}
+
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2025-12-15.clover",
   typescript: true,
 });

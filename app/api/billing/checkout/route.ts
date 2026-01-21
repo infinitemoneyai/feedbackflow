@@ -30,15 +30,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get team info
-    const team = await convex.query(api.teams.getTeam, {
-      teamId: teamId as Id<"teams">,
-    });
-
-    if (!team) {
-      return NextResponse.json({ error: "Team not found" }, { status: 404 });
-    }
-
     // Get or create Stripe customer
     const subscription = await convex.query(api.billing.getSubscriptionPublic, {
       teamId: teamId as Id<"teams">,
@@ -47,18 +38,28 @@ export async function POST(request: Request) {
     let stripeCustomerId = subscription?.stripeCustomerId;
 
     if (!stripeCustomerId) {
+      // Use user's name or email for Stripe customer
+      const customerName = user.firstName && user.lastName 
+        ? `${user.firstName} ${user.lastName}`
+        : user.emailAddresses[0]?.emailAddress || "Team Member";
+      
       const customer = await getOrCreateCustomer({
         email: user.emailAddresses[0]?.emailAddress || "",
-        name: team.name,
+        name: customerName,
         teamId,
       });
       stripeCustomerId = customer.id;
 
-      // Update the subscription with the customer ID
-      await convex.mutation(api.billing.updateStripeCustomerId, {
-        teamId: teamId as Id<"teams">,
-        stripeCustomerId,
-      });
+      // Update the subscription with the customer ID using internal mutation
+      try {
+        await convex.mutation(api.billing.updateStripeCustomerIdPublic, {
+          teamId: teamId as Id<"teams">,
+          stripeCustomerId,
+        });
+      } catch (error) {
+        console.error("Failed to update customer ID in Convex:", error);
+        // Continue anyway - the webhook will handle it
+      }
     }
 
     // Create checkout session
@@ -72,11 +73,19 @@ export async function POST(request: Request) {
       cancelUrl: `${baseUrl}/settings?tab=billing&canceled=true`,
     });
 
+    if (!session.url) {
+      return NextResponse.json(
+        { error: "No checkout URL returned from Stripe" },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json({ url: session.url });
   } catch (error) {
     console.error("Error creating checkout session:", error);
+    const errorMessage = error instanceof Error ? error.message : "Failed to create checkout session";
     return NextResponse.json(
-      { error: "Failed to create checkout session" },
+      { error: errorMessage },
       { status: 500 }
     );
   }

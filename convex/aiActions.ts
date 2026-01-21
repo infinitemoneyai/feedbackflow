@@ -1373,6 +1373,153 @@ export const triggerTicketDraftGeneration = action({
   },
 });
 
+/**
+ * Public action to generate ticket draft and return it immediately
+ */
+export const generateTicketDraft = action({
+  args: {
+    feedbackId: v.id("feedback"),
+    teamId: v.id("teams"),
+  },
+  handler: async (ctx, args) => {
+    // Get current user
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return { success: false, error: "Unauthenticated" };
+    }
+
+    // Get user from database
+    const user = await ctx.runQuery(api.users.getCurrentUser);
+    if (!user) {
+      return { success: false, error: "User not found" };
+    }
+
+    // Get AI config for the team
+    const aiConfig = await ctx.runQuery(api.ai.getTeamAiConfig, {
+      teamId: args.teamId,
+    });
+
+    if (!aiConfig?.isConfigured || !aiConfig.preferredProvider || !aiConfig.preferredModel) {
+      return { success: false, error: "AI not configured" };
+    }
+
+    // Get the API key
+    const apiKeyData = await ctx.runQuery(api.apiKeys.getDecryptedApiKey, {
+      teamId: args.teamId,
+      provider: aiConfig.preferredProvider,
+    });
+
+    if (!apiKeyData?.key) {
+      return { success: false, error: "API key not found" };
+    }
+
+    // Fetch feedback data
+    const feedback = await ctx.runQuery(api.feedback.getFeedback, {
+      feedbackId: args.feedbackId,
+    });
+
+    if (!feedback) {
+      return { success: false, error: "Feedback not found" };
+    }
+
+    // Get existing AI analysis if available
+    const existingAnalysis = await ctx.runQuery(api.ai.getAnalysis, {
+      feedbackId: args.feedbackId,
+    });
+
+    // Get existing solution suggestions if available
+    const existingSuggestions = await ctx.runQuery(api.ai.getSolutionSuggestions, {
+      feedbackId: args.feedbackId,
+    });
+
+    // Get conversation history for context
+    const conversationHistory = await ctx.runQuery(api.ai.getConversationHistory, {
+      feedbackId: args.feedbackId,
+    });
+
+    const feedbackData = {
+      title: feedback.title,
+      description: feedback.description,
+      type: feedback.type,
+      metadata: {
+        browser: feedback.metadata.browser,
+        os: feedback.metadata.os,
+        url: feedback.metadata.url,
+      },
+      existingAnalysis: existingAnalysis
+        ? {
+            summary: existingAnalysis.summary,
+            potentialCauses: existingAnalysis.potentialCauses,
+            affectedComponent: existingAnalysis.affectedComponent,
+            suggestedSolutions: existingAnalysis.suggestedSolutions,
+          }
+        : undefined,
+      existingSuggestions: existingSuggestions
+        ? {
+            summary: existingSuggestions.summary,
+            suggestions: existingSuggestions.suggestions?.map((s: { title: string; description: string }) => ({
+              title: s.title,
+              description: s.description,
+            })),
+            nextSteps: existingSuggestions.nextSteps,
+          }
+        : undefined,
+      conversationHistory: conversationHistory?.map((msg: { role: string; content: string }) => ({
+        role: msg.role,
+        content: msg.content,
+      })),
+    };
+
+    // Fetch screenshot if available
+    let screenshotBase64: string | undefined;
+    if (feedback.screenshotUrl) {
+      try {
+        const imageResponse = await fetch(feedback.screenshotUrl);
+        if (imageResponse.ok) {
+          const arrayBuffer = await imageResponse.arrayBuffer();
+          screenshotBase64 = arrayBufferToBase64(arrayBuffer);
+        }
+      } catch (err) {
+        console.warn("Failed to fetch screenshot for ticket draft generation:", err);
+      }
+    }
+
+    // Call the AI API
+    let draftResult: TicketDraftResult;
+    if (aiConfig.preferredProvider === "openai") {
+      draftResult = await callOpenAIForTicketDraft(aiConfig.apiKey, aiConfig.preferredModel, feedbackData, screenshotBase64);
+    } else {
+      draftResult = await callAnthropicForTicketDraft(apiKeyData.key, aiConfig.preferredModel, feedbackData, screenshotBase64);
+    }
+
+    // Store the ticket draft
+    await ctx.runMutation(internal.ai.storeTicketDraft, {
+      feedbackId: args.feedbackId,
+      userId: user._id,
+      title: draftResult.title,
+      description: draftResult.description,
+      acceptanceCriteria: draftResult.acceptanceCriteria,
+      reproSteps: draftResult.reproSteps,
+      expectedBehavior: draftResult.expectedBehavior,
+      actualBehavior: draftResult.actualBehavior,
+      provider: aiConfig.preferredProvider,
+      model: aiConfig.preferredModel,
+    });
+
+    return { 
+      success: true, 
+      draft: {
+        title: draftResult.title,
+        description: draftResult.description,
+        acceptanceCriteria: draftResult.acceptanceCriteria,
+        reproSteps: draftResult.reproSteps,
+        expectedBehavior: draftResult.expectedBehavior,
+        actualBehavior: draftResult.actualBehavior,
+      }
+    };
+  },
+});
+
 // =============================================================================
 // AI Conversation
 // =============================================================================
@@ -1593,7 +1740,8 @@ async function callAnthropicForConversation(
   feedbackContext: string,
   conversationHistory: ConversationHistoryMessage[],
   userMessage: string,
-  screenshotBase64?: string
+  screenshotBase64?: string,
+  screenshotMediaType?: string
 ): Promise<string> {
   // Build messages array for Anthropic
   const messages: Array<{
@@ -1614,7 +1762,7 @@ async function callAnthropicForConversation(
           type: "image",
           source: {
             type: "base64",
-            media_type: "image/png",
+            media_type: screenshotMediaType || "image/png",
             data: screenshotBase64,
           },
         },
@@ -1742,10 +1890,17 @@ export const processConversationMessage = internalAction({
 
     // Fetch screenshot if available
     let screenshotBase64: string | undefined;
+    let screenshotMediaType: string = "image/png"; // Default
     if (feedback.screenshotUrl) {
       try {
         const imageResponse = await fetch(feedback.screenshotUrl);
         if (imageResponse.ok) {
+          // Detect actual media type from Content-Type header
+          const contentType = imageResponse.headers.get("content-type");
+          if (contentType) {
+            screenshotMediaType = contentType;
+          }
+          
           const arrayBuffer = await imageResponse.arrayBuffer();
           screenshotBase64 = arrayBufferToBase64(arrayBuffer);
         }
@@ -1756,24 +1911,29 @@ export const processConversationMessage = internalAction({
 
     // Call the AI API
     let assistantResponse: string;
-    if (args.provider === "openai") {
-      assistantResponse = await callOpenAIForConversation(
-        args.apiKey,
-        args.model,
-        feedbackContext,
-        historyMessages,
-        args.userMessage,
-        screenshotBase64
-      );
-    } else {
-      assistantResponse = await callAnthropicForConversation(
-        args.apiKey,
-        args.model,
-        feedbackContext,
-        historyMessages,
-        args.userMessage,
-        screenshotBase64
-      );
+    try {
+      if (args.provider === "openai") {
+        assistantResponse = await callOpenAIForConversation(
+          args.apiKey,
+          args.model,
+          feedbackContext,
+          historyMessages,
+          args.userMessage,
+          screenshotBase64
+        );
+      } else {
+        assistantResponse = await callAnthropicForConversation(
+          args.apiKey,
+          args.model,
+          feedbackContext,
+          historyMessages,
+          args.userMessage,
+          screenshotBase64,
+          screenshotMediaType
+        );
+      }
+    } catch (error) {
+      throw error;
     }
 
     // Store the assistant's response
@@ -1797,8 +1957,9 @@ export const sendConversationMessage = action({
     feedbackId: v.id("feedback"),
     teamId: v.id("teams"),
     userMessage: v.string(),
+    model: v.optional(v.string()), // Optional model override
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<{ success: boolean; error?: string }> => {
     // Get current user
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -1820,14 +1981,29 @@ export const sendConversationMessage = action({
       return { success: false, error: "AI not configured" };
     }
 
-    // Get the API key
+    // Use provided model or fall back to preferred model
+    const modelToUse = args.model || aiConfig.preferredModel;
+
+    // Determine which provider to use based on the model
+    // OpenAI models start with "gpt-", Anthropic models start with "claude-"
+    let providerToUse: "openai" | "anthropic";
+    if (modelToUse.startsWith("gpt-")) {
+      providerToUse = "openai";
+    } else if (modelToUse.startsWith("claude-")) {
+      providerToUse = "anthropic";
+    } else {
+      // Fall back to preferred provider if we can't determine from model name
+      providerToUse = aiConfig.preferredProvider;
+    }
+
+    // Get the API key for the determined provider
     const apiKeyData = await ctx.runQuery(api.apiKeys.getDecryptedApiKey, {
       teamId: args.teamId,
-      provider: aiConfig.preferredProvider,
+      provider: providerToUse,
     });
 
     if (!apiKeyData?.key) {
-      return { success: false, error: "API key not found" };
+      return { success: false, error: `API key not found for ${providerToUse}` };
     }
 
     // First, store the user's message
@@ -1836,14 +2012,14 @@ export const sendConversationMessage = action({
       content: args.userMessage,
     });
 
-    // Schedule the conversation processing action
-    await ctx.scheduler.runAfter(0, internal.aiActions.processConversationMessage, {
+    // Call the conversation processing action directly
+    await ctx.runAction(internal.aiActions.processConversationMessage, {
       feedbackId: args.feedbackId,
       teamId: args.teamId,
       userId: user._id,
       userMessage: args.userMessage,
-      provider: aiConfig.preferredProvider,
-      model: aiConfig.preferredModel,
+      provider: providerToUse,
+      model: modelToUse,
       apiKey: apiKeyData.key,
     });
 

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, createContext, useContext, ReactNode } from "react";
+import { useState, createContext, useContext, ReactNode, useEffect } from "react";
 import { useQuery } from "convex/react";
+import { useSearchParams } from "next/navigation";
 import { DashboardSidebar } from "./dashboard-sidebar";
 import { DashboardHeader } from "./dashboard-header";
 import { TicketDetailPanel } from "./ticket-detail-panel";
@@ -39,12 +40,21 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
+  const searchParams = useSearchParams();
   const [selectedTeamId, setSelectedTeamId] = useState<Id<"teams"> | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<Id<"projects"> | null>(null);
   const [selectedFeedbackId, setSelectedFeedbackId] = useState<Id<"feedback"> | null>(null);
   const [currentView, setCurrentView] = useState<"inbox" | "backlog" | "resolved">("inbox");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Handle feedback URL parameter
+  useEffect(() => {
+    const feedbackParam = searchParams.get("feedback");
+    if (feedbackParam) {
+      setSelectedFeedbackId(feedbackParam as Id<"feedback">);
+    }
+  }, [searchParams]);
 
   // Get onboarding state
   const onboardingState = useQuery(api.onboarding.getOnboardingState);
