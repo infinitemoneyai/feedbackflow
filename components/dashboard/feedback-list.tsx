@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, ReactNode } from "react";
 import { useQuery, useMutation } from "convex/react";
 import Image from "next/image";
 import {
+  ArrowUpDown,
   Bug,
   Lightbulb,
   Check,
