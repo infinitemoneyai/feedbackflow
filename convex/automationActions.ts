@@ -417,7 +417,7 @@ export const updateFeedbackInternal = internalMutation({
 /**
  * Execute Linear export for automation
  */
-export const executeLinearExport = internalAction({
+export const executeLinearExport: any = internalAction({
   args: {
     feedbackId: v.id("feedback"),
     teamId: v.id("teams"),
@@ -551,7 +551,7 @@ ${feedback.screenshotUrl ? `### Screenshot\n![Screenshot](${feedback.screenshotU
 /**
  * Execute Notion export for automation
  */
-export const executeNotionExport = internalAction({
+export const executeNotionExport: any = internalAction({
   args: {
     feedbackId: v.id("feedback"),
     teamId: v.id("teams"),

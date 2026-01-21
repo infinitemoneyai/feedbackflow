@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { UpgradeModal } from "./upgrade-modal";
 
 interface TeamSettingsSectionProps {
   teamId: Id<"teams">;
@@ -57,6 +58,7 @@ export function TeamSettingsSection({ teamId }: TeamSettingsSectionProps) {
   const [isLeaving, setIsLeaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const showMessage = useCallback((msg: string, isError = false) => {
     if (isError) {
@@ -112,7 +114,15 @@ export function TeamSettingsSection({ teamId }: TeamSettingsSectionProps) {
       setShowInviteForm(false);
       showMessage(`Invitation sent to ${inviteEmail}`);
     } catch (err) {
-      showMessage(err instanceof Error ? err.message : "Failed to send invitation", true);
+      const errorMessage = err instanceof Error ? err.message : "Failed to send invitation";
+      
+      // Check if this is a seat limit error
+      if (errorMessage.includes("Free plan is limited") || errorMessage.includes("Upgrade to Pro")) {
+        setShowUpgradeModal(true);
+        setShowInviteForm(false);
+      } else {
+        showMessage(errorMessage, true);
+      }
     } finally {
       setIsInviting(false);
     }
@@ -223,9 +233,18 @@ export function TeamSettingsSection({ teamId }: TeamSettingsSectionProps) {
   const isOwner = team.isOwner;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
+    <>
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        feature="invite team members"
+        teamId={teamId}
+      />
+
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
         <div className="flex items-start gap-4">
           <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border-2 border-retro-lavender bg-retro-lavender/10">
             <Users className="h-6 w-6 text-retro-lavender" />
@@ -609,6 +628,7 @@ export function TeamSettingsSection({ teamId }: TeamSettingsSectionProps) {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

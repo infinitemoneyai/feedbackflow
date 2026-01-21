@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
     const analysisResult = normalizeAnalysisResult(rawResult);
 
     // Store the analysis
-    await convex.mutation(api.ai.storeAnalysisInternal, {
+    await convex.mutation(api.ai.storeAnalysis, {
       feedbackId: feedbackId as Id<"feedback">,
       analysis: {
         suggestedType: analysisResult.suggestedType,

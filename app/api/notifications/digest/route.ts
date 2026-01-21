@@ -5,7 +5,7 @@
 
 import { NextResponse } from "next/server";
 import { ConvexHttpClient } from "convex/browser";
-import { api } from "@/convex/_generated/api";
+import { api, internal } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { sendDigestEmail, type NotificationType } from "@/lib/email";
 
@@ -99,7 +99,7 @@ export async function POST(request: Request): Promise<Response> {
 
         if (result.success) {
           // Mark items as sent
-          await convex.mutation(api.notifications.markDigestItemsSent as any, {
+          await convex.mutation(internal.notifications.markDigestItemsSent, {
             itemIds: pendingItems.map((item: { _id: string }) => item._id),
           });
           results.sent++;

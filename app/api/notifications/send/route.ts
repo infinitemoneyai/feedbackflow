@@ -5,7 +5,7 @@
 
 import { NextResponse } from "next/server";
 import { ConvexHttpClient } from "convex/browser";
-import { api } from "@/convex/_generated/api";
+import { api, internal } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { sendNotificationEmail, type NotificationType } from "@/lib/email";
 
@@ -99,7 +99,16 @@ export async function POST(request: Request): Promise<Response> {
     }
 
     // Check if email notifications are enabled for this event type
-    const eventMap: Record<NotificationType, keyof typeof preferences.events> = {
+    type EventMapType = {
+      new_feedback: "newFeedback";
+      assignment: "assignment";
+      comment: "comments";
+      mention: "mentions";
+      export_complete: "exports";
+      export_failed: "exports";
+    };
+    
+    const eventMap: EventMapType = {
       new_feedback: "newFeedback",
       assignment: "assignment",
       comment: "comments",
@@ -112,7 +121,7 @@ export async function POST(request: Request): Promise<Response> {
     const shouldEmail =
       !preferences ||
       (preferences.emailEnabled !== false &&
-        preferences.events[eventMap[type]] !== false);
+        preferences.events?.[eventMap[type]] !== false);
 
     if (!shouldEmail) {
       return NextResponse.json({
@@ -127,7 +136,7 @@ export async function POST(request: Request): Promise<Response> {
 
     if (frequency !== "instant") {
       // Queue for digest instead of sending immediately
-      await convex.mutation(api.notifications.queueForDigest as any, {
+      await convex.mutation(internal.notifications.queueForDigest, {
         userId: userId as Id<"users">,
         notificationType: type,
         feedbackId: feedbackId as Id<"feedback"> | undefined,
