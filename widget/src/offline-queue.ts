@@ -37,6 +37,7 @@ export interface SubmissionResult {
   success: boolean;
   feedbackId?: string;
   error?: string;
+  warning?: string;
 }
 
 const QUEUE_STORAGE_KEY = "ff_submission_queue";
@@ -80,6 +81,22 @@ export class OfflineQueue {
    */
   private getDefaultApiUrl(): string {
     if (typeof window === "undefined") return "";
+    
+    // Try to detect API URL from the widget script source
+    const scripts = document.querySelectorAll('script[src*="widget.js"]');
+    for (const script of Array.from(scripts)) {
+      const src = (script as HTMLScriptElement).src;
+      if (src) {
+        try {
+          const url = new URL(src);
+          // Use the same origin as the widget script
+          return `${url.origin}/api/widget/submit`;
+        } catch (e) {
+          // Invalid URL, continue
+        }
+      }
+    }
+    
     // Default to the FeedbackFlow API
     return "https://feedbackflow.dev/api/widget/submit";
   }

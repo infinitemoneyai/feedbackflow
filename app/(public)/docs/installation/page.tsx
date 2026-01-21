@@ -74,7 +74,7 @@ export default function InstallationDocsPage() {
                 </span>
                 <CopyButton
                   text={`<script
-  src="https://cdn.feedbackflow.dev/widget.js"
+  src="https://feedbackflow.dev/widget.js"
   data-widget-key="YOUR_WIDGET_KEY"
 ></script>`}
                   snippetId="quick-start"
@@ -84,7 +84,7 @@ export default function InstallationDocsPage() {
               </div>
               <CodeBlock
                 code={`<script
-  src="https://cdn.feedbackflow.dev/widget.js"
+  src="https://feedbackflow.dev/widget.js"
   data-widget-key="YOUR_WIDGET_KEY"
 ></script>`}
               />
@@ -186,7 +186,7 @@ export default function InstallationDocsPage() {
                   <CodeBlock
                     code={`<!-- FeedbackFlow Widget -->
 <script
-  src="https://cdn.feedbackflow.dev/widget.js"
+  src="https://feedbackflow.dev/widget.js"
   data-widget-key="YOUR_WIDGET_KEY"
   data-position="bottom-right"
   async
@@ -211,7 +211,7 @@ export default function InstallationDocsPage() {
 
   <!-- FeedbackFlow Widget - Add just before </body> -->
   <script
-    src="https://cdn.feedbackflow.dev/widget.js"
+    src="https://feedbackflow.dev/widget.js"
     data-widget-key="wk_abc123def456"
     data-position="bottom-right"
     async
@@ -253,7 +253,7 @@ export function useFeedbackFlow(widgetKey: string) {
     // if (process.env.NODE_ENV === 'development') return;
 
     const script = document.createElement('script');
-    script.src = 'https://cdn.feedbackflow.dev/widget.js';
+    script.src = 'https://feedbackflow.dev/widget.js';
     script.async = true;
     script.dataset.widgetKey = widgetKey;
     script.dataset.position = 'bottom-right';
@@ -283,7 +283,7 @@ export function useFeedbackFlow(widgetKey: string) {
     // if (process.env.NODE_ENV === 'development') return;
 
     const script = document.createElement('script');
-    script.src = 'https://cdn.feedbackflow.dev/widget.js';
+    script.src = 'https://feedbackflow.dev/widget.js';
     script.async = true;
     script.dataset.widgetKey = widgetKey;
     script.dataset.position = 'bottom-right';
@@ -345,9 +345,9 @@ function App() {
                     Method 2: Script Component
                   </h4>
                   <CodeBlock
-                    code={`// Add to your index.html or use react-helmet
+                    code={`                // Add to your index.html or use react-helmet
 <script
-  src="https://cdn.feedbackflow.dev/widget.js"
+  src="https://feedbackflow.dev/widget.js"
   data-widget-key="wk_your_widget_key"
   async
 />`}
@@ -385,7 +385,7 @@ export function useFeedbackFlow(widgetKey: string) {
 
   onMounted(() => {
     script = document.createElement('script');
-    script.src = 'https://cdn.feedbackflow.dev/widget.js';
+    script.src = 'https://feedbackflow.dev/widget.js';
     script.async = true;
     script.dataset.widgetKey = widgetKey;
     script.dataset.position = 'bottom-right';
@@ -416,7 +416,7 @@ export function useFeedbackFlow(widgetKey: string) {
 
   onMounted(() => {
     script = document.createElement('script');
-    script.src = 'https://cdn.feedbackflow.dev/widget.js';
+    script.src = 'https://feedbackflow.dev/widget.js';
     script.async = true;
     script.dataset.widgetKey = widgetKey;
     script.dataset.position = 'bottom-right';
@@ -512,7 +512,7 @@ export default function RootLayout({
 
         {/* FeedbackFlow Widget */}
         <Script
-          src="https://cdn.feedbackflow.dev/widget.js"
+          src="https://feedbackflow.dev/widget.js"
           data-widget-key="wk_your_widget_key"
           data-position="bottom-right"
           strategy="lazyOnload"
@@ -541,7 +541,7 @@ export default function RootLayout({
 
         {/* FeedbackFlow Widget */}
         <Script
-          src="https://cdn.feedbackflow.dev/widget.js"
+          src="https://feedbackflow.dev/widget.js"
           data-widget-key="wk_your_widget_key"
           data-position="bottom-right"
           strategy="lazyOnload"
@@ -572,7 +572,7 @@ export default function App({ Component, pageProps }: AppProps) {
       <Component {...pageProps} />
 
       <Script
-        src="https://cdn.feedbackflow.dev/widget.js"
+        src="https://feedbackflow.dev/widget.js"
         data-widget-key="wk_your_widget_key"
         strategy="lazyOnload"
       />
@@ -594,7 +594,7 @@ export default function App({ Component, pageProps }: AppProps) {
       <Component {...pageProps} />
 
       <Script
-        src="https://cdn.feedbackflow.dev/widget.js"
+        src="https://feedbackflow.dev/widget.js"
         data-widget-key="wk_your_widget_key"
         strategy="lazyOnload"
       />
@@ -766,7 +766,7 @@ export default function App({ Component, pageProps }: AppProps) {
               <h4 className="mb-2 font-medium text-stone-700">Example with all options</h4>
               <CodeBlock
                 code={`<script
-  src="https://cdn.feedbackflow.dev/widget.js"
+  src="https://feedbackflow.dev/widget.js"
   data-widget-key="wk_your_widget_key"
   data-position="bottom-left"
   data-primary-color="#6B9AC4"
@@ -862,8 +862,7 @@ window.FeedbackFlow.destroy();`}
                   </li>
                   <li>
                     <strong>Check Content Security Policy</strong> - If you have a strict CSP,
-                    add <code className="rounded bg-stone-100 px-1 font-mono">cdn.feedbackflow.dev</code> to
-                    your allowed script sources.
+                    add your FeedbackFlow domain to your allowed script sources.
                   </li>
                   <li>
                     <strong>Ensure the script is in the body</strong> - The script should be

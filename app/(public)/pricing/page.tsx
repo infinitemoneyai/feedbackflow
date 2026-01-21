@@ -182,9 +182,11 @@ function PricingPageContent() {
                     : "text-stone-600 hover:text-retro-black"
                 }`}
               >
-                Yearly
-                <span className="absolute -right-2 -top-2 rounded-full bg-retro-green px-2 py-0.5 text-xs font-bold text-retro-black">
-                  -17%
+                <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                  <span>Yearly</span>
+                  <span className="rounded-full bg-retro-green px-2 py-0.5 text-xs font-bold leading-none text-retro-black">
+                    -17%
+                  </span>
                 </span>
               </button>
             </div>
@@ -287,14 +289,24 @@ function PricingPageContent() {
             <div className="mb-8">
               <div className="flex items-baseline gap-2">
                 <span className="text-6xl font-medium tracking-tighter">
-                  ${billingInterval === "monthly" ? PLANS.pro.pricePerSeat : PLANS.pro.pricePerSeatYearly}
+                  $
+                  {billingInterval === "monthly"
+                    ? PLANS.pro.pricePerSeat
+                    : Math.round((PLANS.pro.pricePerSeatYearly / 12) * 100) /
+                      100}
                 </span>
-                <span className="text-stone-600">/seat/{billingInterval === "monthly" ? "month" : "year"}</span>
+                <span className="text-stone-600">
+                  /seat/{billingInterval === "monthly" ? "month" : "month"}
+                </span>
               </div>
               {billingInterval === "yearly" && (
                 <div className="mt-2 text-sm text-stone-600">
-                  <span className="line-through">${PLANS.pro.pricePerSeat * 12}</span>
-                  <span className="ml-2 font-medium text-retro-green">Save ${PLANS.pro.pricePerSeat * 12 - PLANS.pro.pricePerSeatYearly}/seat/year</span>
+                  <span className="line-through">
+                    ${PLANS.pro.pricePerSeat * 12}/seat/year
+                  </span>
+                  <span className="ml-2 font-medium text-retro-green">
+                    ${PLANS.pro.pricePerSeatYearly}/seat/year
+                  </span>
                 </div>
               )}
             </div>

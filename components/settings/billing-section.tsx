@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { PLANS } from "@/lib/stripe";
+import { PLANS } from "@/lib/stripe-config";
 import { format } from "date-fns";
 
 interface BillingSectionProps {

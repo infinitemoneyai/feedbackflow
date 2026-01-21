@@ -5,6 +5,7 @@ import { useQuery } from "convex/react";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { api } from "@/convex/_generated/api";
+import { OnboardingModal } from "@/components/onboarding/onboarding-modal";
 
 export default function AuthLayout({
   children,
@@ -19,6 +20,17 @@ export default function AuthLayout({
   const onboardingState = useQuery(
     api.onboarding.getOnboardingState,
     user ? {} : "skip"
+  );
+
+  // Get user's team and project for onboarding modal
+  const teams = useQuery(api.teams.getMyTeams, user ? {} : "skip");
+  const projects = useQuery(
+    api.projects.getProjects,
+    teams && teams.length > 0 ? { teamId: teams[0]._id } : "skip"
+  );
+  const widgets = useQuery(
+    api.projects.getWidgets,
+    projects && projects.length > 0 ? { projectId: projects[0]._id } : "skip"
   );
 
   useEffect(() => {
@@ -53,6 +65,25 @@ export default function AuthLayout({
     );
   }
 
-  // User is authenticated, render children
-  return <>{children}</>;
+  // Prepare data for onboarding modal (steps 4-7)
+  const shouldShowModal =
+    onboardingState &&
+    !onboardingState.isComplete &&
+    onboardingState.step &&
+    onboardingState.step >= 4 &&
+    onboardingState.step <= 7;
+
+  const teamId = teams?.[0]?._id;
+  const projectId = projects?.[0]?._id;
+  const widgetKey = widgets?.[0]?.widgetKey;
+
+  // User is authenticated, render children with optional onboarding modal
+  return (
+    <>
+      {children}
+      {shouldShowModal && teamId && projectId && widgetKey && (
+        <OnboardingModal teamId={teamId} projectId={projectId} widgetKey={widgetKey} />
+      )}
+    </>
+  );
 }

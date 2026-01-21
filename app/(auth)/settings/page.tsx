@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useQuery } from "convex/react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Bot, Settings as SettingsIcon, Users, CreditCard, Plug, Webhook, Key, Zap, Bell, Palette, HardDrive, User, FileCode } from "lucide-react";
 import { api } from "@/convex/_generated/api";
@@ -22,11 +23,20 @@ import { ExportTemplatesSection } from "@/components/settings/export-templates-s
 
 type SettingsTab = "profile" | "widget" | "ai" | "storage" | "integrations" | "templates" | "webhooks" | "automation" | "api-keys" | "notifications" | "team" | "billing";
 
-export default function SettingsPage() {
+function SettingsContent() {
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
   const [selectedProjectId, setSelectedProjectId] = useState<Id<"projects"> | null>(null);
   const [selectedWidgetId, setSelectedWidgetId] = useState<Id<"widgets"> | null>(null);
   const teams = useQuery(api.teams.getMyTeams);
+
+  // Read tab from URL on mount
+  useEffect(() => {
+    const tabParam = searchParams.get("tab") as SettingsTab | null;
+    if (tabParam && ["profile", "widget", "ai", "storage", "integrations", "templates", "webhooks", "automation", "api-keys", "notifications", "team", "billing"].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   // Use first team for now (team selector can be added later)
   const selectedTeamId = teams?.[0]?._id as Id<"teams"> | undefined;
@@ -424,5 +434,17 @@ export default function SettingsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="animate-pulse font-mono text-sm text-stone-500">Loading...</div>
+      </div>
+    }>
+      <SettingsContent />
+    </Suspense>
   );
 }

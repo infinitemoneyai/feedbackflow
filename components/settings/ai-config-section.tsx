@@ -185,11 +185,23 @@ function ApiKeyCard({
 
   const hasKey = !!keyData;
 
+  // Clear errors when user types
+  const handleApiKeyChange = useCallback((value: string) => {
+    setApiKey(value);
+    setSaveError(null);
+    setTestResult(null);
+  }, []);
+
   const handleTestConnection = useCallback(async () => {
-    if (!apiKey && !hasKey) return;
+    // Can't test without a key
+    if (!apiKey && !hasKey) {
+      setTestResult({ valid: false, error: "Please enter an API key first" });
+      return;
+    }
 
     setIsTesting(true);
     setTestResult(null);
+    setSaveError(null);
 
     try {
       const response = await fetch("/api/ai/test-key", {
@@ -197,7 +209,7 @@ function ApiKeyCard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           provider,
-          apiKey: apiKey || "test", // Will use stored key server-side if needed
+          apiKey: apiKey || undefined, // Don't send "test" as fallback
         }),
       });
 

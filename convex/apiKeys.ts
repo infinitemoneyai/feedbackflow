@@ -10,15 +10,17 @@ function getKeyHint(key: string): string {
 }
 
 /**
- * Simple XOR-based obfuscation with base64 encoding
+ * Simple base64 encoding (browser-compatible)
  * Note: In production, use proper encryption with a secret key from environment variables
  * This is a simplified version for demonstration - in a real app, use a Convex action
- * that calls an external service or uses Node.js crypto with proper key management
+ * that calls an external service with proper key management
  */
 function obfuscateKey(key: string): string {
   // Simple base64 encoding with a marker
   // In production, use proper AES-256 encryption via an action
-  const encoded = Buffer.from(`encrypted:${key}`).toString("base64");
+  const textToEncode = `encrypted:${key}`;
+  // Use btoa for base64 encoding (available in Convex runtime)
+  const encoded = btoa(textToEncode);
   return encoded;
 }
 
@@ -27,7 +29,8 @@ function obfuscateKey(key: string): string {
  */
 function deobfuscateKey(encrypted: string): string {
   try {
-    const decoded = Buffer.from(encrypted, "base64").toString("utf-8");
+    // Use atob for base64 decoding (available in Convex runtime)
+    const decoded = atob(encrypted);
     if (decoded.startsWith("encrypted:")) {
       return decoded.slice("encrypted:".length);
     }

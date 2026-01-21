@@ -12,36 +12,45 @@ interface OnboardingStepInviteProps {
 
 export function OnboardingStepInvite({ teamId }: OnboardingStepInviteProps) {
   const [email, setEmail] = useState("");
-  const [isInviting, setIsInviting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [invitedEmails, setInvitedEmails] = useState<string[]>([]);
+  const [pendingInvites, setPendingInvites] = useState<string[]>([]);
 
-  const inviteToTeam = useMutation(api.teams.inviteToTeam);
   const completeStep = useMutation(api.onboarding.completeStep);
+  const setOnboardingData = useMutation(api.onboarding.setOnboardingData);
 
-  const handleInvite = async (e: React.FormEvent) => {
+  const handleAddEmail = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
 
-    setIsInviting(true);
-    setError(null);
-
-    try {
-      await inviteToTeam({
-        teamId,
-        email: email.trim(),
-        role: "member",
-      });
-      setInvitedEmails([...invitedEmails, email.trim()]);
-      setEmail("");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send invite");
-    } finally {
-      setIsInviting(false);
+    // Basic email validation
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setError("Please enter a valid email address");
+      return;
     }
+
+    // Check for duplicates
+    if (pendingInvites.includes(email.trim())) {
+      setError("This email is already in your list");
+      return;
+    }
+
+    setPendingInvites([...pendingInvites, email.trim()]);
+    setEmail("");
+    setError(null);
+  };
+
+  const handleRemoveEmail = (emailToRemove: string) => {
+    setPendingInvites(pendingInvites.filter(e => e !== emailToRemove));
   };
 
   const handleContinue = async () => {
+    // Save pending invites to onboarding data for the upgrade step
+    if (pendingInvites.length > 0) {
+      await setOnboardingData({ 
+        key: "pendingInvites", 
+        value: JSON.stringify(pendingInvites) 
+      });
+    }
     await completeStep({ step: 6 });
   };
 
@@ -61,7 +70,7 @@ export function OnboardingStepInvite({ teamId }: OnboardingStepInviteProps) {
         </div>
       </div>
 
-      <form onSubmit={handleInvite} className="mb-6">
+      <form onSubmit={handleAddEmail} className="mb-6">
         <div className="flex gap-2">
           <input
             type="email"
@@ -69,19 +78,14 @@ export function OnboardingStepInvite({ teamId }: OnboardingStepInviteProps) {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="teammate@company.com"
             className="flex-1 border-2 border-retro-black bg-stone-50 px-4 py-3 transition-shadow focus:outline-none focus:ring-0 focus:shadow-[4px_4px_0px_0px_rgba(107,154,196,1)]"
-            disabled={isInviting}
           />
           <button
             type="submit"
-            disabled={!email.trim() || isInviting}
+            disabled={!email.trim()}
             className="flex items-center gap-2 border-2 border-retro-black bg-white px-4 py-3 font-medium transition-all hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isInviting ? (
-              <Icon name="solar:refresh-linear" size={18} className="animate-spin" />
-            ) : (
-              <Icon name="solar:letter-linear" size={18} />
-            )}
-            Invite
+            <Icon name="solar:add-circle-linear" size={18} />
+            Add
           </button>
         </div>
 
@@ -90,20 +94,33 @@ export function OnboardingStepInvite({ teamId }: OnboardingStepInviteProps) {
         )}
       </form>
 
-      {/* Invited list */}
-      {invitedEmails.length > 0 && (
+      {/* Pending invites list */}
+      {pendingInvites.length > 0 && (
         <div className="mb-6 space-y-2">
-          <p className="font-mono text-xs uppercase tracking-wider text-stone-500">Invited</p>
-          {invitedEmails.map((invitedEmail) => (
+          <p className="font-mono text-xs uppercase tracking-wider text-stone-500">
+            Team members to invite ({pendingInvites.length})
+          </p>
+          {pendingInvites.map((inviteEmail) => (
             <div
-              key={invitedEmail}
-              className="flex items-center gap-2 rounded border border-green-200 bg-green-50 px-3 py-2 text-sm"
+              key={inviteEmail}
+              className="flex items-center justify-between rounded border-2 border-stone-200 bg-white px-3 py-2 text-sm"
             >
-              <Icon name="solar:check-circle-linear" size={16} className="text-green-600" />
-              <span className="text-stone-700">{invitedEmail}</span>
-              <span className="text-stone-500">- Invite sent</span>
+              <div className="flex items-center gap-2">
+                <Icon name="solar:user-linear" size={16} className="text-stone-400" />
+                <span className="text-stone-700">{inviteEmail}</span>
+              </div>
+              <button
+                onClick={() => handleRemoveEmail(inviteEmail)}
+                className="text-stone-400 transition-colors hover:text-red-600"
+                title="Remove"
+              >
+                <Icon name="solar:trash-bin-minimalistic-linear" size={16} />
+              </button>
             </div>
           ))}
+          <p className="text-xs text-stone-500">
+            💡 Invites will be sent after you complete onboarding
+          </p>
         </div>
       )}
 
