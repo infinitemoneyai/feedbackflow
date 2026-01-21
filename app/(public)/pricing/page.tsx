@@ -733,8 +733,12 @@ function FeatureRow({
   return (
     <tr className="border-b border-stone-200">
       <td className="p-4 text-sm text-stone-700 md:p-6">{feature}</td>
-      <td className="p-4 text-center md:p-6">{renderValue(free)}</td>
-      <td className="p-4 text-center md:p-6">{renderValue(pro, true)}</td>
+      <td className="p-4 md:p-6">
+        <div className="flex items-center justify-center">{renderValue(free)}</div>
+      </td>
+      <td className="p-4 md:p-6">
+        <div className="flex items-center justify-center">{renderValue(pro, true)}</div>
+      </td>
     </tr>
   );
 }

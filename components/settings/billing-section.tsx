@@ -26,6 +26,8 @@ export function BillingSection({ teamId }: BillingSectionProps) {
   const subscription = useQuery(api.billing.getSubscription, { teamId });
   const usage = useQuery(api.billing.getUsage, { teamId });
   const [loading, setLoading] = useState<"checkout" | "portal" | null>(null);
+  const [showSeatSelector, setShowSeatSelector] = useState(false);
+  const [selectedSeats, setSelectedSeats] = useState(1);
 
   const isPro = subscription?.plan === "pro";
   const isActive = subscription?.status === "active";
@@ -41,10 +43,15 @@ export function BillingSection({ teamId }: BillingSectionProps) {
       });
 
       const data = await response.json();
-      if (data.url) {
+      
+      if (data.error) {
+        console.error("Checkout error:", data.error);
+        alert(`Failed to create checkout session: ${data.error}`);
+      } else if (data.url) {
         window.location.href = data.url;
       } else {
         console.error("No checkout URL returned");
+        alert("Failed to create checkout session. Please try again.");
       }
     } catch (error) {
       console.error("Error creating checkout session:", error);
@@ -166,7 +173,10 @@ export function BillingSection({ teamId }: BillingSectionProps) {
               </button>
             ) : (
               <button
-                onClick={() => handleUpgrade(usage?.memberCount || 1)}
+                onClick={() => {
+                  setSelectedSeats(usage?.memberCount || 1);
+                  setShowSeatSelector(true);
+                }}
                 disabled={loading === "checkout"}
                 className="flex items-center gap-2 rounded border-2 border-retro-black bg-retro-yellow px-4 py-2 text-sm font-medium text-retro-black shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(26,26,26,1)] disabled:opacity-50"
               >
@@ -374,7 +384,10 @@ export function BillingSection({ teamId }: BillingSectionProps) {
             </ul>
             {!isPro && (
               <button
-                onClick={() => handleUpgrade(usage?.memberCount || 1)}
+                onClick={() => {
+                  setSelectedSeats(usage?.memberCount || 1);
+                  setShowSeatSelector(true);
+                }}
                 disabled={loading === "checkout"}
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded border-2 border-retro-black bg-retro-yellow px-4 py-2 text-sm font-medium text-retro-black shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(26,26,26,1)] disabled:opacity-50"
               >
@@ -408,6 +421,87 @@ export function BillingSection({ teamId }: BillingSectionProps) {
           </a>
         </p>
       </div>
+
+      {/* Seat Selector Modal */}
+      {showSeatSelector && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-md rounded border-2 border-retro-black bg-white p-6 shadow-[8px_8px_0px_0px_rgba(26,26,26,1)]">
+            <h3 className="mb-4 text-xl font-semibold text-retro-black">
+              Select Number of Seats
+            </h3>
+            <p className="mb-6 text-sm text-stone-600">
+              Choose how many team members will need access. You can always
+              adjust this later in the billing portal.
+            </p>
+
+            <div className="mb-6">
+              <label className="mb-2 block text-sm font-medium text-retro-black">
+                Number of Seats
+              </label>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setSelectedSeats(Math.max(1, selectedSeats - 1))}
+                  className="flex h-10 w-10 items-center justify-center rounded border-2 border-retro-black bg-white text-retro-black transition-all hover:bg-stone-50"
+                >
+                  -
+                </button>
+                <input
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={selectedSeats}
+                  onChange={(e) => setSelectedSeats(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="h-10 w-20 rounded border-2 border-retro-black text-center text-lg font-semibold"
+                />
+                <button
+                  onClick={() => setSelectedSeats(Math.min(100, selectedSeats + 1))}
+                  className="flex h-10 w-10 items-center justify-center rounded border-2 border-retro-black bg-white text-retro-black transition-all hover:bg-stone-50"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div className="mb-6 rounded border border-stone-200 bg-stone-50 p-4">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-stone-600">
+                  {selectedSeats} seat{selectedSeats > 1 ? "s" : ""} × ${PLANS.pro.pricePerSeat}/month
+                </span>
+                <span className="text-lg font-bold text-retro-black">
+                  ${selectedSeats * PLANS.pro.pricePerSeat}/mo
+                </span>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowSeatSelector(false)}
+                disabled={loading === "checkout"}
+                className="flex-1 rounded border-2 border-retro-black bg-white px-4 py-2 text-sm font-medium text-retro-black transition-all hover:bg-stone-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowSeatSelector(false);
+                  handleUpgrade(selectedSeats);
+                }}
+                disabled={loading === "checkout"}
+                className="flex flex-1 items-center justify-center gap-2 rounded border-2 border-retro-black bg-retro-yellow px-4 py-2 text-sm font-medium text-retro-black shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(26,26,26,1)] disabled:opacity-50"
+              >
+                {loading === "checkout" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <Crown className="h-4 w-4" />
+                    Continue to Checkout
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

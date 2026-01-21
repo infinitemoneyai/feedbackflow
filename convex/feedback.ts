@@ -209,6 +209,73 @@ export const getWidgetDailyCount = query({
 });
 
 /**
+ * Update feedback status
+ */
+export const updateFeedbackStatus = mutation({
+  args: {
+    feedbackId: v.id("feedback"),
+    status: v.union(
+      v.literal("new"),
+      v.literal("triaging"),
+      v.literal("drafted"),
+      v.literal("exported"),
+      v.literal("resolved")
+    ),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const feedback = await ctx.db.get(args.feedbackId);
+    if (!feedback) {
+      throw new Error("Feedback not found");
+    }
+
+    // Check if user is a member of the team
+    const membership = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .filter((q) => q.eq(q.field("teamId"), feedback.teamId))
+      .first();
+
+    if (!membership) {
+      throw new Error("Not a member of this team");
+    }
+
+    // Update the status
+    await ctx.db.patch(args.feedbackId, {
+      status: args.status,
+      updatedAt: Date.now(),
+    });
+
+    // Create activity log entry
+    await ctx.db.insert("activityLog", {
+      feedbackId: args.feedbackId,
+      userId: user._id,
+      action: "status_changed",
+      details: {
+        from: feedback.status,
+        to: args.status,
+      },
+      createdAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
+/**
  * List feedback for a project with filters and sorting
  */
 export const listFeedback = query({
@@ -1186,5 +1253,278 @@ export const getTeamMembersForAssignment = query({
     );
 
     return membersWithDetails.filter(Boolean);
+  },
+});
+
+/**
+ * Add feedback to JSON export queue
+ */
+export const addToJsonExportQueue = mutation({
+  args: {
+    feedbackId: v.id("feedback"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const feedback = await ctx.db.get(args.feedbackId);
+    if (!feedback) {
+      throw new Error("Feedback not found");
+    }
+
+    // Check membership
+    const membership = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .filter((q) => q.eq(q.field("teamId"), feedback.teamId))
+      .first();
+
+    if (!membership) {
+      throw new Error("You are not a member of this team");
+    }
+
+    // Check if already in queue
+    const existingExport = await ctx.db
+      .query("exports")
+      .withIndex("by_feedback", (q) => q.eq("feedbackId", args.feedbackId))
+      .filter((q) => q.eq(q.field("provider"), "json"))
+      .first();
+
+    if (existingExport) {
+      throw new Error("Already in JSON export queue");
+    }
+
+    // Add to export queue
+    await ctx.db.insert("exports", {
+      feedbackId: args.feedbackId,
+      userId: user._id,
+      provider: "json",
+      status: "success",
+      createdAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
+/**
+ * Get JSON export queue for a team
+ */
+export const getJsonExportQueue = query({
+  args: {
+    teamId: v.id("teams"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return null;
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) {
+      return null;
+    }
+
+    // Check membership
+    const membership = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .filter((q) => q.eq(q.field("teamId"), args.teamId))
+      .first();
+
+    if (!membership) {
+      return null;
+    }
+
+    // Get all JSON exports for this team
+    const jsonExports = await ctx.db
+      .query("exports")
+      .filter((q) => q.eq(q.field("provider"), "json"))
+      .collect();
+
+    // Filter for this team's feedback and get feedback details
+    const queueItems = await Promise.all(
+      jsonExports.map(async (exp) => {
+        const feedback = await ctx.db.get(exp.feedbackId);
+        if (feedback && feedback.teamId === args.teamId) {
+          return {
+            exportId: exp._id,
+            feedbackId: exp.feedbackId,
+            feedback: feedback,
+            createdAt: exp.createdAt,
+          };
+        }
+        return null;
+      })
+    );
+
+    return queueItems.filter(Boolean);
+  },
+});
+
+/**
+ * Clear JSON export queue for a team
+ */
+export const clearJsonExportQueue = mutation({
+  args: {
+    teamId: v.id("teams"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Check membership
+    const membership = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .filter((q) => q.eq(q.field("teamId"), args.teamId))
+      .first();
+
+    if (!membership) {
+      throw new Error("You are not a member of this team");
+    }
+
+    // Get all JSON exports for this team
+    const jsonExports = await ctx.db
+      .query("exports")
+      .filter((q) => q.eq(q.field("provider"), "json"))
+      .collect();
+
+    // Delete exports for this team's feedback
+    for (const exp of jsonExports) {
+      const feedback = await ctx.db.get(exp.feedbackId);
+      if (feedback && feedback.teamId === args.teamId) {
+        await ctx.db.delete(exp._id);
+      }
+    }
+
+    return { success: true };
+  },
+});
+
+/**
+ * Delete a feedback item
+ */
+export const deleteFeedback = mutation({
+  args: {
+    feedbackId: v.id("feedback"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Get the feedback
+    const feedback = await ctx.db.get(args.feedbackId);
+    if (!feedback) {
+      throw new Error("Feedback not found");
+    }
+
+    // Check membership
+    const membership = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .filter((q) => q.eq(q.field("teamId"), feedback.teamId))
+      .first();
+
+    if (!membership) {
+      throw new Error("You are not a member of this team");
+    }
+
+    // Delete related data
+    // 1. Delete AI analysis
+    const analysis = await ctx.db
+      .query("aiAnalysis")
+      .withIndex("by_feedback", (q) => q.eq("feedbackId", args.feedbackId))
+      .first();
+    if (analysis) {
+      await ctx.db.delete(analysis._id);
+    }
+
+    // 2. Delete solution suggestions
+    const suggestions = await ctx.db
+      .query("solutionSuggestions")
+      .withIndex("by_feedback", (q) => q.eq("feedbackId", args.feedbackId))
+      .first();
+    if (suggestions) {
+      await ctx.db.delete(suggestions._id);
+    }
+
+    // 3. Delete ticket drafts
+    const drafts = await ctx.db
+      .query("ticketDrafts")
+      .withIndex("by_feedback", (q) => q.eq("feedbackId", args.feedbackId))
+      .collect();
+    for (const draft of drafts) {
+      await ctx.db.delete(draft._id);
+    }
+
+    // 4. Delete conversation messages
+    const messages = await ctx.db
+      .query("conversations")
+      .withIndex("by_feedback", (q) => q.eq("feedbackId", args.feedbackId))
+      .collect();
+    for (const message of messages) {
+      await ctx.db.delete(message._id);
+    }
+
+    // 5. Delete comments
+    const comments = await ctx.db
+      .query("comments")
+      .withIndex("by_feedback", (q) => q.eq("feedbackId", args.feedbackId))
+      .collect();
+    for (const comment of comments) {
+      await ctx.db.delete(comment._id);
+    }
+
+    // 6. Delete exports
+    const exports = await ctx.db
+      .query("exports")
+      .withIndex("by_feedback", (q) => q.eq("feedbackId", args.feedbackId))
+      .collect();
+    for (const exp of exports) {
+      await ctx.db.delete(exp._id);
+    }
+
+    // Finally, delete the feedback itself
+    await ctx.db.delete(args.feedbackId);
+
+    return { success: true };
   },
 });

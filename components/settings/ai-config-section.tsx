@@ -144,6 +144,7 @@ interface ApiKeyCardProps {
     provider: Provider;
     apiKey: string;
     model?: string;
+    isValid?: boolean;
   }) => Promise<{ id: Id<"apiKeys">; updated: boolean }>;
   onDelete: (args: {
     teamId: Id<"teams">;
@@ -254,12 +255,13 @@ function ApiKeyCard({
         return;
       }
 
-      // Save the key
+      // Save the key with isValid: true since we just validated it
       await onSave({
         teamId,
         provider,
         apiKey,
         model: selectedModel,
+        isValid: true,
       });
 
       setApiKey("");

@@ -274,9 +274,35 @@ export const updateStripeCustomerId = mutation({
 // ============================================================================
 
 /**
- * Update subscription from Stripe webhook
+ * Update Stripe customer ID (public, for API routes/webhooks)
+ * This is safe because it only updates the customer ID, not the plan
  */
-export const updateSubscriptionFromStripe = internalMutation({
+export const updateStripeCustomerIdPublic = mutation({
+  args: {
+    teamId: v.id("teams"),
+    stripeCustomerId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const subscription = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+      .first();
+
+    if (!subscription) {
+      throw new Error("Subscription not found");
+    }
+
+    await ctx.db.patch(subscription._id, {
+      stripeCustomerId: args.stripeCustomerId,
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+/**
+ * Update subscription from Stripe webhook (public for API routes)
+ */
+export const updateSubscriptionFromStripe = mutation({
   args: {
     stripeCustomerId: v.string(),
     stripeSubscriptionId: v.string(),
@@ -428,9 +454,9 @@ export const createSubscriptionFromStripe = internalMutation({
 });
 
 /**
- * Update subscription status from invoice payment events
+ * Update subscription status from invoice payment events (public for webhooks)
  */
-export const updateSubscriptionStatus = internalMutation({
+export const updateSubscriptionStatus = mutation({
   args: {
     stripeSubscriptionId: v.string(),
     status: v.union(

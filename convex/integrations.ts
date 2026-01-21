@@ -833,3 +833,51 @@ export const getNotionIntegrationForApi = query({
     };
   },
 });
+
+/**
+ * Get all exports for a feedback item
+ */
+export const getExportsByFeedback = query({
+  args: {
+    feedbackId: v.id("feedback"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return null;
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) {
+      return null;
+    }
+
+    const feedback = await ctx.db.get(args.feedbackId);
+    if (!feedback) {
+      return null;
+    }
+
+    // Check membership
+    const membership = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .filter((q) => q.eq(q.field("teamId"), feedback.teamId))
+      .first();
+
+    if (!membership) {
+      return null;
+    }
+
+    // Get all exports for this feedback
+    const exports = await ctx.db
+      .query("exports")
+      .withIndex("by_feedback", (q) => q.eq("feedbackId", args.feedbackId))
+      .collect();
+
+    return exports;
+  },
+});

@@ -49,6 +49,7 @@ export const saveApiKey = mutation({
     provider: v.union(v.literal("openai"), v.literal("anthropic")),
     apiKey: v.string(),
     model: v.optional(v.string()),
+    isValid: v.optional(v.boolean()), // Allow caller to specify if key was pre-validated
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -103,6 +104,8 @@ export const saveApiKey = mutation({
       .first();
 
     const now = Date.now();
+    // Use provided isValid status (from pre-validation) or default to false
+    const keyIsValid = args.isValid ?? false;
 
     if (existingKey) {
       // Update existing key
@@ -110,8 +113,8 @@ export const saveApiKey = mutation({
         encryptedKey,
         keyHint,
         model: args.model,
-        isValid: false, // Mark as not validated until tested
-        lastValidatedAt: undefined,
+        isValid: keyIsValid,
+        lastValidatedAt: keyIsValid ? now : undefined,
         updatedAt: now,
       });
       return { id: existingKey._id, updated: true };
@@ -124,7 +127,8 @@ export const saveApiKey = mutation({
         encryptedKey,
         keyHint,
         model: args.model,
-        isValid: false,
+        isValid: keyIsValid,
+        lastValidatedAt: keyIsValid ? now : undefined,
         createdAt: now,
         updatedAt: now,
       });

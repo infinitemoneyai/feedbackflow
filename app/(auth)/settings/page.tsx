@@ -20,6 +20,7 @@ import { StorageConfigSection } from "@/components/settings/storage-config-secti
 import { TeamSettingsSection } from "@/components/settings/team-settings-section";
 import { UserProfileSection } from "@/components/settings/user-profile-section";
 import { ExportTemplatesSection } from "@/components/settings/export-templates-section";
+import { JsonExportQueueSection } from "@/components/settings/json-export-queue-section";
 
 type SettingsTab = "profile" | "widget" | "ai" | "storage" | "integrations" | "templates" | "webhooks" | "automation" | "api-keys" | "notifications" | "team" | "billing";
 
@@ -354,6 +355,9 @@ function SettingsContent() {
 
                 {/* Notion Integration */}
                 <NotionConfigSection teamId={selectedTeamId} />
+
+                {/* JSON Export Queue */}
+                <JsonExportQueueSection teamId={selectedTeamId} />
               </div>
             )}
 
