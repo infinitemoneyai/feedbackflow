@@ -289,6 +289,54 @@ export const getLinearApiKey = query({
 });
 
 /**
+ * Get decrypted Linear API key for API route use (with auth check)
+ */
+export const getLinearIntegrationForApi = query({
+  args: {
+    teamId: v.id("teams"),
+    userId: v.string(), // Clerk user ID
+  },
+  handler: async (ctx, args) => {
+    // Find user by Clerk ID
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.userId))
+      .first();
+
+    if (!user) {
+      return null;
+    }
+
+    // Check if user is a member of the team
+    const membership = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .filter((q) => q.eq(q.field("teamId"), args.teamId))
+      .first();
+
+    if (!membership) {
+      return null;
+    }
+
+    // Get the integration
+    const integration = await ctx.db
+      .query("integrations")
+      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+      .filter((q) => q.eq(q.field("provider"), "linear"))
+      .first();
+
+    if (!integration || !integration.accessToken) {
+      return null;
+    }
+
+    return {
+      decryptedKey: decryptKey(integration.accessToken),
+      settings: integration.settings,
+    };
+  },
+});
+
+/**
  * Create an export record for Linear
  */
 export const createExport = mutation({
@@ -733,6 +781,54 @@ export const getNotionApiKey = query({
 
     return {
       apiKey: decryptKey(integration.accessToken),
+      settings: integration.settings,
+    };
+  },
+});
+
+/**
+ * Get decrypted Notion API key for API route use (with auth check)
+ */
+export const getNotionIntegrationForApi = query({
+  args: {
+    teamId: v.id("teams"),
+    userId: v.string(), // Clerk user ID
+  },
+  handler: async (ctx, args) => {
+    // Find user by Clerk ID
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.userId))
+      .first();
+
+    if (!user) {
+      return null;
+    }
+
+    // Check if user is a member of the team
+    const membership = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .filter((q) => q.eq(q.field("teamId"), args.teamId))
+      .first();
+
+    if (!membership) {
+      return null;
+    }
+
+    // Get the integration
+    const integration = await ctx.db
+      .query("integrations")
+      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+      .filter((q) => q.eq(q.field("provider"), "notion"))
+      .first();
+
+    if (!integration || !integration.accessToken) {
+      return null;
+    }
+
+    return {
+      decryptedKey: decryptKey(integration.accessToken),
       settings: integration.settings,
     };
   },

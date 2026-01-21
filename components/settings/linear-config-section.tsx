@@ -73,6 +73,12 @@ export function LinearConfigSection({ teamId }: LinearConfigSectionProps) {
 
   const hasKey = integration?.hasApiKey;
 
+  // Debug: log integration state
+  useEffect(() => {
+    console.log("[linear-config] Integration:", integration);
+    console.log("[linear-config] Has key:", hasKey);
+  }, [integration, hasKey]);
+
   // Load existing settings
   useEffect(() => {
     if (integration?.settings) {
@@ -98,6 +104,7 @@ export function LinearConfigSection({ teamId }: LinearConfigSectionProps) {
         body: JSON.stringify({
           action: "getTeams",
           apiKey: key || "stored", // "stored" signals to use saved key
+          teamId: teamId, // Convex team ID for retrieving stored key
         }),
       });
       const data = await response.json();
@@ -121,7 +128,8 @@ export function LinearConfigSection({ teamId }: LinearConfigSectionProps) {
         body: JSON.stringify({
           action: "getProjects",
           apiKey: apiKey || "stored",
-          teamId: linearTeamId,
+          teamId: teamId, // Convex team ID for retrieving stored key
+          linearTeamId: linearTeamId, // Linear team ID for filtering
         }),
       });
       const data = await response.json();
@@ -145,7 +153,8 @@ export function LinearConfigSection({ teamId }: LinearConfigSectionProps) {
         body: JSON.stringify({
           action: "getLabels",
           apiKey: apiKey || "stored",
-          teamId: linearTeamId,
+          teamId: teamId, // Convex team ID for retrieving stored key
+          linearTeamId: linearTeamId, // Linear team ID for filtering
         }),
       });
       const data = await response.json();
@@ -189,6 +198,7 @@ export function LinearConfigSection({ teamId }: LinearConfigSectionProps) {
         body: JSON.stringify({
           action: "test",
           apiKey: apiKey || "stored",
+          teamId: teamId, // Convex team ID for retrieving stored key
         }),
       });
 
@@ -299,6 +309,23 @@ export function LinearConfigSection({ teamId }: LinearConfigSectionProps) {
       setIsDeleting(false);
     }
   }, [teamId, deleteIntegration]);
+
+  // Auto-load teams when integration exists
+  useEffect(() => {
+    if (hasKey && linearTeams.length === 0) {
+      fetchTeams();
+    }
+  }, [hasKey, linearTeams.length, fetchTeams]);
+
+  // Auto-load projects and labels when saved team is loaded
+  useEffect(() => {
+    if (hasKey && selectedTeamId && linearProjects.length === 0 && linearLabels.length === 0) {
+      Promise.all([
+        fetchProjects(selectedTeamId),
+        fetchLabels(selectedTeamId),
+      ]);
+    }
+  }, [hasKey, selectedTeamId, linearProjects.length, linearLabels.length, fetchProjects, fetchLabels]);
 
   // Toggle label selection
   const handleLabelToggle = (labelId: string) => {

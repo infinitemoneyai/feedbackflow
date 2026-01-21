@@ -4,9 +4,9 @@ import type {
   BlockObjectRequest,
 } from "@notionhq/client/build/src/api-endpoints";
 
-// Type for database object with the properties we need
+// Type for database/data_source object with the properties we need
 interface DatabaseObject {
-  object: "database";
+  object: "database" | "data_source";
   id: string;
   url: string;
   title: Array<{ plain_text: string }>;
@@ -101,55 +101,68 @@ export async function testNotionConnection(apiKey: string): Promise<{
 
 /**
  * Search for databases the integration has access to
+ * Note: Uses Notion's new data_source filter (2025 API)
  */
 export async function getNotionDatabases(
   apiKey: string
 ): Promise<NotionDatabase[]> {
-  const client = new Client({ auth: apiKey });
+  try {
+    const client = new Client({ auth: apiKey });
 
-  // Use type assertion for the filter since the SDK types are outdated
-  // and don't include "database" but the API actually supports it
-  const response = await client.search({
+    console.log("[notion] Searching for data sources...");
+    
+    // Search for data sources using the new API filter
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    filter: { value: "database", property: "object" } as any,
-    page_size: 50,
-  });
+    const response = await client.search({
+      filter: {
+        value: "data_source",
+        property: "object"
+      } as any,
+      page_size: 100,
+    });
 
-  const databases: NotionDatabase[] = [];
+    console.log("[notion] Search returned", response.results.length, "results");
 
-  for (const result of response.results) {
-    // Check if this is a database object (using 'in' check to satisfy TypeScript)
-    if (!("object" in result) || (result as { object: string }).object !== "database") continue;
+    const databases: NotionDatabase[] = [];
 
-    // Cast to our database type (we know it's a database from the filter)
-    const db = result as unknown as DatabaseObject;
+    for (const result of response.results) {
+      // Check if this is a data_source object
+      if (!("object" in result) || (result as { object: string }).object !== "data_source") continue;
 
-    // Skip if no title property
-    if (!db.title) continue;
+      // Cast to our database type (data sources act like databases)
+      const db = result as unknown as DatabaseObject;
 
-    const title =
-      db.title.length > 0 ? db.title[0].plain_text : "Untitled";
+      // Skip if no title property
+      if (!db.title) continue;
 
-    let iconStr: string | undefined;
-    if (db.icon) {
-      if (db.icon.type === "emoji" && db.icon.emoji) {
-        iconStr = db.icon.emoji;
-      } else if (db.icon.type === "external" && db.icon.external) {
-        iconStr = db.icon.external.url;
-      } else if (db.icon.type === "file" && db.icon.file) {
-        iconStr = db.icon.file.url;
+      const title =
+        db.title.length > 0 ? db.title[0].plain_text : "Untitled";
+
+      let iconStr: string | undefined;
+      if (db.icon) {
+        if (db.icon.type === "emoji" && db.icon.emoji) {
+          iconStr = db.icon.emoji;
+        } else if (db.icon.type === "external" && db.icon.external) {
+          iconStr = db.icon.external.url;
+        } else if (db.icon.type === "file" && db.icon.file) {
+          iconStr = db.icon.file.url;
+        }
       }
+
+      databases.push({
+        id: db.id,
+        title,
+        url: db.url,
+        icon: iconStr,
+      });
     }
 
-    databases.push({
-      id: db.id,
-      title,
-      url: db.url,
-      icon: iconStr,
-    });
+    console.log("[notion] Found", databases.length, "data sources");
+    return databases;
+  } catch (error) {
+    console.error("[notion] Error fetching data sources:", error);
+    throw error;
   }
-
-  return databases;
 }
 
 /**

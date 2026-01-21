@@ -675,7 +675,7 @@ export const getDecryptedApiKeyInternal = query({
     // Deobfuscate the key (same logic as in apiKeys.ts)
     let decryptedKey: string;
     try {
-      const decoded = Buffer.from(apiKey.encryptedKey, "base64").toString("utf-8");
+      const decoded = atob(apiKey.encryptedKey);
       if (decoded.startsWith("encrypted:")) {
         decryptedKey = decoded.slice("encrypted:".length);
       } else {

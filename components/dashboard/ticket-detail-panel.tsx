@@ -996,26 +996,26 @@ export function TicketDetailPanel() {
 
         {/* Linear Export Section */}
         <div ref={linearExportRef} className="transition-all duration-200">
-          <LinearExportSection
-            feedbackId={selectedFeedbackId}
-            teamId={feedback.teamId}
-          />
+        <LinearExportSection
+          feedbackId={selectedFeedbackId}
+          teamId={feedback.teamId}
+        />
         </div>
 
         {/* Notion Export Section */}
         <div ref={notionExportRef} className="transition-all duration-200">
-          <NotionExportSection
-            feedbackId={selectedFeedbackId}
-            teamId={feedback.teamId}
-          />
+        <NotionExportSection
+          feedbackId={selectedFeedbackId}
+          teamId={feedback.teamId}
+        />
         </div>
 
         {/* JSON Export Section */}
         <div ref={jsonExportRef} className="transition-all duration-200">
-          <JsonExportSection
-            feedbackId={selectedFeedbackId}
-            teamId={feedback.teamId}
-          />
+        <JsonExportSection
+          feedbackId={selectedFeedbackId}
+          teamId={feedback.teamId}
+        />
         </div>
 
         {/* AI Conversation Section */}

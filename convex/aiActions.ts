@@ -3,6 +3,18 @@ import { action, internalAction } from "./_generated/server";
 import { internal, api } from "./_generated/api";
 
 /**
+ * Convert ArrayBuffer to base64 string (browser-compatible)
+ */
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
+/**
  * AI Analysis Action - makes external API calls to AI providers
  * This action is triggered when auto-categorization is requested
  */
@@ -46,7 +58,7 @@ export const analyzeFeedbackAction = internalAction({
         const imageResponse = await fetch(feedback.screenshotUrl);
         if (imageResponse.ok) {
           const arrayBuffer = await imageResponse.arrayBuffer();
-          screenshotBase64 = Buffer.from(arrayBuffer).toString("base64");
+          screenshotBase64 = arrayBufferToBase64(arrayBuffer);
         }
       } catch (err) {
         console.warn("Failed to fetch screenshot for AI analysis:", err);
@@ -779,7 +791,7 @@ export const generateSolutionsAction = internalAction({
         const imageResponse = await fetch(feedback.screenshotUrl);
         if (imageResponse.ok) {
           const arrayBuffer = await imageResponse.arrayBuffer();
-          screenshotBase64 = Buffer.from(arrayBuffer).toString("base64");
+          screenshotBase64 = arrayBufferToBase64(arrayBuffer);
         }
       } catch (err) {
         console.warn("Failed to fetch screenshot for solution generation:", err);
@@ -1274,7 +1286,7 @@ export const generateTicketDraftAction = internalAction({
         const imageResponse = await fetch(feedback.screenshotUrl);
         if (imageResponse.ok) {
           const arrayBuffer = await imageResponse.arrayBuffer();
-          screenshotBase64 = Buffer.from(arrayBuffer).toString("base64");
+          screenshotBase64 = arrayBufferToBase64(arrayBuffer);
         }
       } catch (err) {
         console.warn("Failed to fetch screenshot for ticket draft generation:", err);
@@ -1735,7 +1747,7 @@ export const processConversationMessage = internalAction({
         const imageResponse = await fetch(feedback.screenshotUrl);
         if (imageResponse.ok) {
           const arrayBuffer = await imageResponse.arrayBuffer();
-          screenshotBase64 = Buffer.from(arrayBuffer).toString("base64");
+          screenshotBase64 = arrayBufferToBase64(arrayBuffer);
         }
       } catch (err) {
         console.warn("Failed to fetch screenshot for conversation:", err);

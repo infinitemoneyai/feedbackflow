@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "@/convex/_generated/api";
 import {
   testLinearConnection,
   getLinearTeams,
@@ -9,46 +12,88 @@ import {
   mapPriorityToLinear,
 } from "@/lib/integrations/linear";
 
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { action, apiKey, teamId, feedback, linearTeamId, linearProjectId, linearLabelIds } = body;
+    const { action, apiKey, teamId: convexTeamId, feedback, linearTeamId, linearProjectId, linearLabelIds } = body;
+
+    // Helper to get API key (either from request or from stored integration)
+    const getApiKey = async (): Promise<string | null> => {
+      if (apiKey && apiKey !== "stored") {
+        console.log("[linear-api] Using provided API key");
+        return apiKey;
+      }
+      
+      // Retrieve stored key from Convex
+      if (convexTeamId) {
+        console.log("[linear-api] Retrieving stored key for teamId:", convexTeamId);
+        const { userId } = await auth();
+        if (!userId) {
+          console.error("[linear-api] No userId from auth");
+          return null;
+        }
+        
+        console.log("[linear-api] Querying Convex for userId:", userId);
+        const integration = await convex.query(api.integrations.getLinearIntegrationForApi, { 
+          teamId: convexTeamId,
+          userId 
+        });
+        
+        if (!integration) {
+          console.error("[linear-api] No integration found");
+          return null;
+        }
+        
+        console.log("[linear-api] Integration found, has key:", !!integration.decryptedKey);
+        return integration?.decryptedKey || null;
+      }
+      
+      console.error("[linear-api] No teamId provided");
+      return null;
+    };
 
     switch (action) {
       case "test": {
-        if (!apiKey) {
+        const key = await getApiKey();
+        if (!key) {
           return NextResponse.json({ error: "API key is required" }, { status: 400 });
         }
-        const result = await testLinearConnection(apiKey);
+        const result = await testLinearConnection(key);
         return NextResponse.json(result);
       }
 
       case "getTeams": {
-        if (!apiKey) {
+        const key = await getApiKey();
+        if (!key) {
           return NextResponse.json({ error: "API key is required" }, { status: 400 });
         }
-        const teams = await getLinearTeams(apiKey);
+        const teams = await getLinearTeams(key);
         return NextResponse.json({ teams });
       }
 
       case "getProjects": {
-        if (!apiKey || !teamId) {
+        const key = await getApiKey();
+        if (!key || !linearTeamId) {
           return NextResponse.json({ error: "API key and team ID are required" }, { status: 400 });
         }
-        const projects = await getLinearProjects(apiKey, teamId);
+        const projects = await getLinearProjects(key, linearTeamId);
         return NextResponse.json({ projects });
       }
 
       case "getLabels": {
-        if (!apiKey || !teamId) {
+        const key = await getApiKey();
+        if (!key || !linearTeamId) {
           return NextResponse.json({ error: "API key and team ID are required" }, { status: 400 });
         }
-        const labels = await getLinearLabels(apiKey, teamId);
+        const labels = await getLinearLabels(key, linearTeamId);
         return NextResponse.json({ labels });
       }
 
       case "createIssue": {
-        if (!apiKey || !linearTeamId || !feedback) {
+        const key = await getApiKey();
+        if (!key || !linearTeamId || !feedback) {
           return NextResponse.json(
             { error: "API key, Linear team ID, and feedback are required" },
             { status: 400 }
@@ -62,7 +107,7 @@ export async function POST(request: NextRequest) {
         const title = feedback.ticketDraft?.title || feedback.title;
 
         // Create the issue
-        const issue = await createLinearIssue(apiKey, {
+        const issue = await createLinearIssue(key, {
           teamId: linearTeamId,
           title,
           description,
