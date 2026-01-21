@@ -1,0 +1,70 @@
+# Security Considerations
+
+## API Key Handling
+
+- User API keys (OpenAI, Anthropic) encrypted at rest with AES-256
+- Keys only decrypted server-side for API calls
+- Never expose keys to client bundle
+- Show only last 4 chars in UI (`keyHint` field)
+
+## Widget Security
+
+- Widget keys are public (embedded in sites)
+- REST API keys are secret (server-to-server)
+- Rate limiting on widget endpoint:
+  - 10 submissions/minute per IP
+  - 100 submissions/day per widget
+- Honeypot field for spam detection
+
+## Authentication
+
+- Clerk handles all auth
+- Protected routes redirect unauthenticated users
+- Session tokens passed to Convex for auth
+- Always check `ctx.auth.getUserIdentity()` in mutations/queries
+
+## Webhooks
+
+- HMAC signatures on all webhook payloads
+- Verify signature before processing
+- Log all webhook attempts
+
+## Data Protection
+
+- GDPR compliance features implemented
+- Data export for submitters
+- Data deletion requests supported
+- Anonymization preserves feedback while removing PII
+
+## Environment Variables
+
+Never commit secrets. Required env vars:
+
+```bash
+# Convex
+CONVEX_DEPLOYMENT=xxx
+NEXT_PUBLIC_CONVEX_URL=xxx
+
+# Clerk
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_xxx
+CLERK_SECRET_KEY=sk_xxx
+
+# Stripe
+STRIPE_SECRET_KEY=sk_test_xxx
+STRIPE_WEBHOOK_SECRET=whsec_xxx
+
+# Resend
+RESEND_API_KEY=re_xxx
+
+# Encryption
+ENCRYPTION_KEY=xxx  # For API key encryption
+```
+
+## Code Review Checklist
+
+- [ ] No credentials in client bundle
+- [ ] Auth checks on all protected endpoints
+- [ ] Input validation on user data
+- [ ] Rate limiting on public endpoints
+- [ ] Encrypted storage for sensitive data
+- [ ] HMAC verification on webhooks

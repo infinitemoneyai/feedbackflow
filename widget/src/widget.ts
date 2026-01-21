@@ -117,7 +117,7 @@ export class FeedbackFlowWidget {
     // Create footer
     const footerContent: (string | HTMLElement)[] = [
       "Powered by ",
-      createElement("a", { href: "https://feedbackflow.dev", target: "_blank" }, [
+      createElement("a", { href: "https://feedbackflow.cc", target: "_blank" }, [
         "FeedbackFlow",
       ]),
     ];

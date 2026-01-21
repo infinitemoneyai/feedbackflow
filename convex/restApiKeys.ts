@@ -20,7 +20,7 @@ function generateApiKey(): string {
 function hashKey(key: string): string {
   // Simple hash using base64 encoding with marker
   // In production, use proper SHA-256 hashing
-  const encoded = Buffer.from(`hashed:${key}`).toString("base64");
+  const encoded = btoa(`hashed:${key}`);
   return encoded;
 }
 
@@ -29,7 +29,7 @@ function hashKey(key: string): string {
  */
 function verifyKey(key: string, hash: string): boolean {
   try {
-    const decoded = Buffer.from(hash, "base64").toString("utf-8");
+    const decoded = atob(hash);
     if (decoded.startsWith("hashed:")) {
       return decoded.slice("hashed:".length) === key;
     }

@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { teamId, seats = 1 } = body;
+    const { teamId, seats = 1, billingInterval = "monthly" } = body;
 
     if (!teamId) {
       return NextResponse.json(
@@ -67,6 +67,7 @@ export async function POST(request: Request) {
       teamId,
       customerId: stripeCustomerId,
       seats,
+      billingInterval,
       successUrl: `${baseUrl}/settings?tab=billing&success=true`,
       cancelUrl: `${baseUrl}/settings?tab=billing&canceled=true`,
     });

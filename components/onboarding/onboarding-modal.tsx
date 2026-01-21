@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { OnboardingProgress } from "./onboarding-progress";
 import { OnboardingStepInstall } from "./onboarding-step-install";
@@ -19,6 +19,7 @@ interface OnboardingModalProps {
 
 export function OnboardingModal({ teamId, projectId, widgetKey }: OnboardingModalProps) {
   const onboardingState = useQuery(api.onboarding.getOnboardingState);
+  const goToStep = useMutation(api.onboarding.goToStep);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -26,6 +27,10 @@ export function OnboardingModal({ teamId, projectId, widgetKey }: OnboardingModa
     const timer = setTimeout(() => setIsVisible(true), 100);
     return () => clearTimeout(timer);
   }, []);
+
+  const handleStepClick = async (targetStep: number) => {
+    await goToStep({ step: targetStep });
+  };
 
   if (!onboardingState || onboardingState.isComplete) {
     return null;
@@ -58,7 +63,11 @@ export function OnboardingModal({ teamId, projectId, widgetKey }: OnboardingModa
         >
           {/* Progress */}
           <div className="mb-4 flex justify-center">
-            <OnboardingProgress currentStep={step} totalSteps={7} />
+            <OnboardingProgress 
+              currentStep={step} 
+              totalSteps={7} 
+              onStepClick={handleStepClick}
+            />
           </div>
 
           {/* Content */}

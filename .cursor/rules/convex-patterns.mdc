@@ -1,0 +1,134 @@
+# Convex Backend Patterns
+
+## Schema Location
+
+All database schema is defined in `convex/schema.ts`. Reference this for table structures.
+
+## Core Tables
+
+```typescript
+// Users & Teams
+users          // Clerk-synced user data
+teams          // Workspaces/organizations
+teamMembers    // User-team relationships with roles
+
+// Projects & Widgets
+projects       // Feedback collection projects
+widgets        // Embeddable widget instances
+widgetConfig   // Widget customization
+
+// Feedback
+feedback       // Main feedback entries
+aiAnalysis     // AI-generated analysis
+conversations  // AI chat history
+comments       // Team comments
+activityLog    // Audit trail
+
+// Integrations
+integrations   // Linear, Notion credentials
+exports        // Export history
+automationRules // Auto-export rules
+webhooks       // Webhook configs
+webhookLogs    // Delivery tracking
+
+// Settings
+apiKeys        // User AI API keys (encrypted)
+storageConfig  // External storage credentials
+notifications  // User notifications
+subscriptions  // Stripe subscription data
+```
+
+## Feedback Status Flow
+
+```
+new → triaging → drafted → exported → resolved
+```
+
+## Query/Mutation Patterns
+
+```typescript
+// convex/feedback.ts
+import { query, mutation } from "./_generated/server";
+import { v } from "convex/values";
+
+export const getFeedback = query({
+  args: { projectId: v.id("projects") },
+  handler: async (ctx, args) => {
+    // Always check auth
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Unauthorized");
+    
+    return await ctx.db
+      .query("feedback")
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .order("desc")
+      .collect();
+  },
+});
+
+export const updateFeedbackStatus = mutation({
+  args: {
+    feedbackId: v.id("feedback"),
+    status: v.union(
+      v.literal("new"),
+      v.literal("triaging"),
+      v.literal("drafted"),
+      v.literal("exported"),
+      v.literal("resolved")
+    ),
+  },
+  handler: async (ctx, args) => {
+    // Auth check, then update
+    await ctx.db.patch(args.feedbackId, {
+      status: args.status,
+      updatedAt: Date.now(),
+    });
+    
+    // Log activity
+    await ctx.db.insert("activityLog", {
+      feedbackId: args.feedbackId,
+      action: "status_changed",
+      details: { to: args.status },
+      createdAt: Date.now(),
+    });
+  },
+});
+```
+
+## Client Usage
+
+```tsx
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+
+function FeedbackList({ projectId }) {
+  const feedback = useQuery(api.feedback.getFeedback, { projectId });
+  const updateStatus = useMutation(api.feedback.updateFeedbackStatus);
+  
+  if (!feedback) return <Loading />;
+  
+  return (
+    <ul>
+      {feedback.map((item) => (
+        <li key={item._id}>
+          {item.title}
+          <button onClick={() => updateStatus({ 
+            feedbackId: item._id, 
+            status: "triaging" 
+          })}>
+            Start Triage
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+## Important Rules
+
+1. **Never run automatic migrations** - Create migration files, let user run manually
+2. **Warn about schema changes** - If deleting data, explain what and why
+3. **Use indexes** - Always query with appropriate index for performance
+4. **Real-time by default** - Convex queries auto-update, leverage this
+5. **Encrypt sensitive data** - API keys stored encrypted (AES-256)

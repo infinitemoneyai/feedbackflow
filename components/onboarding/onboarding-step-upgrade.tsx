@@ -1,19 +1,37 @@
 "use client";
 
-import { useState } from "react";
-import { useMutation } from "convex/react";
+import { useState, useEffect } from "react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Icon } from "@/components/ui/icon";
 import { PLANS } from "@/lib/stripe-config";
 
 export function OnboardingStepUpgrade() {
   const [isLoading, setIsLoading] = useState(false);
+  const [pendingInvites, setPendingInvites] = useState<string[]>([]);
+  
   const skipToComplete = useMutation(api.onboarding.skipToComplete);
+  const onboardingState = useQuery(api.onboarding.getOnboardingState);
+
+  useEffect(() => {
+    // Load pending invites from onboarding data
+    if (onboardingState?.data?.pendingInvites) {
+      try {
+        const invites = JSON.parse(onboardingState.data.pendingInvites);
+        setPendingInvites(invites);
+      } catch (e) {
+        // Invalid JSON, ignore
+      }
+    }
+  }, [onboardingState]);
+
+  const totalSeats = 1 + pendingInvites.length; // 1 for current user + invites
+  const monthlyCost = totalSeats * PLANS.pro.pricePerSeat;
 
   const handleUpgrade = async () => {
     setIsLoading(true);
-    // Redirect to billing/upgrade page
-    window.location.href = `/settings/billing?upgrade=true`;
+    // Redirect to settings page with billing tab
+    window.location.href = `/settings?tab=billing&upgrade=true`;
   };
 
   const handleStartFree = async () => {
@@ -27,7 +45,49 @@ export function OnboardingStepUpgrade() {
           <Icon name="solar:crown-linear" size={28} />
         </div>
         <h2 className="text-2xl font-bold text-retro-black">Unlock the full power</h2>
+        {pendingInvites.length > 0 && (
+          <p className="mt-2 text-sm text-stone-600">
+            You&apos;ve added {pendingInvites.length} team member{pendingInvites.length !== 1 ? 's' : ''} to invite
+          </p>
+        )}
       </div>
+
+      {/* Pending invites preview */}
+      {pendingInvites.length > 0 && (
+        <div className="mb-6 rounded border-2 border-retro-blue bg-blue-50 p-4">
+          <div className="mb-2 flex items-center gap-2">
+            <Icon name="solar:users-group-rounded-linear" size={18} className="text-retro-blue" />
+            <h3 className="font-bold text-retro-black">Your Team</h3>
+          </div>
+          <div className="space-y-1 text-sm">
+            <div className="flex items-center gap-2 text-stone-700">
+              <Icon name="solar:user-linear" size={14} />
+              <span>You (Owner)</span>
+            </div>
+            {pendingInvites.slice(0, 3).map((email, i) => (
+              <div key={i} className="flex items-center gap-2 text-stone-600">
+                <Icon name="solar:user-linear" size={14} />
+                <span>{email}</span>
+              </div>
+            ))}
+            {pendingInvites.length > 3 && (
+              <p className="text-xs text-stone-500">
+                +{pendingInvites.length - 3} more
+              </p>
+            )}
+          </div>
+          <div className="mt-3 border-t border-blue-200 pt-3">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-stone-600">Total seats:</span>
+              <span className="font-bold text-retro-black">{totalSeats}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-stone-600">Monthly cost:</span>
+              <span className="font-bold text-retro-black">${monthlyCost}/mo</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Comparison */}
       <div className="mb-6 grid grid-cols-2 gap-4">

@@ -25,6 +25,7 @@ export const getOnboardingState = query({
       step: user.onboardingStep,
       completedAt: user.onboardingCompletedAt,
       isComplete: user.onboardingStep === undefined || user.onboardingStep >= 8,
+      data: user.onboardingData,
     };
   },
 });
@@ -360,5 +361,82 @@ export const sendTestFeedback = mutation({
     });
 
     return { feedbackId, success: true };
+  },
+});
+
+/**
+ * Set onboarding data (key-value store for temporary onboarding state)
+ */
+export const setOnboardingData = mutation({
+  args: {
+    key: v.string(),
+    value: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Update the onboarding data
+    await ctx.db.patch(user._id, {
+      onboardingData: {
+        ...user.onboardingData,
+        [args.key]: args.value,
+      },
+    });
+
+    return { success: true };
+  },
+});
+
+/**
+ * Go to a specific onboarding step (for navigation)
+ */
+export const goToStep = mutation({
+  args: {
+    step: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Validate step range (1-7)
+    if (args.step < 1 || args.step > 7) {
+      throw new Error("Invalid step number");
+    }
+
+    // Only allow going back to completed steps (can't skip ahead)
+    const currentStep = user.onboardingStep ?? 8;
+    if (args.step >= currentStep) {
+      throw new Error("Cannot skip ahead to incomplete steps");
+    }
+
+    // Update the onboarding step
+    await ctx.db.patch(user._id, {
+      onboardingStep: args.step,
+    });
+
+    return { success: true };
   },
 });

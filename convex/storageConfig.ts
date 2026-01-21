@@ -10,7 +10,7 @@ type StorageProvider = "s3" | "r2" | "gcs";
  */
 function obfuscateCredentials(credentials: object): string {
   const json = JSON.stringify(credentials);
-  const encoded = Buffer.from(`encrypted:${json}`).toString("base64");
+  const encoded = btoa(`encrypted:${json}`);
   return encoded;
 }
 
@@ -19,7 +19,7 @@ function obfuscateCredentials(credentials: object): string {
  */
 function deobfuscateCredentials(encrypted: string): object | null {
   try {
-    const decoded = Buffer.from(encrypted, "base64").toString("utf-8");
+    const decoded = atob(encrypted);
     if (decoded.startsWith("encrypted:")) {
       return JSON.parse(decoded.slice("encrypted:".length));
     }

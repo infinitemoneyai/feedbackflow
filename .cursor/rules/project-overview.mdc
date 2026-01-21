@@ -1,0 +1,62 @@
+# FeedbackFlow Project Overview
+
+## What This App Does
+
+FeedbackFlow is a feedback collection system with:
+- **Embeddable widget** for screenshot capture, screen recording with audio, and annotation
+- **Central dashboard** for processing feedback with AI-powered triage, ticket drafting
+- **Export integrations** to Linear, Notion, or JSON (prd.json format for AI workflows)
+- **Open source** with self-host option, or hosted version with seat-based pricing
+
+## Tech Stack
+
+| Layer    | Technology           | Notes                                     |
+| -------- | -------------------- | ----------------------------------------- |
+| Frontend | Next.js 15           | App Router, React 19                      |
+| Backend  | Convex               | Real-time, serverless                     |
+| Auth     | Clerk                | User accounts + teams                     |
+| Payments | Stripe               | Seat-based pricing                        |
+| Email    | Resend               | Transactional + notifications             |
+| AI       | OpenAI/Anthropic     | User-provided API keys                    |
+| Storage  | Convex + S3/R2/GCS   | Screenshots in Convex, videos in external |
+| UI       | Tailwind + shadcn/ui | Retro design system                       |
+
+## Key Directories
+
+```
+app/                    # Next.js App Router
+├── (auth)/             # Authenticated routes (dashboard, settings, analytics)
+├── (public)/           # Public routes (docs, pricing, status)
+├── api/                # API routes (widget, webhooks, v1 REST API)
+components/             # React components
+├── dashboard/          # Dashboard-specific components
+├── settings/           # Settings page components
+├── ui/                 # shadcn/ui base components
+├── onboarding/         # Onboarding flow components
+convex/                 # Convex backend (schema, mutations, queries)
+widget/                 # Embeddable widget source (vanilla TS, builds to single JS)
+lib/                    # Utilities (AI, email, integrations, hooks)
+e2e/                    # Playwright E2E tests
+__tests__/              # Vitest unit tests
+```
+
+## Commands
+
+```bash
+npm run dev             # Start Next.js
+npx convex dev          # Start Convex (separate terminal)
+npm run widget:dev      # Watch widget source
+npm run test            # Vitest unit tests
+npm run test:e2e        # Playwright E2E
+npm run typecheck       # TypeScript check
+npm run lint            # ESLint
+```
+
+## Billing Model
+
+| Tier | Seats     | Feedback/month | Price         |
+| ---- | --------- | -------------- | ------------- |
+| Free | 1         | 25             | $0            |
+| Pro  | Unlimited | Unlimited      | $X/seat/month |
+
+Self-host option: Free, unlimited, bring your own infrastructure.

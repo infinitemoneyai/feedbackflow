@@ -56,6 +56,7 @@ export class SubmitUI {
   };
   private feedbackId: string = "";
   private errorMessage: string = "";
+  private warningMessage: string = "";
   private offlineQueue: OfflineQueue;
 
   constructor(
@@ -402,6 +403,23 @@ export class SubmitUI {
       "Thank you for your feedback. We'll review it shortly.",
     ]);
 
+    // Show warning if recording was too large
+    if (this.warningMessage) {
+      const warning = createElement("div", { className: "ff-success-warning" }, [
+        createElement("div", { className: "ff-warning-icon" }, [
+          createElementFromHTML(icons.warning || icons.info),
+        ]),
+        createElement("p", { className: "ff-warning-text" }, [this.warningMessage]),
+      ]);
+      success.appendChild(icon);
+      success.appendChild(title);
+      success.appendChild(warning);
+    } else {
+      success.appendChild(icon);
+      success.appendChild(title);
+      success.appendChild(message);
+    }
+
     const idLabel = createElement("div", { className: "ff-success-id" }, [
       createElement("span", { className: "ff-id-label" }, ["Reference ID: "]),
       createElement("code", { className: "ff-id-value" }, [this.feedbackId]),
@@ -412,9 +430,6 @@ export class SubmitUI {
       this.destroy();
     });
 
-    success.appendChild(icon);
-    success.appendChild(title);
-    success.appendChild(message);
     success.appendChild(idLabel);
     success.appendChild(closeButton);
 
@@ -530,6 +545,7 @@ export class SubmitUI {
 
       if (result.success && result.feedbackId) {
         this.feedbackId = result.feedbackId;
+        this.warningMessage = result.warning || "";
         this.state = "success";
         this.render();
       } else {
@@ -594,6 +610,7 @@ export class SubmitUI {
     return {
       success: true,
       feedbackId: data.feedbackId || data.id,
+      warning: data.warning,
     };
   }
 
@@ -1026,6 +1043,37 @@ export class SubmitUI {
         font-size: 14px;
         color: #666;
         margin: 0 0 16px 0;
+      }
+
+      .ff-success-warning {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px;
+        background-color: #fef3c7;
+        border: 1px solid #f59e0b;
+        border-radius: 6px;
+        margin-bottom: 16px;
+        text-align: left;
+      }
+
+      .ff-warning-icon {
+        flex-shrink: 0;
+        width: 20px;
+        height: 20px;
+        color: #f59e0b;
+      }
+
+      .ff-warning-icon svg {
+        width: 100%;
+        height: 100%;
+      }
+
+      .ff-warning-text {
+        font-size: 13px;
+        color: #92400e;
+        margin: 0;
+        line-height: 1.5;
       }
 
       .ff-success-id {

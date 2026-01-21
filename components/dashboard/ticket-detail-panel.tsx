@@ -995,22 +995,28 @@ export function TicketDetailPanel() {
         />
 
         {/* Linear Export Section */}
-        <LinearExportSection
-          feedbackId={selectedFeedbackId}
-          teamId={feedback.teamId}
-        />
+        <div ref={linearExportRef} className="transition-all duration-200">
+          <LinearExportSection
+            feedbackId={selectedFeedbackId}
+            teamId={feedback.teamId}
+          />
+        </div>
 
         {/* Notion Export Section */}
-        <NotionExportSection
-          feedbackId={selectedFeedbackId}
-          teamId={feedback.teamId}
-        />
+        <div ref={notionExportRef} className="transition-all duration-200">
+          <NotionExportSection
+            feedbackId={selectedFeedbackId}
+            teamId={feedback.teamId}
+          />
+        </div>
 
         {/* JSON Export Section */}
-        <JsonExportSection
-          feedbackId={selectedFeedbackId}
-          teamId={feedback.teamId}
-        />
+        <div ref={jsonExportRef} className="transition-all duration-200">
+          <JsonExportSection
+            feedbackId={selectedFeedbackId}
+            teamId={feedback.teamId}
+          />
+        </div>
 
         {/* AI Conversation Section */}
         <AIConversationSection
@@ -1047,18 +1053,23 @@ export function TicketDetailPanel() {
 
         {/* Export Actions */}
         <div className="grid grid-cols-2 gap-3">
-          <button className="group flex items-center justify-center gap-2 border-2 border-retro-black bg-retro-black p-3 text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:border-retro-blue hover:bg-retro-blue hover:shadow-none">
+          <button 
+            onClick={() => scrollToSection(linearExportRef)}
+            className="group flex items-center justify-center gap-2 border-2 border-retro-black bg-retro-black p-3 text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:border-retro-blue hover:bg-retro-blue hover:shadow-none"
+          >
             <Icon name="solar:export-linear" size={18} />
             <span className="font-medium">Linear</span>
           </button>
           <div className="flex gap-2">
             <button
+              onClick={() => scrollToSection(notionExportRef)}
               className="flex flex-1 items-center justify-center gap-2 border-2 border-stone-200 p-3 transition-all hover:border-retro-black hover:bg-stone-50"
               title="Send to Notion"
             >
               <Icon name="solar:notes-linear" size={20} />
             </button>
             <button
+              onClick={() => scrollToSection(jsonExportRef)}
               className="flex flex-1 items-center justify-center gap-2 border-2 border-stone-200 p-3 transition-all hover:border-retro-black hover:bg-stone-50"
               title="Download JSON"
             >

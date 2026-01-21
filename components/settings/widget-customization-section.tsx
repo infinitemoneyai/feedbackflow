@@ -16,6 +16,7 @@ import {
   Copy,
   Code,
   ExternalLink,
+  ChevronDown,
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -68,23 +69,74 @@ export function WidgetCustomizationSection({
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [codeCopied, setCodeCopied] = useState(false);
+  const [codeCopied, setCodeCopied] = useState<string | null>(null);
+  const [showFramework, setShowFramework] = useState<string | null>(null);
+
+  // Use the app's own URL for widget hosting
+  const widgetUrl = typeof window !== 'undefined' 
+    ? `${window.location.origin}/widget.js`
+    : '/widget.js';
 
   const installationCode = widgetKey
     ? `<script
-  src="https://cdn.feedbackflow.dev/widget.js"
+  src="${widgetUrl}"
   data-widget-key="${widgetKey}"
   data-position="${position}"
   async
 ></script>`
     : "";
 
-  const handleCopyCode = useCallback(async () => {
-    if (!installationCode) return;
-    await navigator.clipboard.writeText(installationCode);
-    setCodeCopied(true);
-    setTimeout(() => setCodeCopied(false), 2000);
-  }, [installationCode]);
+  const nextjsSnippet = widgetKey
+    ? `// In your layout.tsx
+import Script from 'next/script'
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        {children}
+        <Script
+          src="${widgetUrl}"
+          data-widget-key="${widgetKey}"
+          data-position="${position}"
+          strategy="lazyOnload"
+        />
+      </body>
+    </html>
+  )
+}`
+    : "";
+
+  const reactSnippet = widgetKey
+    ? `// In your App component
+import { useEffect } from 'react';
+
+function App() {
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = '${widgetUrl}';
+    script.dataset.widgetKey = '${widgetKey}';
+    script.dataset.position = '${position}';
+    script.async = true;
+    document.body.appendChild(script);
+    
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+  
+  return (
+    // Your app content
+  );
+}`
+    : "";
+
+  const handleCopyCode = useCallback(async (text: string, id: string) => {
+    if (!text) return;
+    await navigator.clipboard.writeText(text);
+    setCodeCopied(id);
+    setTimeout(() => setCodeCopied(null), 2000);
+  }, []);
 
   // Sync local state with fetched config
   useEffect(() => {
@@ -504,10 +556,10 @@ export function WidgetCustomizationSection({
             <div className="flex items-center justify-between rounded-t border-2 border-b-0 border-stone-200 bg-stone-50 px-4 py-2">
               <span className="font-mono text-xs text-stone-500">HTML</span>
               <button
-                onClick={handleCopyCode}
+                onClick={() => handleCopyCode(installationCode, "html")}
                 className="flex items-center gap-1.5 rounded border border-stone-200 bg-white px-2.5 py-1 text-xs font-medium text-stone-600 transition-colors hover:border-stone-300 hover:bg-stone-50"
               >
-                {codeCopied ? (
+                {codeCopied === "html" ? (
                   <>
                     <Check className="h-3 w-3 text-green-600" />
                     <span className="text-green-600">Copied!</span>
@@ -525,6 +577,81 @@ export function WidgetCustomizationSection({
             </pre>
           </div>
 
+          {/* Framework examples */}
+          <div className="mt-4 space-y-2">
+            <button
+              onClick={() => setShowFramework(showFramework === "nextjs" ? null : "nextjs")}
+              className="flex w-full items-center justify-between text-sm text-stone-600 hover:text-retro-black"
+            >
+              <span>Using Next.js?</span>
+              <ChevronDown
+                className={`h-4 w-4 transition-transform ${showFramework === "nextjs" ? "rotate-180" : ""}`}
+              />
+            </button>
+            {showFramework === "nextjs" && (
+              <>
+                <div className="flex items-center justify-between rounded-t border border-b-0 border-stone-200 bg-stone-100 px-3 py-1.5">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-stone-500">Next.js</span>
+                  <button
+                    onClick={() => handleCopyCode(nextjsSnippet, "nextjs")}
+                    className="flex items-center gap-1 text-xs text-stone-600 transition-colors hover:text-retro-black"
+                  >
+                    {codeCopied === "nextjs" ? (
+                      <>
+                        <Check className="h-3 w-3" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3 w-3" />
+                        Copy
+                      </>
+                    )}
+                  </button>
+                </div>
+                <pre className="overflow-x-auto rounded-b border border-stone-200 bg-stone-50 p-3 font-mono text-xs text-stone-700">
+                  <code>{nextjsSnippet}</code>
+                </pre>
+              </>
+            )}
+
+            <button
+              onClick={() => setShowFramework(showFramework === "react" ? null : "react")}
+              className="flex w-full items-center justify-between text-sm text-stone-600 hover:text-retro-black"
+            >
+              <span>Using React?</span>
+              <ChevronDown
+                className={`h-4 w-4 transition-transform ${showFramework === "react" ? "rotate-180" : ""}`}
+              />
+            </button>
+            {showFramework === "react" && (
+              <>
+                <div className="flex items-center justify-between rounded-t border border-b-0 border-stone-200 bg-stone-100 px-3 py-1.5">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-stone-500">React</span>
+                  <button
+                    onClick={() => handleCopyCode(reactSnippet, "react")}
+                    className="flex items-center gap-1 text-xs text-stone-600 transition-colors hover:text-retro-black"
+                  >
+                    {codeCopied === "react" ? (
+                      <>
+                        <Check className="h-3 w-3" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3 w-3" />
+                        Copy
+                      </>
+                    )}
+                  </button>
+                </div>
+                <pre className="overflow-x-auto rounded-b border border-stone-200 bg-stone-50 p-3 font-mono text-xs text-stone-700">
+                  <code>{reactSnippet}</code>
+                </pre>
+              </>
+            )}
+          </div>
+
           <div className="mt-4 flex items-start gap-2 rounded border border-retro-blue/30 bg-retro-blue/5 p-3">
             <div className="mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-retro-blue/20">
               <span className="text-xs font-bold text-retro-blue">i</span>
@@ -536,7 +663,7 @@ export function WidgetCustomizationSection({
               <Link href="/docs/installation" className="text-retro-blue hover:underline">
                 installation docs
               </Link>{" "}
-              for React, Vue, and Next.js examples.
+              for more framework examples.
             </p>
           </div>
         </div>

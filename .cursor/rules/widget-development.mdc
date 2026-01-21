@@ -1,0 +1,111 @@
+# Widget Development
+
+## Overview
+
+The widget is a standalone JavaScript file that can be embedded on any website. It's built with vanilla TypeScript and has no external dependencies.
+
+## Location
+
+```
+widget/
+├── src/
+│   ├── index.ts       # Entry point
+│   ├── capture.ts     # Screenshot/recording
+│   ├── annotate.ts    # Annotation tools
+│   ├── ui.ts          # Widget UI
+│   └── submit.ts      # Submission + offline queue
+├── dist/
+│   └── feedbackflow.js  # Built widget script
+├── build.mjs          # Build script (esbuild)
+└── tsconfig.json
+```
+
+## Building
+
+```bash
+npm run widget:build    # Build widget script
+npm run widget:dev      # Watch mode
+npm run widget:typecheck # TypeScript check
+```
+
+Output: `widget/dist/feedbackflow.js` (target: <50KB minified)
+
+## Embedding
+
+```html
+<script
+  src="https://cdn.feedbackflow.dev/widget.js"
+  data-widget-key="wk_xxxxx"
+  data-position="bottom-right"
+></script>
+```
+
+## Widget Features
+
+- **Screenshot capture** - html2canvas or native API
+- **Screen recording with audio** - getDisplayMedia + MediaRecorder
+- **Annotation tools** - Pen (red), highlighter (yellow), shapes (circle, arrow)
+- **Offline queue** - localStorage with retry
+- **Configurable styling** - Position, colors, button text
+
+## Widget Config Options
+
+```typescript
+interface WidgetConfig {
+  position: "bottom-right" | "bottom-left" | "top-right" | "top-left";
+  buttonText?: string;
+  primaryColor?: string;
+  backgroundColor?: string;
+  textColor?: string;
+  logoUrl?: string;
+}
+```
+
+## Submission Flow
+
+1. User clicks widget button
+2. Modal opens with capture options
+3. User captures screenshot or records screen
+4. Optional: annotate screenshot
+5. Fill form (title, description, type, email)
+6. Submit to `/api/widget/submit`
+7. On failure: queue in localStorage, retry later
+
+## API Endpoint
+
+```typescript
+// POST /api/widget/submit
+{
+  widgetKey: string;
+  type: "bug" | "feature";
+  title: string;
+  description?: string;
+  screenshotBase64?: string;
+  recordingBlob?: Blob;
+  submitterEmail?: string;
+  submitterName?: string;
+  metadata: {
+    browser: string;
+    os: string;
+    url: string;
+    screenWidth: number;
+    screenHeight: number;
+    userAgent: string;
+    timestamp: number;
+  };
+}
+```
+
+## Rate Limiting
+
+- 10 submissions per minute per IP
+- 100 submissions per day per widget
+- Honeypot field for spam detection
+
+## Development Rules
+
+1. **No external dependencies** - Keep bundle small
+2. **Works across browsers** - Chrome, Firefox, Safari, Edge
+3. **No AI client-side** - All AI processing happens server-side
+4. **Graceful degradation** - Handle permission denials
+5. **Recording limit** - 2 minutes max

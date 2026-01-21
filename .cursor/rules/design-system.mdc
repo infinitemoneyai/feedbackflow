@@ -1,0 +1,126 @@
+# Design System - Retro Aesthetic
+
+## Brand Identity
+
+FeedbackFlow uses a **retro-modern aesthetic** - clean, bold, with a hint of nostalgia. Think developer tool meets vintage print design.
+
+## Color Palette
+
+**IMPORTANT**: Always use the project's existing system colors. Never introduce custom or new colors.
+
+### Primary Colors (CSS Variables)
+
+```css
+--retro-paper: #f7f5f0;    /* Background, cards */
+--retro-black: #1a1a1a;    /* Text, borders, primary buttons */
+--retro-yellow: #f3c952;   /* Accents, highlights, brand */
+--retro-red: #e85d52;      /* Errors, high priority, bugs */
+--retro-blue: #6b9ac4;     /* Links, info, active states */
+--retro-lavender: #d4c4e8; /* Secondary accents, tags */
+--retro-peach: #f4a261;    /* Warnings, medium priority */
+--bg-page: #e8e6e1;        /* Page background */
+```
+
+### Tailwind Usage
+
+```html
+<div class="bg-retro-paper text-retro-black border-retro-black">
+<span class="text-retro-red">Bug</span>
+<span class="text-retro-blue">Feature</span>
+```
+
+### Status Colors
+
+```css
+--status-new: var(--retro-blue);
+--status-triaging: var(--retro-yellow);
+--status-drafted: var(--retro-lavender);
+--status-exported: var(--stone-400);
+--status-resolved: #22c55e;
+```
+
+## Typography
+
+- **Primary font**: Inter (UI text)
+- **Mono font**: JetBrains Mono (code, IDs, technical info)
+
+```html
+<span class="font-sans">Regular text</span>
+<span class="font-mono text-xs">#FF-402</span>
+```
+
+## The Retro Box Pattern
+
+Signature look uses **thick borders** and **offset shadows**:
+
+```html
+<!-- Standard card -->
+<div class="border-2 border-retro-black bg-white shadow-retro">
+  Content
+</div>
+
+<!-- Interactive card with hover -->
+<div class="border-2 border-retro-black bg-white hover-card">
+  Clickable content
+</div>
+
+<!-- Large shadow variant -->
+<div class="border-2 border-retro-black shadow-retro-lg">
+  Hero element
+</div>
+```
+
+### Shadow Utilities (defined in globals.css)
+
+- `shadow-retro` - 4px offset
+- `shadow-retro-lg` - 8px offset  
+- `shadow-retro-sm` - 2px offset
+- `hover-card` - Interactive with hover effect
+
+## Badges & Tags
+
+```html
+<!-- Priority badges -->
+<span class="rounded border px-1.5 py-0.5 text-[10px] font-bold tracking-wider uppercase
+  text-retro-red bg-retro-red/10 border-retro-red/20">High Priority</span>
+
+<!-- Type badges -->
+<span class="text-retro-red bg-retro-red/10">Bug</span>
+<span class="text-retro-blue bg-retro-blue/10">Feature</span>
+```
+
+## Icons
+
+Use **Solar Icons** via Iconify or lucide-react:
+
+```tsx
+import { Icon } from "@iconify/react";
+<Icon icon="solar:camera-linear" width={24} />
+
+// Or lucide-react
+import { Camera, Bug, Lightbulb } from "lucide-react";
+```
+
+### Common Icons
+
+| Purpose    | Solar Icon                    |
+| ---------- | ----------------------------- |
+| Screenshot | `solar:camera-linear`         |
+| Record     | `solar:record-linear`         |
+| Bug        | `solar:bug-linear`            |
+| Feature    | `solar:lightbulb-linear`      |
+| AI         | `solar:magic-stick-3-linear`  |
+| Settings   | `solar:settings-linear`       |
+| Export     | `solar:export-linear`         |
+| Search     | `solar:magnifer-linear`       |
+
+## Responsive Breakpoints
+
+```css
+sm: 640px   /* Tablet */
+md: 768px   /* Tablet landscape */
+lg: 1024px  /* Desktop */
+xl: 1280px  /* Large desktop */
+```
+
+Dashboard sidebar hides on mobile, detail panel hides below lg.

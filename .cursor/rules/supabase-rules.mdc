@@ -1,0 +1,39 @@
+# Supabase Rules
+
+**Note**: This project uses Convex as the primary backend, but these rules apply if Supabase is used for any auxiliary features.
+
+## Critical Rules
+
+1. **NEVER run automatic migrations** - Always create migration files and let the user run them manually
+
+2. **NEVER do automatic db pushes** - All database changes must be manual
+
+3. **Use MCP server for checks** - When checking database configuration, use the Supabase MCP server
+
+4. **Warn about schema changes** - If any migration would delete data or modify existing columns:
+   - Clearly state what will be deleted
+   - Explain why the change is necessary
+   - Get explicit confirmation before proceeding
+
+## Migration File Pattern
+
+```sql
+-- migrations/YYYYMMDD_description.sql
+
+-- Up migration
+CREATE TABLE IF NOT EXISTS example (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Add comment explaining the change
+COMMENT ON TABLE example IS 'Description of what this table stores';
+```
+
+## Before Any Schema Change
+
+1. Check current schema state via MCP
+2. Identify any data that would be affected
+3. Create migration file with clear naming
+4. Document the change in the migration file
+5. Let user review and run manually

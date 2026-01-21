@@ -1,0 +1,111 @@
+# Testing Guidelines
+
+## Test Stack
+
+- **Unit tests**: Vitest (`__tests__/` directory)
+- **E2E tests**: Playwright (`e2e/` directory)
+- **Coverage target**: 80%+
+
+## Running Tests
+
+```bash
+npm run test              # Vitest unit tests
+npm run test:watch        # Vitest watch mode
+npm run test:coverage     # Coverage report
+npm run test:e2e          # Playwright E2E
+npm run test:e2e:ui       # Playwright UI mode
+npm run test:e2e:headed   # Playwright headed mode
+```
+
+## Unit Test Structure
+
+```typescript
+// __tests__/lib/ai/index.test.ts
+import { describe, it, expect, vi } from "vitest";
+import { analyzeFeeback } from "@/lib/ai";
+
+describe("analyzeFeeback", () => {
+  it("should categorize bug reports correctly", async () => {
+    const mockFeedback = {
+      title: "Button not working",
+      description: "Click does nothing",
+      type: "bug",
+    };
+    
+    const result = await analyzeFeeback(mockFeedback, "test-api-key");
+    
+    expect(result.suggestedType).toBe("bug");
+    expect(result.typeConfidence).toBeGreaterThan(0.8);
+  });
+});
+```
+
+## E2E Test Structure
+
+```typescript
+// e2e/dashboard-feedback.spec.ts
+import { test, expect } from "@playwright/test";
+
+test.describe("Feedback Dashboard", () => {
+  test.beforeEach(async ({ page }) => {
+    // Setup: login, navigate to dashboard
+    await page.goto("/dashboard");
+  });
+
+  test("should display feedback list", async ({ page }) => {
+    await expect(page.getByRole("list")).toBeVisible();
+    await expect(page.getByText("Inbox")).toBeVisible();
+  });
+
+  test("should filter by type", async ({ page }) => {
+    await page.getByRole("button", { name: "Bugs" }).click();
+    // Assert only bugs shown
+  });
+});
+```
+
+## What to Test
+
+### Unit Tests Focus On:
+- Convex mutations/queries (mock ctx)
+- API endpoint handlers
+- Utility functions
+- AI service wrappers
+- Email template generation
+
+### E2E Tests Focus On:
+- Sign up and create team
+- Create project and widget
+- Submit feedback via widget
+- View and process feedback
+- Export to Linear (mocked)
+- Upgrade subscription (mocked)
+
+## Mocking External Services
+
+```typescript
+// Mock Stripe
+vi.mock("stripe", () => ({
+  default: vi.fn(() => ({
+    customers: { create: vi.fn() },
+    subscriptions: { create: vi.fn() },
+  })),
+}));
+
+// Mock Resend
+vi.mock("resend", () => ({
+  Resend: vi.fn(() => ({
+    emails: { send: vi.fn() },
+  })),
+}));
+```
+
+## Before Committing
+
+```bash
+npm run typecheck
+npm run lint
+npm run test
+```
+
+All three must pass before committing.

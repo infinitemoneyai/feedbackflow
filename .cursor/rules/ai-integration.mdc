@@ -1,0 +1,122 @@
+# AI Integration Patterns
+
+## Overview
+
+Users provide their own API keys. The system supports both OpenAI and Anthropic.
+
+## AI Features
+
+1. **Auto-categorization** - Analyze feedback, suggest type/priority/tags
+2. **Solution suggestions** - Propose fixes or investigation steps
+3. **Ticket drafting** - Generate formatted tickets (priority feature)
+4. **Conversation** - Chat about the feedback
+
+## API Key Storage
+
+Keys are encrypted at rest (AES-256) in the `apiKeys` table:
+
+```typescript
+// convex/schema.ts
+apiKeys: defineTable({
+  userId: v.id("users"),
+  teamId: v.id("teams"),
+  provider: v.union(v.literal("openai"), v.literal("anthropic")),
+  encryptedKey: v.string(),  // AES-256 encrypted
+  keyHint: v.string(),       // Last 4 chars for display
+  model: v.optional(v.string()),
+  isValid: v.boolean(),
+  lastValidatedAt: v.optional(v.number()),
+  // ...
+})
+```
+
+## AI Service Pattern
+
+```typescript
+// lib/ai/index.ts
+export async function analyzeFeeback(
+  feedback: Feedback, 
+  apiKey: string,
+  provider: "openai" | "anthropic"
+) {
+  // Use vision API for screenshot analysis
+  // Return categorization, suggestions
+}
+
+export async function draftTicket(
+  feedback: Feedback, 
+  apiKey: string,
+  provider: "openai" | "anthropic"
+) {
+  // Generate formatted ticket
+  // Return title, description, acceptance criteria
+}
+
+export async function generateSolutions(
+  feedback: Feedback,
+  apiKey: string,
+  provider: "openai" | "anthropic"
+) {
+  // For bugs: investigation steps, potential causes
+  // For features: implementation approaches
+}
+```
+
+## Using AI in Components
+
+```tsx
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+
+function AIAnalysisButton({ feedbackId }) {
+  const analyze = useMutation(api.ai.analyzeFeedback);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  const handleAnalyze = async () => {
+    setIsAnalyzing(true);
+    try {
+      await analyze({ feedbackId });
+    } catch (error) {
+      // Handle error - likely missing API key
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  return (
+    <Button onClick={handleAnalyze} disabled={isAnalyzing}>
+      {isAnalyzing ? "Analyzing..." : "AI Analyze"}
+    </Button>
+  );
+}
+```
+
+## AI Analysis Storage
+
+Results stored in `aiAnalysis` table:
+
+```typescript
+aiAnalysis: defineTable({
+  feedbackId: v.id("feedback"),
+  suggestedType: v.optional(v.union(v.literal("bug"), v.literal("feature"))),
+  typeConfidence: v.optional(v.number()),
+  suggestedPriority: v.optional(...),
+  priorityConfidence: v.optional(v.number()),
+  suggestedTags: v.array(v.string()),
+  summary: v.optional(v.string()),
+  affectedComponent: v.optional(v.string()),
+  potentialCauses: v.array(v.string()),
+  suggestedSolutions: v.array(v.string()),
+  provider: v.union(v.literal("openai"), v.literal("anthropic")),
+  model: v.string(),
+  createdAt: v.number(),
+})
+```
+
+## Important Rules
+
+1. **Never expose API keys to client** - Decrypt only server-side
+2. **Run analysis as background job** - Don't block UI
+3. **Support both providers** - OpenAI and Anthropic
+4. **Use vision APIs** - For screenshot analysis
+5. **Store results** - Cache AI analysis to avoid re-running

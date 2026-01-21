@@ -23,6 +23,10 @@ export default defineSchema({
     // Onboarding state (1-7, undefined = complete/returning user)
     onboardingStep: v.optional(v.number()),
     onboardingCompletedAt: v.optional(v.number()),
+    // Onboarding data (key-value store for temporary onboarding state)
+    onboardingData: v.optional(v.object({
+      pendingInvites: v.optional(v.string()),
+    })),
   })
     .index("by_clerk_id", ["clerkId"])
     .index("by_email", ["email"]),

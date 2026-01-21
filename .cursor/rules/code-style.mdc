@@ -1,0 +1,72 @@
+# Code Style & Conventions
+
+## Naming Conventions
+
+- **Files**: kebab-case (`feedback-detail.tsx`, `api-auth.ts`)
+- **Components**: PascalCase (`FeedbackDetail`, `DashboardHeader`)
+- **Functions**: camelCase (`getFeedbackById`, `handleSubmit`)
+- **Constants**: SCREAMING_SNAKE (`API_BASE_URL`, `MAX_RETRIES`)
+- **Types/Interfaces**: PascalCase (`Feedback`, `FeedbackStatus`, `TeamMember`)
+
+## Import Order
+
+Always organize imports in this order:
+
+```typescript
+// 1. External packages
+import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "convex/react";
+
+// 2. Internal absolute (@/)
+import { Button } from "@/components/ui/button";
+import { api } from "@/convex/_generated/api";
+
+// 3. Relative
+import { formatDate } from "./utils";
+```
+
+## Component Structure
+
+```typescript
+// 1. Imports
+// 2. Types/Interfaces
+// 3. Constants
+// 4. Component
+// 5. Helpers (if small, otherwise separate file)
+
+interface FeedbackItemProps {
+  feedback: Feedback;
+  onSelect: (id: string) => void;
+}
+
+const PRIORITY_COLORS = {
+  low: "bg-stone-100",
+  medium: "bg-retro-peach/20",
+  high: "bg-retro-red/20",
+  critical: "bg-retro-red/40",
+} as const;
+
+export function FeedbackItem({ feedback, onSelect }: FeedbackItemProps) {
+  // Component logic
+}
+```
+
+## TypeScript
+
+- Strict mode enabled
+- Prefer `interface` for object shapes, `type` for unions/intersections
+- Use Convex-generated types from `convex/_generated/dataModel`
+- Avoid `any` - use `unknown` and narrow types
+
+## Error Handling
+
+- Use try/catch for async operations
+- Return meaningful error messages
+- Log errors via debug (not console.log in prod)
+- Show user-friendly error states in UI
+
+## Comments
+
+- Use JSDoc for public functions/components
+- Inline comments for complex logic only
+- TODO comments with context: `// TODO(username): description`

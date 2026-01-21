@@ -6,14 +6,14 @@ import { mutation, query } from "./_generated/server";
  * In production, use proper AES-256 encryption with a secure key
  */
 function encryptKey(key: string): string {
-  return "encrypted:" + Buffer.from(key).toString("base64");
+  return "encrypted:" + btoa(key);
 }
 
 function decryptKey(encryptedKey: string): string {
   if (!encryptedKey.startsWith("encrypted:")) {
     return encryptedKey;
   }
-  return Buffer.from(encryptedKey.slice("encrypted:".length), "base64").toString();
+  return atob(encryptedKey.slice("encrypted:".length));
 }
 
 /**

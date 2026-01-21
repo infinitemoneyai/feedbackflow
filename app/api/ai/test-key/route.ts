@@ -39,6 +39,8 @@ export async function POST(request: NextRequest) {
 
 async function testOpenAIKey(apiKey: string): Promise<NextResponse> {
   try {
+    console.log("[test-key] Testing OpenAI key, length:", apiKey.length);
+    
     // Test with a minimal models list request (cheap and fast)
     const response = await fetch("https://api.openai.com/v1/models", {
       method: "GET",
@@ -46,6 +48,8 @@ async function testOpenAIKey(apiKey: string): Promise<NextResponse> {
         Authorization: `Bearer ${apiKey}`,
       },
     });
+
+    console.log("[test-key] OpenAI response status:", response.status);
 
     if (response.ok) {
       const data = await response.json();
@@ -60,6 +64,7 @@ async function testOpenAIKey(apiKey: string): Promise<NextResponse> {
         .map((model: { id: string }) => model.id)
         .sort();
 
+      console.log("[test-key] OpenAI key valid, found models:", chatModels.length);
       return NextResponse.json({
         valid: true,
         provider: "openai",
@@ -69,6 +74,7 @@ async function testOpenAIKey(apiKey: string): Promise<NextResponse> {
       const errorData = await response.json().catch(() => ({}));
       const errorMessage =
         errorData.error?.message || `HTTP ${response.status}`;
+      console.error("[test-key] OpenAI key invalid:", errorMessage, errorData);
       return NextResponse.json({
         valid: false,
         provider: "openai",
@@ -76,6 +82,7 @@ async function testOpenAIKey(apiKey: string): Promise<NextResponse> {
       });
     }
   } catch (error) {
+    console.error("[test-key] OpenAI test error:", error);
     return NextResponse.json({
       valid: false,
       provider: "openai",

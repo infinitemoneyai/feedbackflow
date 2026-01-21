@@ -1,0 +1,145 @@
+# Component Patterns
+
+## Directory Structure
+
+```
+components/
+├── ui/              # Base shadcn/ui components (Button, Card, Input, Badge, Icon)
+├── dashboard/       # Dashboard-specific components
+├── settings/        # Settings page components
+├── onboarding/      # Onboarding flow components
+└── layout/          # Layout components (header, footer, sidebar)
+```
+
+## shadcn/ui Components
+
+Located in `components/ui/`. These are the base building blocks:
+
+```tsx
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+```
+
+## Dashboard Components
+
+### FeedbackList
+
+```tsx
+// components/dashboard/feedback-list.tsx
+export function FeedbackList({ 
+  projectId, 
+  onSelect 
+}: { 
+  projectId: Id<"projects">;
+  onSelect: (id: Id<"feedback">) => void;
+}) {
+  const feedback = useQuery(api.feedback.list, { projectId });
+  // ...
+}
+```
+
+### TicketDetailPanel
+
+```tsx
+// components/dashboard/ticket-detail-panel.tsx
+export function TicketDetailPanel({ 
+  feedbackId 
+}: { 
+  feedbackId: Id<"feedback"> | null;
+}) {
+  if (!feedbackId) return <EmptyState />;
+  // ...
+}
+```
+
+## Common Patterns
+
+### Loading States
+
+```tsx
+function FeedbackList({ projectId }) {
+  const feedback = useQuery(api.feedback.list, { projectId });
+  
+  if (feedback === undefined) {
+    return <LoadingSkeleton />;
+  }
+  
+  if (feedback.length === 0) {
+    return <EmptyState message="No feedback yet" />;
+  }
+  
+  return <ul>{/* render items */}</ul>;
+}
+```
+
+### Error Boundaries
+
+Wrap major sections in error boundaries:
+
+```tsx
+<ErrorBoundary fallback={<ErrorState />}>
+  <FeedbackList projectId={projectId} />
+</ErrorBoundary>
+```
+
+### Responsive Patterns
+
+```tsx
+// Hide on mobile, show on desktop
+<aside className="hidden lg:flex w-[480px]">
+  <TicketDetailPanel />
+</aside>
+
+// Stack on mobile, row on desktop
+<div className="flex flex-col md:flex-row gap-4">
+```
+
+## Form Patterns
+
+```tsx
+function FeedbackForm() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const createFeedback = useMutation(api.feedback.create);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await createFeedback({ /* data */ });
+      // Success handling
+    } catch (error) {
+      // Error handling
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <Input name="title" required />
+      <Button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? "Submitting..." : "Submit"}
+      </Button>
+    </form>
+  );
+}
+```
+
+## Retro Styling Patterns
+
+```tsx
+// Card with retro shadow
+<div className="border-2 border-retro-black bg-white shadow-retro p-4">
+
+// Interactive card
+<div className="border-2 border-retro-black bg-white hover-card cursor-pointer">
+
+// Badge
+<Badge variant="bug">Bug</Badge>
+<Badge variant="feature">Feature</Badge>
+
+// Status indicator
+<div className="h-2 w-2 rounded-full bg-retro-blue animate-pulse" />
+```

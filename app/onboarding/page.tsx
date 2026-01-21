@@ -14,8 +14,13 @@ export default function OnboardingPage() {
   const router = useRouter();
   const onboardingState = useQuery(api.onboarding.getOnboardingState);
   const startOnboarding = useMutation(api.onboarding.startOnboarding);
+  const goToStep = useMutation(api.onboarding.goToStep);
 
   const [teamId, setTeamId] = useState<Id<"teams"> | null>(null);
+
+  const handleStepClick = async (targetStep: number) => {
+    await goToStep({ step: targetStep });
+  };
 
   useEffect(() => {
     // Start onboarding if not started
@@ -45,7 +50,11 @@ export default function OnboardingPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4">
-      <OnboardingProgress currentStep={currentStep} totalSteps={7} />
+      <OnboardingProgress 
+        currentStep={currentStep} 
+        totalSteps={7} 
+        onStepClick={handleStepClick}
+      />
 
       <div className="mt-8 w-full max-w-lg">
         {currentStep === 1 && (

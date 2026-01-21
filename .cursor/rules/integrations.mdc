@@ -1,0 +1,154 @@
+# External Integrations
+
+## Linear Integration
+
+### Setup
+- OAuth or API key auth
+- Settings page for Linear team/project selection
+
+### Features
+- Creates issues with title, description, labels
+- Attaches media (screenshot/video)
+- Links back to FeedbackFlow ticket
+- Optional: syncs status back
+
+### Usage
+
+```typescript
+// lib/integrations/linear.ts
+import { LinearClient } from "@linear/sdk";
+
+export async function exportToLinear(
+  feedback: Feedback,
+  ticketDraft: TicketDraft,
+  integration: Integration
+) {
+  const client = new LinearClient({ apiKey: integration.accessToken });
+  
+  const issue = await client.createIssue({
+    teamId: integration.settings.linearTeamId,
+    title: ticketDraft.title,
+    description: ticketDraft.description,
+    labelIds: integration.settings.linearLabelIds,
+  });
+  
+  return {
+    externalId: issue.id,
+    externalUrl: issue.url,
+  };
+}
+```
+
+## Notion Integration
+
+### Setup
+- OAuth connection
+- User shares specific database with integration
+
+### Features
+- Creates pages in selected database
+- Maps properties (title, status, priority)
+- Embeds screenshots in page
+- Links video if applicable
+
+### Usage
+
+```typescript
+// lib/integrations/notion.ts
+import { Client } from "@notionhq/client";
+
+export async function exportToNotion(
+  feedback: Feedback,
+  ticketDraft: TicketDraft,
+  integration: Integration
+) {
+  const notion = new Client({ auth: integration.accessToken });
+  
+  const page = await notion.pages.create({
+    parent: { database_id: integration.settings.notionDatabaseId },
+    properties: {
+      Title: { title: [{ text: { content: ticketDraft.title } }] },
+      Status: { select: { name: "New" } },
+      Priority: { select: { name: feedback.priority } },
+    },
+    children: [
+      // Page content blocks
+    ],
+  });
+  
+  return {
+    externalId: page.id,
+    externalUrl: page.url,
+  };
+}
+```
+
+## JSON Export (prd.json format)
+
+For AI dev workflows like Ralph:
+
+```json
+{
+  "id": "FF-001",
+  "title": "User reported bug",
+  "acceptanceCriteria": [
+    "AI-generated criteria",
+    "Based on feedback content"
+  ],
+  "priority": 1,
+  "notes": "Original feedback description"
+}
+```
+
+### Bulk Export
+
+```typescript
+export function exportToPrdJson(feedbackItems: Feedback[]): PrdJson {
+  return {
+    userStories: feedbackItems.map((item, index) => ({
+      id: `FF-${String(index + 1).padStart(3, "0")}`,
+      title: item.title,
+      acceptanceCriteria: item.aiAnalysis?.acceptanceCriteria || [],
+      priority: priorityToNumber(item.priority),
+      notes: item.description,
+    })),
+  };
+}
+```
+
+## Webhooks
+
+### Configuration
+- URL with secret for HMAC signature
+- Events: `new_feedback`, `status_changed`, `exported`
+- Retry: 3 attempts with exponential backoff
+
+### Payload
+
+```typescript
+interface WebhookPayload {
+  event: "new_feedback" | "status_changed" | "exported";
+  timestamp: number;
+  data: {
+    feedbackId: string;
+    projectId: string;
+    // Event-specific data
+  };
+}
+```
+
+## Automation Rules
+
+Trigger automatic exports based on conditions:
+
+```typescript
+// Example: All critical bugs → Export to Linear
+{
+  trigger: "new_feedback",
+  conditions: [
+    { field: "type", operator: "equals", value: "bug" },
+    { field: "priority", operator: "equals", value: "critical" },
+  ],
+  action: "export_linear",
+}
+```

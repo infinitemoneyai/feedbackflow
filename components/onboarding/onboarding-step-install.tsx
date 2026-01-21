@@ -13,40 +13,66 @@ interface OnboardingStepInstallProps {
 }
 
 export function OnboardingStepInstall({ widgetKey, projectId }: OnboardingStepInstallProps) {
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
   const [showFramework, setShowFramework] = useState<string | null>(null);
   const completeStep = useMutation(api.onboarding.completeStep);
 
   const project = useQuery(api.projects.getProject, { projectId });
 
+  // Use the app's own URL for widget hosting
+  const widgetUrl = typeof window !== 'undefined' 
+    ? `${window.location.origin}/widget.js`
+    : '/widget.js';
+
   const scriptSnippet = `<script
-  src="https://cdn.feedbackflow.dev/widget.js"
+  src="${widgetUrl}"
   data-widget-key="${widgetKey}"
   async
 ></script>`;
 
-  const nextjsSnippet = `// In your layout.tsx or _app.tsx
+  const nextjsSnippet = `// In your layout.tsx
 import Script from 'next/script'
 
-<Script
-  src="https://cdn.feedbackflow.dev/widget.js"
-  data-widget-key="${widgetKey}"
-  strategy="lazyOnload"
-/>`;
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        {children}
+        <Script
+          src="${widgetUrl}"
+          data-widget-key="${widgetKey}"
+          strategy="lazyOnload"
+        />
+      </body>
+    </html>
+  )
+}`;
 
-  const reactSnippet = `// In your index.html or App component
-useEffect(() => {
-  const script = document.createElement('script');
-  script.src = 'https://cdn.feedbackflow.dev/widget.js';
-  script.dataset.widgetKey = '${widgetKey}';
-  script.async = true;
-  document.body.appendChild(script);
-}, []);`;
+  const reactSnippet = `// In your App component
+import { useEffect } from 'react';
 
-  const handleCopy = async (text: string) => {
+function App() {
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = '${widgetUrl}';
+    script.dataset.widgetKey = '${widgetKey}';
+    script.async = true;
+    document.body.appendChild(script);
+    
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+  
+  return (
+    // Your app content
+  );
+}`;
+
+  const handleCopy = async (text: string, id: string) => {
     await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopied(id);
+    setTimeout(() => setCopied(null), 2000);
   };
 
   const handleContinue = async () => {
@@ -82,11 +108,11 @@ useEffect(() => {
             <div className="flex items-center justify-between border-2 border-retro-black border-b-0 bg-stone-100 px-4 py-2">
               <span className="font-mono text-xs uppercase tracking-wider text-stone-600">HTML</span>
               <button
-                onClick={() => handleCopy(scriptSnippet)}
+                onClick={() => handleCopy(scriptSnippet, "html")}
                 className="flex items-center gap-1 text-sm text-stone-600 transition-colors hover:text-retro-black"
               >
-                <Icon name={copied ? "solar:check-circle-linear" : "solar:copy-linear"} size={16} />
-                {copied ? "Copied!" : "Copy"}
+                <Icon name={copied === "html" ? "solar:check-circle-linear" : "solar:copy-linear"} size={16} />
+                {copied === "html" ? "Copied!" : "Copy"}
               </button>
             </div>
             <pre className="overflow-x-auto border-2 border-retro-black bg-stone-900 p-4 text-sm text-green-400">
@@ -108,9 +134,21 @@ useEffect(() => {
               />
             </button>
             {showFramework === "nextjs" && (
-              <pre className="overflow-x-auto rounded border border-stone-200 bg-stone-50 p-3 text-xs text-stone-700">
-                <code>{nextjsSnippet}</code>
-              </pre>
+              <>
+                <div className="flex items-center justify-between rounded-t border border-b-0 border-stone-200 bg-stone-100 px-3 py-1.5">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-stone-500">Next.js</span>
+                  <button
+                    onClick={() => handleCopy(nextjsSnippet, "nextjs")}
+                    className="flex items-center gap-1 text-xs text-stone-600 transition-colors hover:text-retro-black"
+                  >
+                    <Icon name={copied === "nextjs" ? "solar:check-circle-linear" : "solar:copy-linear"} size={14} />
+                    {copied === "nextjs" ? "Copied!" : "Copy"}
+                  </button>
+                </div>
+                <pre className="overflow-x-auto rounded-b border border-stone-200 bg-stone-50 p-3 text-xs text-stone-700">
+                  <code>{nextjsSnippet}</code>
+                </pre>
+              </>
             )}
 
             <button
@@ -125,9 +163,21 @@ useEffect(() => {
               />
             </button>
             {showFramework === "react" && (
-              <pre className="overflow-x-auto rounded border border-stone-200 bg-stone-50 p-3 text-xs text-stone-700">
-                <code>{reactSnippet}</code>
-              </pre>
+              <>
+                <div className="flex items-center justify-between rounded-t border border-b-0 border-stone-200 bg-stone-100 px-3 py-1.5">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-stone-500">React</span>
+                  <button
+                    onClick={() => handleCopy(reactSnippet, "react")}
+                    className="flex items-center gap-1 text-xs text-stone-600 transition-colors hover:text-retro-black"
+                  >
+                    <Icon name={copied === "react" ? "solar:check-circle-linear" : "solar:copy-linear"} size={14} />
+                    {copied === "react" ? "Copied!" : "Copy"}
+                  </button>
+                </div>
+                <pre className="overflow-x-auto rounded-b border border-stone-200 bg-stone-50 p-3 text-xs text-stone-700">
+                  <code>{reactSnippet}</code>
+                </pre>
+              </>
             )}
           </div>
         </>

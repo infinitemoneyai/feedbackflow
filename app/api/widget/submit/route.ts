@@ -272,6 +272,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // The widget would need to upload to S3/R2/GCS and provide the URL
     let recordingUrl: string | undefined;
     let recordingDuration: number | undefined;
+    let recordingWarning: string | undefined;
     const recording = formData.get("recording") as File | null;
 
     if (recording && recording.size > 0) {
@@ -305,6 +306,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           console.error("Error uploading recording:", error);
         }
       } else {
+        const sizeMB = (recording.size / (1024 * 1024)).toFixed(2);
+        recordingWarning = `Recording too large (${sizeMB}MB). Maximum size is 10MB. Your feedback was submitted without the recording.`;
         console.warn(
           `Recording too large (${recording.size} bytes). External storage required.`
         );
@@ -426,6 +429,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         success: true,
         feedbackId: result.feedbackRef,
         id: result.feedbackId,
+        ...(recordingWarning && { warning: recordingWarning }),
       },
       201,
       {
