@@ -14,13 +14,50 @@ function generateWidgetKey(): string {
 }
 
 /**
+ * Generate a project code from the project name
+ * Takes first letters of words, max 4 chars
+ */
+function generateProjectCode(name: string): string {
+  // Remove special characters and split into words
+  const words = name
+    .toUpperCase()
+    .replace(/[^A-Z0-9\s]/g, "")
+    .split(/\s+/)
+    .filter((w) => w.length > 0);
+
+  if (words.length === 0) {
+    return "PROJ";
+  }
+
+  // Take first letter of each word, up to 4 chars
+  let code = words.map((w) => w[0]).join("").slice(0, 4);
+
+  // If too short, pad with more letters from first word
+  if (code.length < 2 && words[0].length >= 2) {
+    code = words[0].slice(0, 2);
+  }
+
+  return code;
+}
+
+/**
  * Create a new project
  */
 export const createProject = mutation({
   args: {
     teamId: v.id("teams"),
     name: v.string(),
+    code: v.optional(v.string()),
     description: v.optional(v.string()),
+    siteUrl: v.optional(v.string()),
+    projectType: v.optional(
+      v.union(
+        v.literal("web_app"),
+        v.literal("marketing_site"),
+        v.literal("mobile_app"),
+        v.literal("other")
+      )
+    ),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -49,11 +86,58 @@ export const createProject = mutation({
       throw new Error("You are not a member of this team");
     }
 
+    // Generate or validate project code
+    let code = args.code?.toUpperCase().trim() || generateProjectCode(args.name);
+
+    // Validate code format (2-4 uppercase alphanumeric characters)
+    if (!/^[A-Z0-9]{2,4}$/.test(code)) {
+      throw new Error("Project code must be 2-4 uppercase letters or numbers");
+    }
+
+    // Check if code is unique within team
+    const existingProject = await ctx.db
+      .query("projects")
+      .withIndex("by_team_and_code", (q) =>
+        q.eq("teamId", args.teamId).eq("code", code)
+      )
+      .first();
+
+    if (existingProject) {
+      // Try appending a number
+      let counter = 2;
+      let uniqueCode = code;
+      while (counter <= 99) {
+        // Truncate code if needed to fit number
+        const baseCode = code.slice(0, 3);
+        uniqueCode = `${baseCode}${counter}`;
+        
+        const exists = await ctx.db
+          .query("projects")
+          .withIndex("by_team_and_code", (q) =>
+            q.eq("teamId", args.teamId).eq("code", uniqueCode)
+          )
+          .first();
+        
+        if (!exists) {
+          code = uniqueCode;
+          break;
+        }
+        counter++;
+      }
+      
+      if (counter > 99) {
+        throw new Error(`Project code "${code}" is already in use. Please choose a different code.`);
+      }
+    }
+
     // Create the project
     const projectId = await ctx.db.insert("projects", {
       teamId: args.teamId,
       name: args.name,
+      code,
       description: args.description,
+      siteUrl: args.siteUrl,
+      projectType: args.projectType,
       settings: {
         defaultPriority: "medium",
         autoTriage: true,
@@ -67,11 +151,12 @@ export const createProject = mutation({
     await ctx.db.insert("widgets", {
       projectId,
       widgetKey,
+      siteUrl: args.siteUrl,
       isActive: true,
       createdAt: Date.now(),
     });
 
-    return projectId;
+    return { projectId, code };
   },
 });
 

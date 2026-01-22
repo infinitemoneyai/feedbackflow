@@ -7,6 +7,7 @@ import { DashboardSidebar } from "./dashboard-sidebar";
 import { DashboardHeader } from "./dashboard-header";
 import { TicketDetailPanel } from "./ticket-detail-panel";
 import { OnboardingModal } from "../onboarding/onboarding-modal";
+import { CreateProjectModal } from "./create-project-modal";
 import { Id } from "@/convex/_generated/dataModel";
 import { api } from "@/convex/_generated/api";
 
@@ -23,6 +24,8 @@ interface DashboardContextType {
   setSidebarOpen: (open: boolean) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  isCreateProjectModalOpen: boolean;
+  setIsCreateProjectModalOpen: (open: boolean) => void;
 }
 
 const DashboardContext = createContext<DashboardContextType | null>(null);
@@ -34,6 +37,8 @@ export function useDashboard() {
   }
   return context;
 }
+
+export const DashboardProvider = DashboardContext.Provider;
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -47,6 +52,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [currentView, setCurrentView] = useState<"inbox" | "backlog" | "resolved">("inbox");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
 
   // Handle feedback URL parameter
   useEffect(() => {
@@ -101,6 +107,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         setSidebarOpen,
         searchQuery,
         setSearchQuery,
+        isCreateProjectModalOpen,
+        setIsCreateProjectModalOpen,
       }}
     >
       {/* Outer wrapper with retro background */}
@@ -135,6 +143,19 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           teamId={firstTeam._id}
           projectId={firstProject._id}
           widgetKey={widgetKey}
+        />
+      )}
+
+      {/* Create Project Modal */}
+      {selectedTeamId && (
+        <CreateProjectModal
+          isOpen={isCreateProjectModalOpen}
+          onClose={() => setIsCreateProjectModalOpen(false)}
+          teamId={selectedTeamId}
+          onSuccess={(projectId) => {
+            setSelectedProjectId(projectId);
+            setSidebarOpen(false);
+          }}
         />
       )}
     </DashboardContext.Provider>

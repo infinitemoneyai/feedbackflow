@@ -21,19 +21,55 @@ interface OnboardingStepProjectProps {
   teamId: Id<"teams">;
 }
 
+/**
+ * Generate a project code from the project name
+ */
+function generateProjectCode(name: string): string {
+  // Remove special characters and split into words
+  const words = name
+    .toUpperCase()
+    .replace(/[^A-Z0-9\s]/g, "")
+    .split(/\s+/)
+    .filter((w) => w.length > 0);
+
+  if (words.length === 0) {
+    return "";
+  }
+
+  // Take first letter of each word, up to 4 chars
+  let code = words.map((w) => w[0]).join("").slice(0, 4);
+
+  // If too short, pad with more letters from first word
+  if (code.length < 2 && words[0].length >= 2) {
+    code = words[0].slice(0, 2);
+  }
+
+  return code;
+}
+
 export function OnboardingStepProject({ teamId }: OnboardingStepProjectProps) {
   const router = useRouter();
   const [projectName, setProjectName] = useState("");
+  const [projectCode, setProjectCode] = useState("");
   const [siteUrl, setSiteUrl] = useState("");
   const [projectType, setProjectType] = useState<ProjectType>("web_app");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [codeManuallyEdited, setCodeManuallyEdited] = useState(false);
 
   const createProject = useMutation(api.onboarding.createOnboardingProject);
 
+  // Auto-generate code from name if not manually edited
+  useEffect(() => {
+    if (!codeManuallyEdited && projectName) {
+      const generated = generateProjectCode(projectName);
+      setProjectCode(generated);
+    }
+  }, [projectName, codeManuallyEdited]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!projectName.trim() || !siteUrl.trim()) return;
+    if (!projectName.trim() || !siteUrl.trim() || !projectCode.trim()) return;
 
     setIsLoading(true);
     setError(null);
@@ -48,6 +84,7 @@ export function OnboardingStepProject({ teamId }: OnboardingStepProjectProps) {
       await createProject({
         teamId,
         name: projectName.trim(),
+        code: projectCode.trim(),
         siteUrl: formattedUrl,
         projectType,
       });
@@ -58,6 +95,13 @@ export function OnboardingStepProject({ teamId }: OnboardingStepProjectProps) {
       setError(err instanceof Error ? err.message : "Failed to create project");
       setIsLoading(false);
     }
+  };
+
+  const handleCodeChange = (value: string) => {
+    setCodeManuallyEdited(true);
+    // Only allow uppercase alphanumeric, max 4 chars
+    const sanitized = value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
+    setProjectCode(sanitized);
   };
 
   return (
@@ -90,6 +134,29 @@ export function OnboardingStepProject({ teamId }: OnboardingStepProjectProps) {
             autoFocus
             disabled={isLoading}
           />
+        </div>
+
+        {/* Project Code */}
+        <div>
+          <label
+            htmlFor="projectCode"
+            className="mb-2 block font-mono text-sm uppercase tracking-wider text-stone-600"
+          >
+            Project Code
+          </label>
+          <input
+            id="projectCode"
+            type="text"
+            value={projectCode}
+            onChange={(e) => handleCodeChange(e.target.value)}
+            placeholder="MA"
+            maxLength={4}
+            className="w-full border-2 border-retro-black bg-stone-50 px-4 py-3 font-mono uppercase transition-shadow focus:outline-none focus:ring-0 focus:shadow-[4px_4px_0px_0px_rgba(107,154,196,1)]"
+            disabled={isLoading}
+          />
+          <p className="mt-2 text-sm text-stone-500">
+            2-4 uppercase letters/numbers. {projectCode && `Tickets will be tagged #${projectCode}-1, #${projectCode}-2...`}
+          </p>
         </div>
 
         {/* Site URL */}

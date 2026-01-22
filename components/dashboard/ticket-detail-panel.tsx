@@ -49,6 +49,12 @@ export function TicketDetailPanel() {
     selectedFeedbackId ? { feedbackId: selectedFeedbackId } : "skip"
   );
 
+  // Fetch the project to get the code
+  const project = useQuery(
+    api.projects.getProject,
+    feedback ? { projectId: feedback.projectId } : "skip"
+  );
+
   // Fetch conversation history
   const conversationHistory = useQuery(
     api.ai.getConversationHistory,
@@ -134,6 +140,17 @@ export function TicketDetailPanel() {
       return () => clearTimeout(timeout);
     }
   }, [conversationHistory, isAiThinking]);
+
+  // Auto-dismiss toast after 3 seconds
+  useEffect(() => {
+    if (toast) {
+      const timeout = setTimeout(() => {
+        setToast(null);
+      }, 3000);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [toast]);
   const linearExport = exports?.find((e) => e.provider === "linear");
   const notionExport = exports?.find((e) => e.provider === "notion");
 
@@ -292,10 +309,7 @@ export function TicketDetailPanel() {
     <aside className="relative z-10 hidden w-[480px] flex-shrink-0 flex-col border-l-2 border-retro-black bg-retro-paper lg:flex">
       {/* Toast */}
       {toast && (
-        <div
-          className="pointer-events-none absolute bottom-4 left-4 right-4 z-50 animate-[fadeUp_2.2s_ease-in-out_forwards]"
-          onAnimationEnd={() => setToast(null)}
-        >
+        <div className="pointer-events-none absolute bottom-4 left-4 right-4 z-50 animate-ff-fade-up">
           <div
             className={`pointer-events-auto flex items-center justify-between gap-3 rounded border-2 border-retro-black bg-white px-3 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] ${
               toast.kind === "success" ? "" : "bg-retro-red/5"
@@ -393,7 +407,7 @@ export function TicketDetailPanel() {
       <div className="flex h-16 items-center justify-between border-b-2 border-retro-black bg-white px-6">
         <div className="flex items-center gap-3">
           <span className="font-mono text-lg font-bold">
-            #{selectedFeedbackId.slice(-3).toUpperCase()}
+            {project?.code && feedback.ticketNumber ? `#${project.code}-${feedback.ticketNumber}` : `#${selectedFeedbackId.slice(-3).toUpperCase()}`}
           </span>
           <span className="h-4 w-px bg-stone-300" />
           <span

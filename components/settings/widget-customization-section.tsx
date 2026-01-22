@@ -76,12 +76,17 @@ export function WidgetCustomizationSection({
   const widgetUrl = typeof window !== 'undefined' 
     ? `${window.location.origin}/widget.js`
     : '/widget.js';
+  
+  const apiUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/api/widget/submit`
+    : '';
 
   const installationCode = widgetKey
     ? `<script
   src="${widgetUrl}"
   data-widget-key="${widgetKey}"
   data-position="${position}"
+  data-api-url="${apiUrl}"
   async
 ></script>`
     : "";
@@ -99,6 +104,7 @@ export default function RootLayout({ children }) {
           src="${widgetUrl}"
           data-widget-key="${widgetKey}"
           data-position="${position}"
+          data-api-url="${apiUrl}"
           strategy="lazyOnload"
         />
       </body>
@@ -117,6 +123,7 @@ function App() {
     script.src = '${widgetUrl}';
     script.dataset.widgetKey = '${widgetKey}';
     script.dataset.position = '${position}';
+    script.dataset.apiUrl = '${apiUrl}';
     script.async = true;
     document.body.appendChild(script);
     
