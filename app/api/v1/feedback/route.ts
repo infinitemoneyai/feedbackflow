@@ -90,8 +90,8 @@ export async function GET(request: NextRequest) {
         pagination: {
           total: result.total,
           limit: result.limit,
-          offset: result.offset,
-          hasMore: result.offset + result.feedback.length < result.total,
+          offset: result.offset ?? 0,
+          hasMore: (result.offset ?? 0) + result.feedback.length < result.total,
         },
       },
       200,

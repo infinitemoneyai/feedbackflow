@@ -381,10 +381,10 @@ export const updateApiKeyLastUsed = mutation({
 });
 
 /**
- * Internal query to get feedback for API access
+ * Query to get feedback for API access
  * No auth required - called after API key validation
  */
-export const getFeedbackForApi = internalQuery({
+export const getFeedbackForApi = query({
   args: {
     teamId: v.id("teams"),
     projectId: v.optional(v.id("projects")),
@@ -474,9 +474,9 @@ export const getFeedbackForApi = internalQuery({
 });
 
 /**
- * Internal query to get a single feedback by ID for API access
+ * Query to get a single feedback by ID for API access
  */
-export const getFeedbackByIdForApi = internalQuery({
+export const getFeedbackByIdForApi = query({
   args: {
     feedbackId: v.id("feedback"),
     teamId: v.id("teams"),
@@ -529,9 +529,9 @@ export const getFeedbackByIdForApi = internalQuery({
 });
 
 /**
- * Internal query to get projects for API access
+ * Query to get projects for API access
  */
-export const getProjectsForApi = internalQuery({
+export const getProjectsForApi = query({
   args: {
     teamId: v.id("teams"),
   },

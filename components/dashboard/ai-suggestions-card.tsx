@@ -56,7 +56,7 @@ export function AISuggestionsCard({
   }, [feedbackId, teamId, triggerSolutions]);
 
   // If AI is not configured
-  if (!aiConfig?.provider) {
+  if (!aiConfig?.preferredProvider) {
     return null;
   }
 

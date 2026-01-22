@@ -257,7 +257,11 @@ interface InboxFooterProps {
   inputMode: "write" | "chat";
   messageInput: string;
   isAiThinking: boolean;
-  aiConfig?: { isConfigured: boolean } | null;
+  aiConfig?: { 
+    isConfigured: boolean;
+    preferredProvider?: "openai" | "anthropic" | null;
+    preferredModel?: string | null;
+  } | null;
   selectedModel: string | null;
   availableModels: Array<{ id: string; name: string; provider: string }>;
   apiKeyStatus?: {

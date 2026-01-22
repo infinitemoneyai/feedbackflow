@@ -131,9 +131,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (honeypot && honeypot.trim().length > 0) {
       // Honeypot field filled - likely a bot
       // Return success to not reveal detection, but don't process
-      console.log(
-        `FeedbackFlow: Honeypot triggered from IP ${clientIp}, widget ${widgetKey}`
-      );
       return jsonResponse(
         {
           success: true,
@@ -348,9 +345,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       description: description?.trim(),
       submitterEmail: email?.trim(),
       submitterName: name?.trim(),
-      screenshotStorageId: screenshotStorageId as
-        | `${"_storage"}${""}${string}`
-        | undefined,
+      screenshotStorageId: screenshotStorageId as any,
       recordingUrl,
       recordingDuration,
       metadata: feedbackMetadata,

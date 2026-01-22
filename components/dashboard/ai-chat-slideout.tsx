@@ -140,7 +140,7 @@ export function AIChatSlideout({
 
   // Get conversation messages
   const messages = useQuery(
-    api.ai.getConversationMessages,
+    api.ai.getConversationHistory,
     isOpen ? { feedbackId } : "skip"
   );
 
@@ -148,7 +148,7 @@ export function AIChatSlideout({
   const sendMessage = useAction(api.aiActions.sendConversationMessage);
 
   // Clear conversation mutation
-  const clearConversation = useMutation(api.ai.clearConversation);
+  const clearConversation = useMutation(api.ai.clearConversationHistory);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -174,7 +174,7 @@ export function AIChatSlideout({
       const result = await sendMessage({
         feedbackId,
         teamId,
-        message: message.trim(),
+        userMessage: message.trim(),
       });
 
       if (!result.success) {
@@ -250,7 +250,7 @@ export function AIChatSlideout({
 
         {/* Messages area */}
         <div className="flex-1 overflow-y-auto p-4">
-          {!aiConfig?.provider ? (
+          {!aiConfig?.preferredProvider ? (
             <div className="flex h-full flex-col items-center justify-center p-8 text-center">
               <AlertCircle className="mb-3 h-12 w-12 text-stone-300" />
               <h3 className="mb-2 font-medium text-stone-600">AI Not Configured</h3>
@@ -280,7 +280,7 @@ export function AIChatSlideout({
         </div>
 
         {/* Input area */}
-        {aiConfig?.provider && (
+        {aiConfig?.preferredProvider && (
           <div className="border-t-2 border-retro-black bg-white p-4">
             {sendError && (
               <div className="mb-2 flex items-start gap-2 rounded bg-red-50 p-2 text-xs text-red-600">

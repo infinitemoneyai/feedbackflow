@@ -186,7 +186,7 @@ export const createNotification = internalMutation({
       .first();
 
     // Check if user has this notification type enabled for in-app
-    const eventMap: Record<NotificationType, keyof typeof prefs.events> = {
+    const eventMap: Record<NotificationType, string> = {
       new_feedback: "newFeedback",
       assignment: "assignment",
       comment: "comments",
@@ -199,7 +199,7 @@ export const createNotification = internalMutation({
     const shouldNotify =
       !prefs ||
       prefs.inAppEnabled === true ||
-      (prefs.events && prefs.events[eventMap[args.type]] !== false);
+      (prefs.events && (prefs.events as any)[eventMap[args.type]] !== false);
 
     if (!shouldNotify) {
       return null;
@@ -247,7 +247,7 @@ export const createNotificationPublic = mutation({
       .first();
 
     // Check if user has this notification type enabled for in-app
-    const eventMap: Record<NotificationType, keyof typeof prefs.events> = {
+    const eventMap: Record<NotificationType, string> = {
       new_feedback: "newFeedback",
       assignment: "assignment",
       comment: "comments",
@@ -260,7 +260,7 @@ export const createNotificationPublic = mutation({
     const shouldNotify =
       !prefs ||
       prefs.inAppEnabled !== false ||
-      (prefs.events && prefs.events[eventMap[args.type]] !== false);
+      (prefs.events && (prefs.events as any)[eventMap[args.type]] !== false);
 
     if (!shouldNotify) {
       return null;

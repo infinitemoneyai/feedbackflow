@@ -28,11 +28,24 @@ interface Export {
 }
 
 interface Feedback {
+  _id: any;
   status: string;
+  title: string;
+  description?: string;
+  type: string;
+  priority: string;
+  tags?: string[];
+  screenshotUrl?: string;
+  recordingUrl?: string;
+  submitterEmail?: string;
+  submitterName?: string;
   resolvedAt?: number;
+  metadata: any;
+  createdAt: number;
 }
 
 interface ConversationMessage {
+  _id: any;
   role: "user" | "assistant";
   content: string;
   createdAt: number;

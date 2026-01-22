@@ -22,20 +22,17 @@ export async function POST(request: NextRequest) {
     // Helper to get API key (either from request or from stored integration)
     const getApiKey = async (): Promise<string | null> => {
       if (apiKey && apiKey !== "stored") {
-        console.log("[linear-api] Using provided API key");
         return apiKey;
       }
       
       // Retrieve stored key from Convex
       if (convexTeamId) {
-        console.log("[linear-api] Retrieving stored key for teamId:", convexTeamId);
         const { userId } = await auth();
         if (!userId) {
           console.error("[linear-api] No userId from auth");
           return null;
         }
         
-        console.log("[linear-api] Querying Convex for userId:", userId);
         const integration = await convex.query(api.integrations.getLinearIntegrationForApi, { 
           teamId: convexTeamId,
           userId 
@@ -46,7 +43,6 @@ export async function POST(request: NextRequest) {
           return null;
         }
         
-        console.log("[linear-api] Integration found, has key:", !!integration.decryptedKey);
         return integration?.decryptedKey || null;
       }
       

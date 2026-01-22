@@ -26,22 +26,22 @@ export function JsonExportQueueSection({ teamId }: JsonExportQueueSectionProps) 
     setIsDownloading(true);
     try {
       // Format data for export
-      const exportData = queueItems.map((item) => ({
-        id: item.feedbackId,
-        ref: item.feedback.ref,
-        type: item.feedback.type,
-        status: item.feedback.status,
-        priority: item.feedback.priority,
-        title: item.feedback.title,
-        description: item.feedback.description,
-        submitterName: item.feedback.submitterName,
-        submitterEmail: item.feedback.submitterEmail,
-        screenshotUrl: item.feedback.screenshotUrl,
-        recordingUrl: item.feedback.recordingUrl,
-        metadata: item.feedback.metadata,
-        tags: item.feedback.tags,
-        createdAt: new Date(item.feedback.createdAt).toISOString(),
-        updatedAt: new Date(item.feedback.updatedAt).toISOString(),
+      const exportData = queueItems.filter(item => item !== null).map((item) => ({
+        id: item!.feedbackId,
+        ref: item!.feedback.ticketNumber || `FB-${item!.feedbackId}`,
+        type: item!.feedback.type,
+        status: item!.feedback.status,
+        priority: item!.feedback.priority,
+        title: item!.feedback.title,
+        description: item!.feedback.description,
+        submitterName: item!.feedback.submitterName,
+        submitterEmail: item!.feedback.submitterEmail,
+        screenshotUrl: item!.feedback.screenshotUrl,
+        recordingUrl: item!.feedback.recordingUrl,
+        metadata: item!.feedback.metadata,
+        tags: item!.feedback.tags,
+        createdAt: new Date(item!.feedback.createdAt).toISOString(),
+        updatedAt: new Date(item!.feedback.updatedAt || item!.feedback.createdAt).toISOString(),
       }));
 
       // Create and download JSON file
@@ -149,21 +149,21 @@ export function JsonExportQueueSection({ teamId }: JsonExportQueueSectionProps) 
               clear the queue to start fresh.
             </p>
             <div className="max-h-[300px] space-y-2 overflow-y-auto">
-              {queueItems?.map((item) => (
+              {queueItems?.filter(item => item !== null).map((item) => (
                 <div
-                  key={item.exportId}
+                  key={item!.exportId}
                   className="flex items-start justify-between rounded border border-stone-200 bg-stone-50 p-3"
                 >
                   <div className="flex-1">
-                    <div className="font-medium text-retro-black">{item.feedback.title}</div>
+                    <div className="font-medium text-retro-black">{item!.feedback.title}</div>
                     <div className="mt-0.5 text-xs text-stone-500">
-                      {item.feedback.ref} • Added{" "}
-                      {new Date(item.createdAt).toLocaleDateString()}
+                      {item!.feedback.ticketNumber || `FB-${item!.feedbackId}`} • Added{" "}
+                      {new Date(item!.createdAt).toLocaleDateString()}
                     </div>
                   </div>
                   <span
                     className={`ml-2 rounded px-2 py-0.5 text-xs font-medium ${
-                      item.feedback.type === "bug"
+                      item!.feedback.type === "bug"
                         ? "bg-red-100 text-red-700"
                         : "bg-blue-100 text-blue-700"
                     }`}

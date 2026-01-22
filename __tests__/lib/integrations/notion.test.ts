@@ -35,7 +35,7 @@ vi.mock("@notionhq/client", () => {
         return Promise.resolve({
           results: [
             {
-              object: "database",
+              object: "data_source",
               id: "db1",
               url: "https://notion.so/db1",
               title: [{ plain_text: "Feedback Database" }],
@@ -43,7 +43,7 @@ vi.mock("@notionhq/client", () => {
               properties: {},
             },
             {
-              object: "database",
+              object: "data_source",
               id: "db2",
               url: "https://notion.so/db2",
               title: [{ plain_text: "Tasks" }],

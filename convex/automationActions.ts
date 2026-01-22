@@ -69,7 +69,6 @@ export const evaluateRules = internalAction({
     });
 
     if (!feedback) {
-      console.log("Feedback not found for automation rule evaluation");
       return { executed: 0 };
     }
 
