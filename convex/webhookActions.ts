@@ -39,7 +39,7 @@ export const sendWebhook = internalAction({
     logId: v.optional(v.id("webhookLogs")),
   },
   handler: async (ctx, args) => {
-    const webhook = await ctx.runQuery(internal.webhooks.getWebhookById, {
+    const webhook: any = await ctx.runQuery(internal.webhooks.getWebhookById, {
       webhookId: args.webhookId,
     });
 
@@ -71,7 +71,7 @@ export const sendWebhook = internalAction({
     const signature = await generateSignature(payloadString, webhook.secret);
 
     try {
-      const response = await fetch(webhook.url, {
+      const response: any = await fetch(webhook.url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -169,8 +169,8 @@ export const triggerWebhooks = internalAction({
     feedbackId: v.optional(v.id("feedback")),
     payload: v.any(),
   },
-  handler: async (ctx, args) => {
-    const webhooks = await ctx.runQuery(internal.webhooks.getWebhooksForEvent, {
+  handler: async (ctx, args): Promise<any> => {
+    const webhooks: any = await ctx.runQuery(internal.webhooks.getWebhooksForEvent, {
       teamId: args.teamId,
       event: args.event,
     });
@@ -206,7 +206,7 @@ export const testWebhook = action({
       throw new Error("Unauthenticated");
     }
 
-    const webhook = await ctx.runQuery(internal.webhooks.getWebhookById, {
+    const webhook: any = await ctx.runQuery(internal.webhooks.getWebhookById, {
       webhookId: args.webhookId,
     });
 
@@ -242,7 +242,7 @@ export const testWebhook = action({
     const signature = await generateSignature(payloadString, webhook.secret);
 
     // Create log entry
-    const logId = await ctx.runMutation(internal.webhooks.createWebhookLog, {
+    const logId: any = await ctx.runMutation(internal.webhooks.createWebhookLog, {
       webhookId: args.webhookId,
       event: "test",
       payload: testPayload,
@@ -251,7 +251,7 @@ export const testWebhook = action({
     });
 
     try {
-      const response = await fetch(webhook.url, {
+      const response: any = await fetch(webhook.url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

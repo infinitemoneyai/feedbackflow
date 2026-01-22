@@ -58,8 +58,7 @@ export function NotionConfigSection({ teamId }: NotionConfigSectionProps) {
 
   // Debug: log integration state
   useEffect(() => {
-    console.log("[notion-config] Integration:", integration);
-    console.log("[notion-config] Has key:", hasKey);
+    // Integration state updated
   }, [integration, hasKey]);
 
   // Load existing settings

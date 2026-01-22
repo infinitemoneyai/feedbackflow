@@ -75,8 +75,7 @@ export function LinearConfigSection({ teamId }: LinearConfigSectionProps) {
 
   // Debug: log integration state
   useEffect(() => {
-    console.log("[linear-config] Integration:", integration);
-    console.log("[linear-config] Has key:", hasKey);
+    // Integration state updated
   }, [integration, hasKey]);
 
   // Load existing settings

@@ -75,7 +75,7 @@ export function WebhookConfigSection({ teamId }: WebhookConfigSectionProps) {
   const updateWebhook = useMutation(api.webhooks.updateWebhook);
   const deleteWebhook = useMutation(api.webhooks.deleteWebhook);
   const regenerateSecret = useMutation(api.webhooks.regenerateSecret);
-  const testWebhook = useAction(api.webhookActions.testWebhook);
+  const testWebhook = useAction((api as any).webhookActions.testWebhook);
 
   const [isAdding, setIsAdding] = useState(false);
   const [newUrl, setNewUrl] = useState("");

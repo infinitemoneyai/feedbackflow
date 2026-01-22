@@ -34,7 +34,8 @@ type ActivityAction =
   | "exported"
   | "commented"
   | "ai_analyzed"
-  | "ticket_drafted";
+  | "ticket_drafted"
+  | "automation_executed";
 
 interface UserInfo {
   _id: Id<"users">;

@@ -29,7 +29,6 @@ const buildOptions = {
 if (isDev) {
   const ctx = await esbuild.context(buildOptions);
   await ctx.watch();
-  console.log("Watching for changes...");
 } else {
   const result = await esbuild.build({
     ...buildOptions,
@@ -46,13 +45,9 @@ if (isDev) {
   const gzipped = await gzipAsync(content);
   const gzippedSize = gzipped.length;
 
-  console.log(`Widget build complete:`);
-  console.log(`  Minified: ${(minifiedSize / 1024).toFixed(2)}KB (target: <50KB)`);
-  console.log(`  Gzipped:  ${(gzippedSize / 1024).toFixed(2)}KB (typical CDN transfer)`);
 
   if (minifiedSize > 50 * 1024) {
     console.warn(`⚠️  Warning: Widget exceeds 50KB target!`);
   } else {
-    console.log(`✅ Widget size is within target`);
   }
 }

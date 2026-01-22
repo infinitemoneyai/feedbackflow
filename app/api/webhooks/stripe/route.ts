@@ -68,7 +68,7 @@ export async function POST(request: Request) {
         break;
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        // Unhandled event type
     }
 
     return NextResponse.json({ received: true });
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
 async function handleCheckoutSessionCompleted(
   session: Stripe.Checkout.Session
 ) {
-  console.log("Checkout session completed:", session.id);
+  // Handle checkout session completion
 
   // Get the team ID from metadata
   const teamId = session.metadata?.teamId;
@@ -150,7 +150,7 @@ async function handleCheckoutSessionCompleted(
  * Handle subscription created or updated
  */
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
-  console.log("Subscription updated:", subscription.id, subscription.status);
+  // Handle subscription update
 
   const customerId =
     typeof subscription.customer === "string"
@@ -186,10 +186,30 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
  * Handle subscription deleted
  */
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
-  console.log("Subscription deleted:", subscription.id);
+  // Handle subscription deletion
 
-  await convex.mutation(api.billing.cancelSubscriptionFromStripe, {
+  // Mark subscription as cancelled in database
+  const subscriptionItem = subscription.items.data[0];
+  const quantity = subscriptionItem?.quantity || 1;
+  // Use type assertion since Stripe types may not include all runtime properties
+  const sub = subscription as any;
+  const currentPeriodStart = typeof sub.current_period_start === 'number' 
+    ? sub.current_period_start * 1000 
+    : Date.now();
+  const currentPeriodEnd = typeof sub.current_period_end === 'number' 
+    ? sub.current_period_end * 1000 
+    : Date.now() + 86400000;
+  
+  await convex.mutation(api.billing.updateSubscriptionFromStripe, {
+    stripeCustomerId: subscription.customer as string,
     stripeSubscriptionId: subscription.id,
+    stripePriceId: subscriptionItem?.price.id || "",
+    plan: "free",
+    seats: quantity,
+    status: "canceled",
+    currentPeriodStart,
+    currentPeriodEnd,
+    cancelAtPeriodEnd: true,
   });
 }
 
@@ -215,7 +235,7 @@ function getSubscriptionIdFromInvoice(invoice: Stripe.Invoice): string | null {
  * Handle successful invoice payment
  */
 async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
-  console.log("Invoice payment succeeded:", invoice.id);
+  // Handle successful invoice payment
 
   const subscriptionId = getSubscriptionIdFromInvoice(invoice);
 
@@ -234,7 +254,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
  * Handle failed invoice payment
  */
 async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
-  console.log("Invoice payment failed:", invoice.id);
+  // Handle failed invoice payment
 
   const subscriptionId = getSubscriptionIdFromInvoice(invoice);
 

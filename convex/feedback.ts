@@ -532,7 +532,7 @@ export const searchFeedback = query({
       matchedCommentIds: string[];
     };
 
-    const scoredResults: FeedbackWithScore[] = [];
+    let scoredResults: FeedbackWithScore[] = [];
 
     for (const feedback of allFeedback) {
       // Apply filters first

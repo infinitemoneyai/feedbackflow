@@ -184,7 +184,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             setEditingProjectId(null);
           }}
           projectId={editingProjectId}
-          isAdmin={teams?.find((t) => t._id === selectedTeamId)?.role === "admin"}
+          isAdmin={teams?.find((t) => t?._id === selectedTeamId)?.role === "admin"}
           onSuccess={() => {
             // Modal will close itself
           }}

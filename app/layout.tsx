@@ -16,14 +16,32 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FeedbackFlow - Turn Screenshots into Tickets",
+  title: "Feedback Flow — AI Bug Tracker & Feedback Tool for Modern AI Development",
   description:
-    "A feedback widget for people shipping faster than their attention span allows. Screenshot capture, screen recording with audio, and AI-powered triage.",
+    "An issue tracking widget for people shipping faster than their attention span allows. Screenshot capture, screen recording with audio, and AI-powered triage. AI bug tracker & feedback tool for AI-assisted development teams",
+  icons: {
+    icon: "/favicon.ico",
+  },
   openGraph: {
-    title: "FeedbackFlow - Turn Screenshots into Tickets",
+    title: "FeedbackFlow - Turn Screenshots into product improvements",
     description:
-      "A feedback widget for people shipping faster than their attention span allows.",
+      "An issue tracking widget for people shipping faster than their attention span allows. AI bug tracker & feedback tool for AI-assisted development teams.",
     type: "website",
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "FeedbackFlow - Turn Screenshots into product improvements",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "FeedbackFlow - Turn Screenshots into product improvements",
+    description:
+      "An issue tracking widget for people shipping faster than their attention span allows. AI bug tracker & feedback tool for AI-assisted development teams",
+    images: ["/og-image.jpg"],
   },
 };
 

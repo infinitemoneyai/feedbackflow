@@ -167,14 +167,14 @@ export function TeamSettingsSection({ teamId }: TeamSettingsSectionProps) {
       return;
     }
 
-    const currentMember = members?.find((m: { _id: Id<"users"> }) => m._id === team?.owner?._id);
+    const currentMember = members?.find((m) => m?._id === team?.owner?._id);
     if (!currentMember) return;
 
     setIsLeaving(true);
     try {
       // Find current user's ID from members list
       const currentUserMember = members?.find(
-        (m: { role: string; isOwner: boolean }) => !m.isOwner && m.role !== "admin"
+        (m) => m && !m.isOwner && m.role !== "admin"
       );
       if (currentUserMember) {
         await removeMemberMutation({ teamId, userId: currentUserMember._id });
@@ -416,16 +416,9 @@ export function TeamSettingsSection({ teamId }: TeamSettingsSectionProps) {
 
         {/* Member List */}
         <div className="space-y-2">
-          {members.map((member: {
-            _id: Id<"users">;
-            name?: string;
-            email: string;
-            role: "admin" | "member";
-            isOwner: boolean;
-            joinedAt: number;
-          }) => (
+          {members.filter(m => m !== null).map((member) => (
             <div
-              key={member._id}
+              key={member!._id}
               className="flex items-center justify-between rounded border border-stone-200 p-3"
             >
               <div className="flex items-center gap-3">

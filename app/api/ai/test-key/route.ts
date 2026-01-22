@@ -39,7 +39,6 @@ export async function POST(request: NextRequest) {
 
 async function testOpenAIKey(apiKey: string): Promise<NextResponse> {
   try {
-    console.log("[test-key] Testing OpenAI key, length:", apiKey.length);
     
     // Test with a minimal models list request (cheap and fast)
     const response = await fetch("https://api.openai.com/v1/models", {
@@ -49,7 +48,6 @@ async function testOpenAIKey(apiKey: string): Promise<NextResponse> {
       },
     });
 
-    console.log("[test-key] OpenAI response status:", response.status);
 
     if (response.ok) {
       const data = await response.json();
@@ -64,7 +62,6 @@ async function testOpenAIKey(apiKey: string): Promise<NextResponse> {
         .map((model: { id: string }) => model.id)
         .sort();
 
-      console.log("[test-key] OpenAI key valid, found models:", chatModels.length);
       return NextResponse.json({
         valid: true,
         provider: "openai",

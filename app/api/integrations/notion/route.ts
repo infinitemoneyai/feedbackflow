@@ -25,20 +25,17 @@ export async function POST(request: NextRequest) {
     // Helper to get API key (either from request or from stored integration)
     const getApiKey = async (): Promise<string | null> => {
       if (apiKey && apiKey !== "stored") {
-        console.log("[notion-api] Using provided API key");
         return apiKey;
       }
       
       // Retrieve stored key from Convex
       if (teamId) {
-        console.log("[notion-api] Retrieving stored key for teamId:", teamId);
         const { userId } = await auth();
         if (!userId) {
           console.error("[notion-api] No userId from auth");
           return null;
         }
         
-        console.log("[notion-api] Querying Convex for userId:", userId);
         const integration = await convex.query(api.integrations.getNotionIntegrationForApi, { 
           teamId,
           userId 
@@ -49,7 +46,6 @@ export async function POST(request: NextRequest) {
           return null;
         }
         
-        console.log("[notion-api] Integration found, has key:", !!integration.decryptedKey);
         return integration?.decryptedKey || null;
       }
       
@@ -95,13 +91,7 @@ export async function POST(request: NextRequest) {
       }
 
       case "createPage": {
-        console.log("[notion-api] createPage action called");
-        console.log("[notion-api] databaseId:", databaseId);
-        console.log("[notion-api] feedback:", feedback ? "present" : "missing");
-        console.log("[notion-api] teamId:", teamId);
-        
         const key = await getApiKey();
-        console.log("[notion-api] Retrieved key:", key ? "present" : "missing");
         
         if (!key || !databaseId || !feedback) {
           console.error("[notion-api] Missing required params - key:", !!key, "databaseId:", !!databaseId, "feedback:", !!feedback);

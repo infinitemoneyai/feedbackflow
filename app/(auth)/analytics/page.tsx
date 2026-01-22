@@ -90,8 +90,14 @@ export default function AnalyticsPage() {
         setSidebarOpen,
         searchQuery,
         setSearchQuery,
-        isCreateProjectModalOpen,
-        setIsCreateProjectModalOpen,
+        filterType: null,
+        setFilterType: () => {},
+        isCreateProjectModalOpen: false,
+        setIsCreateProjectModalOpen: () => {},
+        isEditProjectModalOpen: false,
+        setIsEditProjectModalOpen: () => {},
+        editingProjectId: null,
+        setEditingProjectId: () => {},
       }}
     >
       {/* Outer wrapper with retro background */}

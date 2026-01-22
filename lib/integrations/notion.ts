@@ -109,7 +109,6 @@ export async function getNotionDatabases(
   try {
     const client = new Client({ auth: apiKey });
 
-    console.log("[notion] Searching for data sources...");
     
     // Search for data sources using the new API filter
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -121,7 +120,6 @@ export async function getNotionDatabases(
       page_size: 100,
     });
 
-    console.log("[notion] Search returned", response.results.length, "results");
 
     const databases: NotionDatabase[] = [];
 
@@ -157,7 +155,6 @@ export async function getNotionDatabases(
       });
     }
 
-    console.log("[notion] Found", databases.length, "data sources");
     return databases;
   } catch (error) {
     console.error("[notion] Error fetching data sources:", error);
@@ -199,7 +196,6 @@ export async function getNotionDatabaseProperties(
     return properties;
   } catch (error) {
     // Fallback to database retrieve for backwards compatibility
-    console.log("[notion] Falling back to database retrieve");
     const response = await client.databases.retrieve({ database_id: databaseId });
     const db = response as unknown as DatabaseObject;
 

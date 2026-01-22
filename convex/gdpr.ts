@@ -88,7 +88,7 @@ export const exportTeamData = query({
 
     const feedbackData = feedback.map((f) => ({
       id: f._id,
-      referenceId: f.referenceId,
+      referenceId: f.ticketNumber || `FB-${f._id}`,
       projectId: f.projectId,
       title: f.title,
       description: f.description,
@@ -679,7 +679,7 @@ export const deleteTeamData = mutation({
       .first();
     if (subscription) {
       await ctx.db.patch(subscription._id, {
-        status: "cancelled",
+        status: "canceled",
         updatedAt: Date.now(),
       });
     }

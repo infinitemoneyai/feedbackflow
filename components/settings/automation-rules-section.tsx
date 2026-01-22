@@ -77,7 +77,7 @@ interface ProjectResult {
 
 interface TeamMemberResult {
   _id: Id<"users">;
-  name: string;
+  name?: string;
   email: string;
   avatar?: string;
 }
@@ -95,7 +95,7 @@ interface RuleResult {
   conditions: Condition[];
   action: string;
   actionConfig?: ActionConfig;
-  targetUser?: { _id: Id<"users">; name: string; email: string } | null;
+  targetUser?: { _id: Id<"users">; name?: string; email: string } | null;
   webhook?: { _id: Id<"webhooks">; url: string } | null;
   createdAt: number;
 }
@@ -628,7 +628,7 @@ interface RuleItemProps {
     conditions: Condition[];
     action: string;
     actionConfig?: ActionConfig;
-    targetUser?: { _id: Id<"users">; name: string; email: string } | null;
+    targetUser?: { _id: Id<"users">; name?: string; email: string } | null;
     webhook?: { _id: Id<"webhooks">; url: string } | null;
     createdAt: number;
   };
