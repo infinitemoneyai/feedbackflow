@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="public/logo.png" alt="FeedbackFlow Logo" width="120" />
+  <img src="public/readme.jpg" alt="FeedbackFlow container" width="8000" />
   <h1>FeedbackFlow</h1>
   <p><strong>Open-source feedback management platform with AI-powered insights</strong></p>
   
