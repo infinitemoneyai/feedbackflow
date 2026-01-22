@@ -98,7 +98,7 @@ export default function ApiDocsPage() {
             <CodeBlock
               language="bash"
               code={`curl -H "Authorization: Bearer ff_your_api_key_here" \\
-  https://feedbackflow.dev/api/v1/feedback`}
+  https://feedbackflow.cc/api/v1/feedback`}
             />
           </div>
         </div>
@@ -366,7 +366,7 @@ export default function ApiDocsPage() {
           <CodeBlock
             language="javascript"
             code={`const API_KEY = process.env.FEEDBACKFLOW_API_KEY;
-const BASE_URL = 'https://feedbackflow.dev/api/v1';
+const BASE_URL = 'https://feedbackflow.cc/api/v1';
 
 async function listFeedback(options = {}) {
   const params = new URLSearchParams(options);

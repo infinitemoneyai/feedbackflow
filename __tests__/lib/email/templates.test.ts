@@ -22,9 +22,9 @@ const baseTemplateData = {
   projectName: "MyApp",
   actorName: "Jane Smith",
   commentPreview: "I think this is a CSS issue",
-  dashboardUrl: "https://feedbackflow.dev/dashboard",
-  feedbackUrl: "https://feedbackflow.dev/dashboard?feedback=123",
-  unsubscribeUrl: "https://feedbackflow.dev/unsubscribe?token=abc123",
+  dashboardUrl: "https://feedbackflow.ccv/dashboard",
+  feedbackUrl: "https://feedbackflow.cc/dashboard?feedback=123",
+  unsubscribeUrl: "https://feedbackflow.cc/unsubscribe?token=abc123",
 };
 
 describe("Email Templates", () => {
@@ -75,8 +75,8 @@ describe("Email Templates", () => {
 
     it("handles missing optional fields gracefully", () => {
       const result = newFeedbackEmail({
-        dashboardUrl: "https://feedbackflow.dev/dashboard",
-        unsubscribeUrl: "https://feedbackflow.dev/unsubscribe",
+        dashboardUrl: "https://feedbackflow.cc/dashboard",
+        unsubscribeUrl: "https://feedbackflow.cc/unsubscribe",
       });
       expect(result.html).toContain("Hi,"); // No name
       expect(result.subject).toContain("New feedback");
@@ -176,7 +176,7 @@ describe("Email Templates", () => {
         recipientName: "John",
         feedbackTitle: "Login bug",
         projectName: "MyApp",
-        statusUrl: "https://feedbackflow.dev/status?token=xyz",
+        statusUrl: "https://feedbackflow.cc/status?token=xyz",
       });
       expect(result.subject).toBe("Check the status of your feedback: Login bug");
     });
@@ -184,16 +184,16 @@ describe("Email Templates", () => {
     it("includes status URL in button", () => {
       const result = magicLinkEmail({
         feedbackTitle: "Login bug",
-        statusUrl: "https://feedbackflow.dev/status?token=xyz",
+        statusUrl: "https://feedbackflow.cc/status?token=xyz",
       });
-      expect(result.html).toContain("https://feedbackflow.dev/status?token=xyz");
+      expect(result.html).toContain("https://feedbackflow.cc/status?token=xyz");
       expect(result.html).toContain("View Status");
     });
 
     it("includes expiration warning", () => {
       const result = magicLinkEmail({
         feedbackTitle: "Login bug",
-        statusUrl: "https://feedbackflow.dev/status?token=xyz",
+        statusUrl: "https://feedbackflow.cc/status?token=xyz",
       });
       expect(result.html).toContain("expire in 7 days");
     });
@@ -208,8 +208,8 @@ describe("Email Templates", () => {
           { type: "comment", title: "Comment on Bug 2", actorName: "Jane" },
         ],
         period: "daily",
-        dashboardUrl: "https://feedbackflow.dev/dashboard",
-        unsubscribeUrl: "https://feedbackflow.dev/unsubscribe",
+        dashboardUrl: "https://feedbackflow.cc/dashboard",
+        unsubscribeUrl: "https://feedbackflow.cc/unsubscribe",
       });
       expect(result.subject).toBe(
         "Your Daily FeedbackFlow Digest (2 updates)"
@@ -220,8 +220,8 @@ describe("Email Templates", () => {
       const result = digestEmail({
         items: [{ type: "new_feedback", title: "Bug 1" }],
         period: "weekly",
-        dashboardUrl: "https://feedbackflow.dev/dashboard",
-        unsubscribeUrl: "https://feedbackflow.dev/unsubscribe",
+        dashboardUrl: "https://feedbackflow.cc/dashboard",
+        unsubscribeUrl: "https://feedbackflow.cc/unsubscribe",
       });
       expect(result.subject).toBe(
         "Your Weekly FeedbackFlow Digest (1 updates)"
@@ -241,8 +241,8 @@ describe("Email Templates", () => {
           { type: "comment", title: "Comment added", body: "Great work!" },
         ],
         period: "daily",
-        dashboardUrl: "https://feedbackflow.dev/dashboard",
-        unsubscribeUrl: "https://feedbackflow.dev/unsubscribe",
+        dashboardUrl: "https://feedbackflow.cc/dashboard",
+        unsubscribeUrl: "https://feedbackflow.cc/unsubscribe",
       });
 
       expect(result.html).toContain("New Feedback");
@@ -257,16 +257,16 @@ describe("Email Templates", () => {
       const dailyResult = digestEmail({
         items: [{ type: "new_feedback", title: "Bug" }],
         period: "daily",
-        dashboardUrl: "https://feedbackflow.dev/dashboard",
-        unsubscribeUrl: "https://feedbackflow.dev/unsubscribe",
+        dashboardUrl: "https://feedbackflow.cc/dashboard",
+        unsubscribeUrl: "https://feedbackflow.cc/unsubscribe",
       });
       expect(dailyResult.html).toContain("daily digest");
 
       const weeklyResult = digestEmail({
         items: [{ type: "new_feedback", title: "Bug" }],
         period: "weekly",
-        dashboardUrl: "https://feedbackflow.dev/dashboard",
-        unsubscribeUrl: "https://feedbackflow.dev/unsubscribe",
+        dashboardUrl: "https://feedbackflow.cc/dashboard",
+        unsubscribeUrl: "https://feedbackflow.cc/unsubscribe",
       });
       expect(weeklyResult.html).toContain("weekly digest");
     });

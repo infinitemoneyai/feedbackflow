@@ -4,7 +4,7 @@
  * This script can be embedded on any website with:
  *
  * <script
- *   src="https://cdn.feedbackflow.dev/widget.js"
+ *   src="https://cdn.feedbackflow.cc/widget.js"
  *   data-widget-key="wk_xxxxx"
  *   data-position="bottom-right"
  * ></script>

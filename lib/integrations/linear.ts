@@ -265,7 +265,7 @@ export function formatFeedbackForLinear(feedback: {
   }
 
   // Add source attribution
-  sections.push("\n---\n*Exported from [FeedbackFlow](https://feedbackflow.dev)*");
+  sections.push("\n---\n*Exported from [FeedbackFlow](https://feedbackflow.cc)*");
 
   return sections.join("\n");
 }

@@ -18,7 +18,7 @@ import {
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Default sender address (configure in Resend dashboard)
-const FROM_EMAIL = process.env.EMAIL_FROM || "FeedbackFlow <noreply@feedbackflow.dev>";
+const FROM_EMAIL = process.env.EMAIL_FROM || "FeedbackFlow <noreply@feedbackflow.cc>";
 
 export type NotificationType =
   | "new_feedback"
@@ -90,7 +90,7 @@ export async function sendNotificationEmail(data: EmailNotificationData): Promis
   id?: string;
   error?: string;
 }> {
-  const baseUrl = data.baseUrl || process.env.NEXT_PUBLIC_APP_URL || "https://feedbackflow.dev";
+  const baseUrl = data.baseUrl || process.env.NEXT_PUBLIC_APP_URL || "https://feedbackflow.cc";
   const urls = buildUrls(baseUrl, data.feedbackId, data.unsubscribeToken);
 
   const templateData = {
@@ -160,7 +160,7 @@ export async function sendDigestEmail(data: DigestEmailData): Promise<{
   id?: string;
   error?: string;
 }> {
-  const baseUrl = data.baseUrl || process.env.NEXT_PUBLIC_APP_URL || "https://feedbackflow.dev";
+  const baseUrl = data.baseUrl || process.env.NEXT_PUBLIC_APP_URL || "https://feedbackflow.cc";
   const urls = buildUrls(baseUrl, undefined, data.unsubscribeToken);
 
   const digestData = {
@@ -221,7 +221,7 @@ export async function sendMagicLinkEmail(data: {
   id?: string;
   error?: string;
 }> {
-  const baseUrl = data.baseUrl || process.env.NEXT_PUBLIC_APP_URL || "https://feedbackflow.dev";
+  const baseUrl = data.baseUrl || process.env.NEXT_PUBLIC_APP_URL || "https://feedbackflow.cc";
   const statusUrl = `${baseUrl.replace(/\/$/, "")}/status?token=${data.token}`;
 
   const emailContent = magicLinkEmail({

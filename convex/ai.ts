@@ -848,6 +848,95 @@ export const getTicketDraft = query({
 });
 
 /**
+ * Save (upsert) a ticket draft from client-side edits.
+ *
+ * Note: This is intentionally separate from the AI draft flow so it does NOT
+ * increment AI usage tracking and does not require an AI provider/model.
+ */
+export const saveTicketDraft = mutation({
+  args: {
+    feedbackId: v.id("feedback"),
+    title: v.string(),
+    description: v.string(),
+    acceptanceCriteria: v.array(v.string()),
+    reproSteps: v.optional(v.array(v.string())),
+    expectedBehavior: v.optional(v.string()),
+    actualBehavior: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const feedback = await ctx.db.get(args.feedbackId);
+    if (!feedback) {
+      throw new Error("Feedback not found");
+    }
+
+    // Check if user is a member of the team
+    const membership = await ctx.db
+      .query("teamMembers")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .filter((q) => q.eq(q.field("teamId"), feedback.teamId))
+      .first();
+
+    if (!membership) {
+      throw new Error("Not a member of this team");
+    }
+
+    const now = Date.now();
+
+    // Upsert draft for this feedback (one draft per feedback, latest wins)
+    const existingDraft = await ctx.db
+      .query("ticketDrafts")
+      .withIndex("by_feedback", (q) => q.eq("feedbackId", args.feedbackId))
+      .first();
+
+    if (existingDraft) {
+      await ctx.db.patch(existingDraft._id, {
+        title: args.title,
+        description: args.description,
+        acceptanceCriteria: args.acceptanceCriteria,
+        reproSteps: args.reproSteps,
+        expectedBehavior: args.expectedBehavior,
+        actualBehavior: args.actualBehavior,
+        // Keep provider/model from original (AI) draft if present
+        updatedAt: now,
+      });
+
+      return { success: true, draftId: existingDraft._id };
+    }
+
+    const draftId = await ctx.db.insert("ticketDrafts", {
+      feedbackId: args.feedbackId,
+      userId: user._id,
+      title: args.title,
+      description: args.description,
+      acceptanceCriteria: args.acceptanceCriteria,
+      reproSteps: args.reproSteps,
+      expectedBehavior: args.expectedBehavior,
+      actualBehavior: args.actualBehavior,
+      provider: "openai",
+      model: "manual",
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    return { success: true, draftId };
+  },
+});
+
+/**
  * Update ticket draft (user edits)
  */
 export const updateTicketDraft = mutation({

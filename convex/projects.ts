@@ -278,6 +278,15 @@ export const updateProject = mutation({
     projectId: v.id("projects"),
     name: v.optional(v.string()),
     description: v.optional(v.string()),
+    siteUrl: v.optional(v.string()),
+    projectType: v.optional(
+      v.union(
+        v.literal("web_app"),
+        v.literal("marketing_site"),
+        v.literal("mobile_app"),
+        v.literal("other")
+      )
+    ),
     settings: v.optional(
       v.object({
         defaultPriority: v.optional(
@@ -324,10 +333,17 @@ export const updateProject = mutation({
       throw new Error("You are not a member of this team");
     }
 
+    // Only admins can update projects
+    if (membership.role !== "admin") {
+      throw new Error("Only admins can update projects");
+    }
+
     // Build update object
     const updates: Record<string, unknown> = {};
     if (args.name !== undefined) updates.name = args.name;
     if (args.description !== undefined) updates.description = args.description;
+    if (args.siteUrl !== undefined) updates.siteUrl = args.siteUrl;
+    if (args.projectType !== undefined) updates.projectType = args.projectType;
     if (args.settings !== undefined) {
       updates.settings = {
         ...project.settings,

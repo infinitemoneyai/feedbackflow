@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "convex/react";
 import { useUser, UserButton } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
@@ -27,7 +27,11 @@ export function DashboardSidebar() {
     sidebarOpen,
     setSidebarOpen,
     setIsCreateProjectModalOpen,
+    setIsEditProjectModalOpen,
+    setEditingProjectId,
   } = useDashboard();
+
+  const [openMenuProjectId, setOpenMenuProjectId] = useState<Id<"projects"> | null>(null);
 
   // Get projects for selected team
   const projects = useQuery(
@@ -37,8 +41,9 @@ export function DashboardSidebar() {
 
   // Auto-select first team if none selected
   useEffect(() => {
-    if (!selectedTeamId && teams && teams.length > 0) {
-      setSelectedTeamId(teams[0]._id);
+    const firstTeam = teams?.find((t) => t !== null);
+    if (!selectedTeamId && firstTeam) {
+      setSelectedTeamId(firstTeam._id);
     }
   }, [teams, selectedTeamId, setSelectedTeamId]);
 
@@ -49,7 +54,8 @@ export function DashboardSidebar() {
     }
   }, [projects, selectedProjectId, setSelectedProjectId]);
 
-  const selectedTeam = teams?.find((t: { _id: Id<"teams">; name: string }) => t._id === selectedTeamId);
+  const selectedTeam = teams?.find((t) => t?._id === selectedTeamId) ?? null;
+  const isAdmin = selectedTeam?.role === "admin";
 
   const navItems = [
     {
@@ -117,39 +123,87 @@ export function DashboardSidebar() {
               </div>
             ) : (
               projects.map((project: { _id: Id<"projects">; name: string; feedbackCount: number; newFeedbackCount: number }) => (
-                <button
-                  key={project._id}
-                  onClick={() => {
-                    setSelectedProjectId(project._id);
-                    setSidebarOpen(false);
-                  }}
-                  className={cn(
-                    "group relative flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-all",
-                    selectedProjectId === project._id
-                      ? "border-2 border-retro-black bg-white font-medium shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                      : "border-2 border-transparent text-stone-500 hover:border-stone-200 hover:bg-white hover:text-retro-black hover:shadow-sm"
-                  )}
-                >
+                <div key={project._id} className="relative">
                   <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => {
+                      setSelectedProjectId(project._id);
+                      setSidebarOpen(false);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setSelectedProjectId(project._id);
+                        setSidebarOpen(false);
+                      }
+                    }}
                     className={cn(
-                      "h-2 w-2 rounded-full",
-                      project.newFeedbackCount > 0
-                        ? "animate-pulse bg-retro-blue"
-                        : "bg-stone-300"
-                    )}
-                  />
-                  <span className="truncate">{project.name}</span>
-                  {project.feedbackCount > 0 && (
-                    <span className={cn(
-                      "ml-auto font-mono text-xs",
+                      "group relative flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-all",
                       selectedProjectId === project._id
-                        ? "rounded border border-stone-200 bg-stone-100 px-1"
-                        : "opacity-50"
-                    )}>
-                      {project.feedbackCount}
-                    </span>
+                        ? "border-2 border-retro-black bg-white font-medium shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                        : "border-2 border-transparent text-stone-500 hover:border-stone-200 hover:bg-white hover:text-retro-black hover:shadow-sm"
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "h-2 w-2 flex-shrink-0 rounded-full",
+                        project.newFeedbackCount > 0
+                          ? "animate-pulse bg-retro-blue"
+                          : "bg-stone-300"
+                      )}
+                    />
+                    {project.feedbackCount > 0 && (
+                      <span
+                        className={cn(
+                          "flex-shrink-0 rounded border px-1.5 py-0.5 font-mono text-xs leading-none",
+                          selectedProjectId === project._id
+                            ? "border-retro-black text-retro-black"
+                            : "border-stone-300 text-stone-400"
+                        )}
+                      >
+                        {project.feedbackCount}
+                      </span>
+                    )}
+                    <span className="min-w-0 flex-1 truncate">{project.name}</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenMenuProjectId(openMenuProjectId === project._id ? null : project._id);
+                      }}
+                      className={cn(
+                        "flex-shrink-0 rounded p-1 transition-colors hover:bg-stone-200",
+                        "opacity-0 group-hover:opacity-100",
+                        selectedProjectId === project._id && "opacity-100"
+                      )}
+                    >
+                      <Icon name="solar:menu-dots-bold" size={16} />
+                    </button>
+                  </div>
+
+                  {/* Dropdown menu */}
+                  {openMenuProjectId === project._id && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-10"
+                        onClick={() => setOpenMenuProjectId(null)}
+                      />
+                      <div className="absolute right-0 top-full z-20 mt-1 w-48 rounded border-2 border-retro-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]">
+                        <button
+                          onClick={() => {
+                            setEditingProjectId(project._id);
+                            setIsEditProjectModalOpen(true);
+                            setOpenMenuProjectId(null);
+                          }}
+                          className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors hover:bg-stone-50"
+                        >
+                          <Icon name="solar:eye-linear" size={16} />
+                          {isAdmin ? "Edit Project" : "View Details"}
+                        </button>
+                      </div>
+                    </>
                   )}
-                </button>
+                </div>
               ))
             )}
 

@@ -323,6 +323,7 @@ export const listFeedback = query({
     view: v.optional(
       v.union(v.literal("inbox"), v.literal("backlog"), v.literal("resolved"))
     ),
+    showArchived: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -378,6 +379,20 @@ export const listFeedback = query({
           );
           break;
       }
+    }
+
+    // Filter out archived resolved tickets (older than 30 days) unless showArchived is true
+    if (!args.showArchived) {
+      const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+      feedbackList = feedbackList.filter((f) => {
+        // Keep all non-resolved tickets
+        if (f.status !== "resolved" && f.status !== "exported") {
+          return true;
+        }
+        // For resolved/exported tickets, check if they're within 30 days
+        const resolvedTime = f.resolvedAt || f.updatedAt;
+        return resolvedTime > thirtyDaysAgo;
+      });
     }
 
     // Apply type filter
@@ -446,6 +461,7 @@ export const searchFeedback = query({
         v.literal("critical")
       )
     ),
+    showArchived: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -615,6 +631,21 @@ export const searchFeedback = query({
           matchedCommentIds,
         });
       }
+    }
+
+    // Filter out archived resolved tickets (older than 30 days) unless showArchived is true
+    if (!args.showArchived) {
+      const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+      scoredResults = scoredResults.filter((r) => {
+        const f = r.feedback;
+        // Keep all non-resolved tickets
+        if (f.status !== "resolved" && f.status !== "exported") {
+          return true;
+        }
+        // For resolved/exported tickets, check if they're within 30 days
+        const resolvedTime = f.resolvedAt || f.updatedAt;
+        return resolvedTime > thirtyDaysAgo;
+      });
     }
 
     // Sort by score (descending)

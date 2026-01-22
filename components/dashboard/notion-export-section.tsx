@@ -76,7 +76,7 @@ export function NotionExportSection({ feedbackId, teamId }: NotionExportSectionP
       const response = await fetch("/api/integrations/notion", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "getDatabases", apiKey: "stored" }),
+        body: JSON.stringify({ action: "getDatabases", apiKey: "stored", teamId }),
       });
       const data = await response.json();
       if (data.databases) {
@@ -87,7 +87,7 @@ export function NotionExportSection({ feedbackId, teamId }: NotionExportSectionP
     } finally {
       setIsLoadingData(false);
     }
-  }, [integration]);
+  }, [integration, teamId]);
 
   // Fetch when options are expanded
   useEffect(() => {
@@ -134,6 +134,7 @@ export function NotionExportSection({ feedbackId, teamId }: NotionExportSectionP
         body: JSON.stringify({
           action: "createPage",
           apiKey: "stored",
+          teamId,
           databaseId: selectedDatabaseId,
           feedback: feedbackPayload,
         }),
@@ -236,7 +237,7 @@ export function NotionExportSection({ feedbackId, teamId }: NotionExportSectionP
           </div>
           <div className="flex-1">
             <h4 className="text-sm font-medium text-green-700">
-              Exported to Notion
+              Routed to Notion
             </h4>
             <p className="text-xs text-green-600">
               {existingNotionExport.exportedData?.title || "Page created"}
@@ -247,6 +248,7 @@ export function NotionExportSection({ feedbackId, teamId }: NotionExportSectionP
               href={existingNotionExport.externalUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
               className="flex items-center gap-1.5 rounded border-2 border-green-300 bg-white px-3 py-1.5 text-xs font-medium text-green-700 transition-colors hover:bg-green-50"
             >
               View in Notion
@@ -259,17 +261,20 @@ export function NotionExportSection({ feedbackId, teamId }: NotionExportSectionP
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" onClick={(e) => e.stopPropagation()}>
       {/* Header */}
       <button
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsExpanded(!isExpanded);
+        }}
         className="flex w-full items-center gap-3 rounded border-2 border-stone-300 bg-stone-50 p-3 text-left transition-colors hover:border-stone-400"
       >
         <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-stone-400 bg-white">
           <NotionIcon />
         </div>
         <div className="flex-1">
-          <h4 className="text-sm font-medium text-stone-700">Export to Notion</h4>
+          <h4 className="text-sm font-medium text-stone-700">Route to Notion</h4>
           <p className="text-xs text-stone-500">
             {ticketDraft
               ? "Use ticket draft to create Notion page"
@@ -288,7 +293,10 @@ export function NotionExportSection({ feedbackId, teamId }: NotionExportSectionP
         <div className="rounded border-2 border-stone-300 bg-white p-4">
           {/* Options toggle */}
           <button
-            onClick={() => setShowOptions(!showOptions)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowOptions(!showOptions);
+            }}
             className="mb-3 flex items-center gap-1 text-xs text-stone-600 hover:underline"
           >
             <Settings className="h-3 w-3" />
@@ -337,19 +345,22 @@ export function NotionExportSection({ feedbackId, teamId }: NotionExportSectionP
 
           {/* Export button */}
           <button
-            onClick={handleExport}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleExport();
+            }}
             disabled={isExporting || !selectedDatabaseId}
             className="flex w-full items-center justify-center gap-2 rounded border-2 border-stone-700 bg-stone-700 px-4 py-2.5 text-sm font-medium text-white shadow-[4px_4px_0px_0px_rgba(168,162,158,0.5)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(168,162,158,0.5)] disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0"
           >
             {isExporting ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Creating page...
+                Routing to Notion...
               </>
             ) : (
               <>
                 <ExternalLink className="h-4 w-4" />
-                Export to Notion
+                Route to Notion
               </>
             )}
           </button>

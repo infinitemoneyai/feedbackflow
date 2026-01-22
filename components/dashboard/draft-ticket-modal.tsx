@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAction } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { X } from "lucide-react";
 import { Icon } from "@/components/ui/icon";
 import { api } from "@/convex/_generated/api";
@@ -13,6 +13,12 @@ interface DraftTicketModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  initialFeedback?: {
+    title: string;
+    description?: string;
+    type: string;
+  };
+  solutionNotes?: string;
 }
 
 export function DraftTicketModal({
@@ -21,6 +27,8 @@ export function DraftTicketModal({
   isOpen,
   onClose,
   onSuccess,
+  initialFeedback,
+  solutionNotes,
 }: DraftTicketModalProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [ticketDraft, setTicketDraft] = useState<{
@@ -33,20 +41,56 @@ export function DraftTicketModal({
   } | null>(null);
 
   const generateTicketDraft = useAction(api.aiActions.generateTicketDraft);
+  const saveTicketDraft = useMutation(api.ai.saveTicketDraft);
+  
+  // Check if AI is configured
+  const aiConfig = useQuery(api.ai.getTeamAiConfig, { teamId });
 
-  // Generate ticket draft when modal opens
+  // Initialize draft from feedback when modal opens
   useEffect(() => {
-    if (isOpen && !ticketDraft) {
-      handleGenerate();
+    if (isOpen && !ticketDraft && initialFeedback) {
+      // Build description from issue description and solution notes
+      let fullDescription = "";
+      
+      if (initialFeedback.description) {
+        fullDescription = `**Issue:**\n${initialFeedback.description}`;
+      }
+      
+      if (solutionNotes?.trim()) {
+        if (fullDescription) {
+          fullDescription += "\n\n";
+        }
+        fullDescription += `**Solution:**\n${solutionNotes.trim()}`;
+      }
+      
+      // Create a basic draft from the feedback data
+      setTicketDraft({
+        title: initialFeedback.title,
+        description: fullDescription || "",
+        acceptanceCriteria: ["Complete the implementation"],
+        reproSteps: initialFeedback.type === "bug" ? ["Steps to reproduce"] : undefined,
+        expectedBehavior: initialFeedback.type === "bug" ? "Expected behavior" : undefined,
+        actualBehavior: initialFeedback.type === "bug" ? "Actual behavior" : undefined,
+      });
     }
-  }, [isOpen]);
+  }, [isOpen, initialFeedback, solutionNotes]);
 
-  const handleGenerate = async () => {
+  const handleEnhanceWithAI = async () => {
+    if (!ticketDraft) return;
+    
     setIsGenerating(true);
     try {
       const result = await generateTicketDraft({
         feedbackId,
         teamId,
+        currentDraft: {
+          title: ticketDraft.title,
+          description: ticketDraft.description,
+          acceptanceCriteria: ticketDraft.acceptanceCriteria,
+          reproSteps: ticketDraft.reproSteps,
+          expectedBehavior: ticketDraft.expectedBehavior,
+          actualBehavior: ticketDraft.actualBehavior,
+        },
       });
 
       if (result.success && result.draft) {
@@ -59,9 +103,20 @@ export function DraftTicketModal({
     }
   };
 
-  const handleConfirm = () => {
-    // The ticket draft is already saved in the backend
-    // Just trigger the success callback to update status
+  const handleConfirm = async () => {
+    if (!ticketDraft) return;
+
+    await saveTicketDraft({
+      feedbackId,
+      title: ticketDraft.title,
+      description: ticketDraft.description,
+      acceptanceCriteria: ticketDraft.acceptanceCriteria,
+      reproSteps: ticketDraft.reproSteps,
+      expectedBehavior: ticketDraft.expectedBehavior,
+      actualBehavior: ticketDraft.actualBehavior,
+    });
+
+    // Trigger the success callback to update status in the UI
     onSuccess();
     onClose();
   };
@@ -69,24 +124,40 @@ export function DraftTicketModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="relative w-full max-w-3xl rounded-lg border-2 border-retro-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,0.3)]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-retro-black/20 p-4">
+      <div className="relative w-full max-w-3xl rounded border-2 border-retro-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,0.25)]">
         {/* Header */}
-        <div className="flex items-center justify-between border-b-2 border-retro-black bg-retro-paper p-6">
+        <div className="flex items-center justify-between border-b-2 border-retro-black px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-retro-black bg-retro-blue/20">
-              <Icon name="solar:document-text-linear" className="text-retro-blue" size={20} />
+            <div className="font-mono text-xs font-bold uppercase tracking-wider text-stone-700">
+              Draft Ticket
             </div>
-            <div>
-              <h2 className="text-xl font-bold text-retro-black">Draft Ticket</h2>
-              <p className="text-sm text-stone-500">Review and confirm the generated ticket</p>
-            </div>
+            {aiConfig?.isConfigured ? (
+              <button
+                onClick={handleEnhanceWithAI}
+                disabled={isGenerating}
+                className="flex items-center gap-1.5 rounded border border-retro-blue bg-retro-blue/10 px-2 py-1 text-xs font-medium text-retro-blue transition-colors hover:bg-retro-blue/20 disabled:cursor-not-allowed disabled:opacity-50"
+                title="Use AI to enhance this ticket draft"
+              >
+                <Icon name="solar:magic-stick-3-linear" size={14} />
+                {isGenerating ? "Enhancing..." : "Enhance with AI"}
+              </button>
+            ) : (
+              <button
+                disabled
+                className="flex items-center gap-1.5 rounded border border-stone-300 bg-stone-100 px-2 py-1 text-xs font-medium text-stone-400 cursor-not-allowed"
+                title="Configure AI in settings to use this feature"
+              >
+                <Icon name="solar:magic-stick-3-linear" size={14} />
+                Enhance with AI
+              </button>
+            )}
           </div>
           <button
             onClick={onClose}
-            className="rounded p-2 text-stone-500 transition-colors hover:bg-stone-100 hover:text-retro-red"
+            className="rounded p-1 text-stone-500 transition-colors hover:bg-stone-100 hover:text-retro-black"
           >
-            <X size={24} />
+            <X size={18} />
           </button>
         </div>
 
@@ -94,7 +165,7 @@ export function DraftTicketModal({
         <div className="max-h-[70vh] overflow-y-auto p-6">
           {isGenerating ? (
             <div className="flex flex-col items-center justify-center py-12">
-              <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-stone-200 border-t-retro-blue" />
+              <div className="mb-4 h-8 w-8 animate-spin rounded-full border-2 border-stone-200 border-t-retro-black" />
               <p className="text-sm font-medium text-stone-600">Generating ticket draft...</p>
               <p className="mt-2 text-xs text-stone-500">AI is analyzing the feedback and creating a structured ticket</p>
             </div>
@@ -195,36 +266,23 @@ export function DraftTicketModal({
                 </div>
               )}
             </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-12">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2 border-retro-red/20 bg-retro-red/10">
-                <Icon name="solar:danger-circle-linear" className="text-retro-red" size={32} />
-              </div>
-              <p className="text-sm font-medium text-stone-600">Failed to generate ticket</p>
-              <button
-                onClick={handleGenerate}
-                className="mt-4 rounded border-2 border-retro-black bg-white px-4 py-2 text-sm font-medium transition-colors hover:bg-stone-50"
-              >
-                Try Again
-              </button>
-            </div>
-          )}
+          ) : null}
         </div>
 
         {/* Footer */}
         {!isGenerating && ticketDraft && (
-          <div className="flex items-center justify-end gap-3 border-t-2 border-stone-200 bg-stone-50 p-6">
+          <div className="flex items-center justify-end gap-2 border-t-2 border-retro-black bg-stone-50 p-4">
             <button
               onClick={onClose}
-              className="rounded border-2 border-stone-300 bg-white px-6 py-2.5 font-medium transition-colors hover:bg-stone-50"
+              className="rounded border-2 border-stone-200 bg-white px-3 py-1.5 text-xs font-medium text-stone-700 transition-colors hover:bg-stone-50"
             >
               Cancel
             </button>
             <button
               onClick={handleConfirm}
-              className="flex items-center gap-2 rounded border-2 border-retro-black bg-retro-black px-6 py-2.5 font-medium text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
+              className="flex items-center gap-2 rounded border-2 border-retro-black bg-retro-black px-3 py-1.5 text-xs font-medium text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)] transition-transform hover:translate-x-[1px] hover:translate-y-[1px]"
             >
-              <Icon name="solar:check-circle-linear" size={18} />
+              <Icon name="solar:check-circle-linear" size={14} />
               Confirm & Move to Backlog
             </button>
           </div>

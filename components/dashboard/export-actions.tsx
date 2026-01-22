@@ -100,7 +100,7 @@ export function ExportActions({ feedbackId, teamId }: ExportActionsProps) {
             <div className="flex items-center justify-between rounded border-2 border-green-200 bg-green-50 px-4 py-3">
               <div className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-green-600" />
-                <span className="text-sm font-medium text-green-700">Exported to Linear</span>
+                <span className="text-sm font-medium text-green-700">Routed to Linear</span>
               </div>
               {linearExport.externalUrl && (
                 <a
@@ -140,7 +140,7 @@ export function ExportActions({ feedbackId, teamId }: ExportActionsProps) {
             <div className="flex items-center justify-between rounded border-2 border-green-200 bg-green-50 px-4 py-3">
               <div className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-green-600" />
-                <span className="text-sm font-medium text-green-700">Exported to Notion</span>
+                <span className="text-sm font-medium text-green-700">Routed to Notion</span>
               </div>
               {notionExport.externalUrl && (
                 <a

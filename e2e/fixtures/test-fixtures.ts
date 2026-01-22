@@ -10,7 +10,7 @@ import { test as base, expect, Page } from "@playwright/test";
 // Mock user data for tests
 export const mockUser = {
   id: "user_test_12345",
-  email: "test@feedbackflow.dev",
+  email: "test@feedbackflow.cc",
   firstName: "Test",
   lastName: "User",
   fullName: "Test User",

@@ -191,7 +191,7 @@ function UnsubscribeContent() {
                   <p className="text-sm text-stone-500">
                     If you continue to have issues, please{" "}
                     <a
-                      href="mailto:support@feedbackflow.dev"
+                      href="mailto:support@feedbackflow.cc"
                       className="text-retro-blue hover:underline"
                     >
                       contact support
