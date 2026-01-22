@@ -283,7 +283,7 @@ Run `npm run lint` to check code style.
 - 🐛 [Report a bug](https://github.com/yourusername/feedbackflow/issues/new?labels=bug)
 - 💡 [Request a feature](https://github.com/yourusername/feedbackflow/issues/new?labels=enhancement)
 - 💬 [Join our Discord](https://discord.gg/your-invite) (if applicable)
-- 📧 [Email us](mailto:hello@feedbackflow.dev)
+- 📧 [Email us](mailto:hello@feedbackflow.cc)
 
 ## Security
 
@@ -309,7 +309,7 @@ Built with amazing open-source tools:
   <p>Made with ❤️ by the FeedbackFlow team</p>
   <p>
     <a href="https://github.com/yourusername/feedbackflow">GitHub</a> ·
-    <a href="https://feedbackflow.dev">Website</a> ·
+    <a href="https://feedbackflow.cc">Website</a> ·
     <a href="https://twitter.com/feedbackflow">Twitter</a>
   </p>
 </div>
