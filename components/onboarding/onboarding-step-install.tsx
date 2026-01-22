@@ -23,10 +23,15 @@ export function OnboardingStepInstall({ widgetKey, projectId }: OnboardingStepIn
   const widgetUrl = typeof window !== 'undefined' 
     ? `${window.location.origin}/widget.js`
     : '/widget.js';
+  
+  const apiUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/api/widget/submit`
+    : '';
 
   const scriptSnippet = `<script
   src="${widgetUrl}"
   data-widget-key="${widgetKey}"
+  data-api-url="${apiUrl}"
   async
 ></script>`;
 
@@ -38,10 +43,11 @@ export default function RootLayout({ children }) {
     <html>
       <body>
         {children}
-<Script
+        <Script
           src="${widgetUrl}"
-  data-widget-key="${widgetKey}"
-  strategy="lazyOnload"
+          data-widget-key="${widgetKey}"
+          data-api-url="${apiUrl}"
+          strategy="lazyOnload"
         />
       </body>
     </html>
@@ -52,12 +58,13 @@ export default function RootLayout({ children }) {
 import { useEffect } from 'react';
 
 function App() {
-useEffect(() => {
-  const script = document.createElement('script');
+  useEffect(() => {
+    const script = document.createElement('script');
     script.src = '${widgetUrl}';
-  script.dataset.widgetKey = '${widgetKey}';
-  script.async = true;
-  document.body.appendChild(script);
+    script.dataset.widgetKey = '${widgetKey}';
+    script.dataset.apiUrl = '${apiUrl}';
+    script.async = true;
+    document.body.appendChild(script);
     
     return () => {
       document.body.removeChild(script);

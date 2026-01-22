@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, ReactNode } from "react";
 import { useQuery, useMutation } from "convex/react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   ArrowUpDown,
   Bug,
@@ -106,6 +107,7 @@ interface SearchMeta {
 
 interface FeedbackItem {
   _id: Id<"feedback">;
+  ticketNumber?: number;
   type: FeedbackType;
   title: string;
   description?: string;
@@ -208,6 +210,48 @@ export function FeedbackList() {
 
   // Use search results if searching, otherwise use the regular list
   const displayedFeedback = effectiveSearchQuery.length > 0 ? searchResults : feedbackList;
+
+  // Check if project has ANY feedback at all (across Inbox/Backlog/Resolved)
+  // This helps us show the "install widget" CTA only for truly empty projects.
+  const anyInboxFeedback = useQuery(
+    api.feedback.listFeedback,
+    selectedProjectId
+      ? {
+          projectId: selectedProjectId,
+          sortBy: "createdAt",
+          sortOrder: "desc",
+          view: "inbox",
+        }
+      : "skip"
+  );
+  const anyBacklogFeedback = useQuery(
+    api.feedback.listFeedback,
+    selectedProjectId
+      ? {
+          projectId: selectedProjectId,
+          sortBy: "createdAt",
+          sortOrder: "desc",
+          view: "backlog",
+        }
+      : "skip"
+  );
+  const anyResolvedFeedback = useQuery(
+    api.feedback.listFeedback,
+    selectedProjectId
+      ? {
+          projectId: selectedProjectId,
+          sortBy: "createdAt",
+          sortOrder: "desc",
+          view: "resolved",
+        }
+      : "skip"
+  );
+
+  const hasAnyFeedback =
+    (anyInboxFeedback?.length ?? 0) +
+      (anyBacklogFeedback?.length ?? 0) +
+      (anyResolvedFeedback?.length ?? 0) >
+    0;
 
   const priorityColors = {
     low: "border-stone-200 bg-stone-100 text-stone-500",
@@ -616,7 +660,7 @@ export function FeedbackList() {
                   ? "Backlog is empty"
                   : "No resolved feedback"}
           </h3>
-          <p className="text-sm text-stone-500">
+          <p className="mb-4 text-sm text-stone-500">
             {effectiveSearchQuery
               ? "Try adjusting your search or filters"
               : currentView === "inbox"
@@ -625,6 +669,47 @@ export function FeedbackList() {
                   ? "Draft tickets to move them here"
                   : "Exported feedback will appear here"}
           </p>
+
+          {/* Show widget installation CTA if project has no feedback at all */}
+          {!effectiveSearchQuery && currentView === "inbox" && !hasAnyFeedback && (
+            <div className="mt-5 w-full max-w-lg border-2 border-retro-black bg-retro-paper text-left shadow-[6px_6px_0px_0px_rgba(26,26,26,1)]">
+              <div className="flex items-center justify-between border-b-2 border-retro-black bg-retro-yellow px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <Icon name="solar:widget-linear" size={18} />
+                  <span className="font-mono text-xs font-bold uppercase tracking-wider text-retro-black">
+                    Install Widget
+                  </span>
+                </div>
+                <span className="font-mono text-xs text-stone-600">Start collecting feedback</span>
+              </div>
+
+              <div className="p-5">
+                <h4 className="text-base font-semibold text-retro-black">
+                  Add widget to start getting feedback
+                </h4>
+                <p className="mt-1 text-sm text-stone-600">
+                  Add one script tag to your site. New feedback will instantly show up in this Inbox.
+                </p>
+
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <Link
+                    href="/settings?tab=widget"
+                    className="inline-flex items-center gap-2 border-2 border-retro-black bg-retro-blue px-4 py-2 text-sm font-medium text-white shadow-[3px_3px_0px_0px_rgba(26,26,26,1)] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]"
+                  >
+                    <Icon name="solar:code-square-linear" size={16} />
+                    Get install snippet
+                  </Link>
+
+                  <Link
+                    href="/docs/installation"
+                    className="text-sm font-medium text-retro-blue underline underline-offset-2 hover:text-retro-black"
+                  >
+                    View install docs
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <div className="space-y-3">
@@ -667,7 +752,7 @@ export function FeedbackList() {
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 flex items-center justify-between">
                     <span className="font-mono text-xs text-stone-400">
-                      #{feedback._id.slice(-3).toUpperCase()} • {formatTimeAgo(feedback.createdAt, currentTime)}
+                      {project?.code && feedback.ticketNumber ? `#${project.code}-${feedback.ticketNumber}` : `#${feedback._id.slice(-3).toUpperCase()}`} • {formatTimeAgo(feedback.createdAt, currentTime)}
                     </span>
                     <div className="flex gap-2">
                       {/* Priority badge */}

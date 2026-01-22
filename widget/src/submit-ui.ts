@@ -1018,13 +1018,15 @@ export class SubmitUI {
       .ff-success-icon {
         width: 64px;
         height: 64px;
-        background-color: #22c55e;
+        background-color: #6B9AC4;
+        border: 2px solid ${this.config.primaryColor};
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         color: white;
         margin-bottom: 16px;
+        box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 0.2);
       }
 
       .ff-success-icon svg {
@@ -1108,12 +1110,14 @@ export class SubmitUI {
         width: 64px;
         height: 64px;
         background-color: #E85D52;
+        border: 2px solid ${this.config.primaryColor};
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         color: white;
         margin-bottom: 16px;
+        box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 0.2);
       }
 
       .ff-error-icon svg {

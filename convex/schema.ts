@@ -82,6 +82,7 @@ export default defineSchema({
   projects: defineTable({
     teamId: v.id("teams"),
     name: v.string(),
+    code: v.optional(v.string()), // 2-4 char uppercase code for ticket numbering (e.g., "FF")
     description: v.optional(v.string()),
     siteUrl: v.optional(v.string()),
     projectType: v.optional(
@@ -109,7 +110,8 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_team", ["teamId"])
-    .index("by_team_and_name", ["teamId", "name"]),
+    .index("by_team_and_name", ["teamId", "name"])
+    .index("by_team_and_code", ["teamId", "code"]),
 
   /**
    * Widgets - embeddable instances
@@ -155,6 +157,9 @@ export default defineSchema({
     widgetId: v.id("widgets"),
     projectId: v.id("projects"),
     teamId: v.id("teams"),
+
+    // Ticket numbering
+    ticketNumber: v.optional(v.number()), // Sequential per project: 1, 2, 3...
 
     // Type and content
     type: v.union(v.literal("bug"), v.literal("feature")),

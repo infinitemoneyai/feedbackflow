@@ -26,6 +26,7 @@ export function DashboardSidebar() {
     setCurrentView,
     sidebarOpen,
     setSidebarOpen,
+    setIsCreateProjectModalOpen,
   } = useDashboard();
 
   // Get projects for selected team
@@ -96,6 +97,7 @@ export function DashboardSidebar() {
               Projects
             </span>
             <button
+              onClick={() => setIsCreateProjectModalOpen(true)}
               className="rounded p-1 transition-colors hover:bg-stone-200"
               title="Create project"
             >
@@ -152,7 +154,10 @@ export function DashboardSidebar() {
             )}
 
             {/* Add Project Button */}
-            <button className="mt-2 flex w-full items-center justify-center gap-2 border-2 border-dashed border-stone-300 px-3 py-2 text-sm text-stone-400 transition-colors hover:border-retro-black hover:bg-stone-100 hover:text-retro-black">
+            <button
+              onClick={() => setIsCreateProjectModalOpen(true)}
+              className="mt-2 flex w-full items-center justify-center gap-2 border-2 border-dashed border-stone-300 px-3 py-2 text-sm text-stone-400 transition-colors hover:border-retro-black hover:bg-stone-100 hover:text-retro-black"
+            >
               <Icon name="solar:add-square-linear" size={16} />
               <span>Add Project</span>
             </button>

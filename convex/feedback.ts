@@ -2,15 +2,27 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
 /**
- * Generate a short feedback reference ID
+ * Get the next ticket number for a project
  */
-function generateFeedbackRef(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // No I, O, 0, 1 for clarity
-  let ref = "FF-";
-  for (let i = 0; i < 6; i++) {
-    ref += chars.charAt(Math.floor(Math.random() * chars.length));
+async function getNextTicketNumber(
+  ctx: { db: any },
+  projectId: any
+): Promise<number> {
+  // Get all feedback for this project
+  const allFeedback = await ctx.db
+    .query("feedback")
+    .withIndex("by_project", (q: any) => q.eq("projectId", projectId))
+    .collect();
+
+  // Find the max ticket number
+  let maxTicketNumber = 0;
+  for (const feedback of allFeedback) {
+    if (feedback.ticketNumber && feedback.ticketNumber > maxTicketNumber) {
+      maxTicketNumber = feedback.ticketNumber;
+    }
   }
-  return ref;
+
+  return maxTicketNumber + 1;
 }
 
 /**
@@ -59,8 +71,8 @@ export const submitFromWidget = mutation({
       throw new Error("Project not found");
     }
 
-    // Generate a unique reference ID
-    const feedbackRef = generateFeedbackRef();
+    // Get the next ticket number for this project
+    const ticketNumber = await getNextTicketNumber(ctx, widget.projectId);
 
     // Get screenshot URL if storage ID is provided
     let screenshotUrl: string | undefined;
@@ -76,6 +88,7 @@ export const submitFromWidget = mutation({
       widgetId: widget._id,
       projectId: widget.projectId,
       teamId: project.teamId,
+      ticketNumber,
       type: args.type,
       title: args.title,
       description: args.description,
@@ -134,8 +147,12 @@ export const submitFromWidget = mutation({
       });
     }
 
+    // Generate feedback reference (e.g., FF-0001)
+    const feedbackRef = `FF-${ticketNumber.toString().padStart(4, "0")}`;
+
     return {
       feedbackId,
+      ticketNumber,
       feedbackRef,
     };
   },

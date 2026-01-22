@@ -2,6 +2,33 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
 /**
+ * Generate a project code from the project name
+ * Takes first letters of words, max 4 chars
+ */
+function generateProjectCode(name: string): string {
+  // Remove special characters and split into words
+  const words = name
+    .toUpperCase()
+    .replace(/[^A-Z0-9\s]/g, "")
+    .split(/\s+/)
+    .filter((w) => w.length > 0);
+
+  if (words.length === 0) {
+    return "PROJ";
+  }
+
+  // Take first letter of each word, up to 4 chars
+  let code = words.map((w) => w[0]).join("").slice(0, 4);
+
+  // If too short, pad with more letters from first word
+  if (code.length < 2 && words[0].length >= 2) {
+    code = words[0].slice(0, 2);
+  }
+
+  return code;
+}
+
+/**
  * Get onboarding state for current user
  */
 export const getOnboardingState = query({
@@ -228,6 +255,7 @@ export const createOnboardingProject = mutation({
   args: {
     teamId: v.id("teams"),
     name: v.string(),
+    code: v.optional(v.string()),
     siteUrl: v.string(),
     projectType: v.union(
       v.literal("web_app"),
@@ -262,10 +290,55 @@ export const createOnboardingProject = mutation({
       throw new Error("Not a team member");
     }
 
+    // Generate or validate project code
+    let code = args.code?.toUpperCase().trim() || generateProjectCode(args.name);
+
+    // Validate code format (2-4 uppercase alphanumeric characters)
+    if (!/^[A-Z0-9]{2,4}$/.test(code)) {
+      throw new Error("Project code must be 2-4 uppercase letters or numbers");
+    }
+
+    // Check if code is unique within team
+    const existingProject = await ctx.db
+      .query("projects")
+      .withIndex("by_team_and_code", (q) =>
+        q.eq("teamId", args.teamId).eq("code", code)
+      )
+      .first();
+
+    if (existingProject) {
+      // Try appending a number
+      let counter = 2;
+      let uniqueCode = code;
+      while (counter <= 99) {
+        // Truncate code if needed to fit number
+        const baseCode = code.slice(0, 3);
+        uniqueCode = `${baseCode}${counter}`;
+        
+        const exists = await ctx.db
+          .query("projects")
+          .withIndex("by_team_and_code", (q) =>
+            q.eq("teamId", args.teamId).eq("code", uniqueCode)
+          )
+          .first();
+        
+        if (!exists) {
+          code = uniqueCode;
+          break;
+        }
+        counter++;
+      }
+      
+      if (counter > 99) {
+        throw new Error(`Project code "${code}" is already in use. Please choose a different code.`);
+      }
+    }
+
     // Create project
     const projectId = await ctx.db.insert("projects", {
       teamId: args.teamId,
       name: args.name,
+      code,
       siteUrl: args.siteUrl,
       projectType: args.projectType,
       settings: {
@@ -296,7 +369,7 @@ export const createOnboardingProject = mutation({
       onboardingStep: 4,
     });
 
-    return { projectId, widgetId, widgetKey, step: 4 };
+    return { projectId, widgetId, widgetKey, code, step: 4 };
   },
 });
 
@@ -337,11 +410,26 @@ export const sendTestFeedback = mutation({
       throw new Error("Widget not found");
     }
 
+    // Get all feedback for this project to determine next ticket number
+    const allFeedback = await ctx.db
+      .query("feedback")
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .collect();
+
+    let maxTicketNumber = 0;
+    for (const feedback of allFeedback) {
+      if (feedback.ticketNumber && feedback.ticketNumber > maxTicketNumber) {
+        maxTicketNumber = feedback.ticketNumber;
+      }
+    }
+    const ticketNumber = maxTicketNumber + 1;
+
     // Create test feedback
     const feedbackId = await ctx.db.insert("feedback", {
       widgetId: widget._id,
       projectId: args.projectId,
       teamId: project.teamId,
+      ticketNumber,
       type: "bug",
       title: "Test Feedback - Widget Successfully Connected!",
       description: "This is a test ticket to verify your FeedbackFlow widget is working correctly. You can archive or delete this ticket once you've confirmed everything is set up.",

@@ -1487,7 +1487,7 @@ export const generateTicketDraft = action({
     // Call the AI API
     let draftResult: TicketDraftResult;
     if (aiConfig.preferredProvider === "openai") {
-      draftResult = await callOpenAIForTicketDraft(aiConfig.apiKey, aiConfig.preferredModel, feedbackData, screenshotBase64);
+      draftResult = await callOpenAIForTicketDraft(apiKeyData.key, aiConfig.preferredModel, feedbackData, screenshotBase64);
     } else {
       draftResult = await callAnthropicForTicketDraft(apiKeyData.key, aiConfig.preferredModel, feedbackData, screenshotBase64);
     }
