@@ -95,8 +95,16 @@ export async function POST(request: NextRequest) {
       }
 
       case "createPage": {
+        console.log("[notion-api] createPage action called");
+        console.log("[notion-api] databaseId:", databaseId);
+        console.log("[notion-api] feedback:", feedback ? "present" : "missing");
+        console.log("[notion-api] teamId:", teamId);
+        
         const key = await getApiKey();
+        console.log("[notion-api] Retrieved key:", key ? "present" : "missing");
+        
         if (!key || !databaseId || !feedback) {
+          console.error("[notion-api] Missing required params - key:", !!key, "databaseId:", !!databaseId, "feedback:", !!feedback);
           return NextResponse.json(
             { error: "API key, database ID, and feedback are required" },
             { status: 400 }

@@ -166,7 +166,8 @@ export async function getNotionDatabases(
 }
 
 /**
- * Get database properties/schema
+ * Get database/data source properties/schema
+ * For the 2025 API, data sources use the same retrieve endpoint
  */
 export async function getNotionDatabaseProperties(
   apiKey: string,
@@ -174,23 +175,48 @@ export async function getNotionDatabaseProperties(
 ): Promise<NotionProperty[]> {
   const client = new Client({ auth: apiKey });
 
-  const response = await client.databases.retrieve({ database_id: databaseId });
-  // Cast to our database type
-  const db = response as unknown as DatabaseObject;
+  try {
+    // Try to retrieve as a data source first (2025 API)
+    // The SDK may not have types for this yet, so we use any
+    const response = await (client as any).request({
+      path: `data_sources/${databaseId}`,
+      method: "GET",
+    });
+    
+    const db = response as unknown as DatabaseObject;
+    const properties: NotionProperty[] = [];
 
-  const properties: NotionProperty[] = [];
-
-  if (db.properties) {
-    for (const [name, prop] of Object.entries(db.properties)) {
-      properties.push({
-        id: prop.id,
-        name,
-        type: prop.type,
-      });
+    if (db.properties) {
+      for (const [name, prop] of Object.entries(db.properties)) {
+        properties.push({
+          id: prop.id,
+          name,
+          type: prop.type,
+        });
+      }
     }
-  }
 
-  return properties;
+    return properties;
+  } catch (error) {
+    // Fallback to database retrieve for backwards compatibility
+    console.log("[notion] Falling back to database retrieve");
+    const response = await client.databases.retrieve({ database_id: databaseId });
+    const db = response as unknown as DatabaseObject;
+
+    const properties: NotionProperty[] = [];
+
+    if (db.properties) {
+      for (const [name, prop] of Object.entries(db.properties)) {
+        properties.push({
+          id: prop.id,
+          name,
+          type: prop.type,
+        });
+      }
+    }
+
+    return properties;
+  }
 }
 
 /**
@@ -501,7 +527,7 @@ function formatContentAsBlocks(params: CreatePageParams): BlockObjectRequest[] {
           type: "text",
           text: {
             content: "FeedbackFlow",
-            link: { url: "https://feedbackflow.dev" },
+            link: { url: "https://feedbackflow.cc" },
           },
           annotations: { italic: true, color: "gray" },
         },
@@ -612,8 +638,10 @@ export async function createNotionPage(
   // Create the page with content blocks
   const contentBlocks = formatContentAsBlocks(params);
 
+  // Use data_source_id for the 2025 API version
+  // The databaseId we receive is actually a data source ID from the search results
   const response = await client.pages.create({
-    parent: { database_id: params.databaseId },
+    parent: { data_source_id: params.databaseId } as any,
     properties,
     children: contentBlocks,
   });

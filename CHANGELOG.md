@@ -6,23 +6,337 @@ All notable changes to FeedbackFlow will be documented in this file.
 
 ### Added
 
-- **Onboarding Flow** - Complete 7-step blocking onboarding for new users:
-  - Step 1: Team name input (creates team, subscription, adds user as admin)
-  - Step 2: Animated walkthrough showing how FeedbackFlow works (4 auto-advancing panels)
-  - Step 3: Create first project (name, URL, type selection)
-  - Step 4: Install script modal with framework-specific code snippets
-  - Step 5: Verify installation with "Send Test Feedback" button and real-time verification
-  - Step 6: Invite teammate with email input
-  - Step 7: Upgrade prompt with Free vs Pro comparison
-  - Hybrid layout: Full-page for steps 1-3, modal over dashboard for steps 4-7
-  - Progress indicator with dots showing current step
-  - Skip allowed only after verification (steps 6-7)
-  - Route protection: redirects to /onboarding for steps 1-3, shows modal for steps 4-7
-  - New users with pending team invites skip onboarding
-  - Retro design aesthetic with thick borders, offset shadows, yellow accents
-  - Schema updates: onboardingStep and onboardingCompletedAt on users table
-  - Convex functions: getOnboardingState, startOnboarding, completeStep, skipToComplete, createOnboardingTeam, createOnboardingProject, sendTestFeedback
-  - 9 new components in components/onboarding/
+- **FF-047: Inbox Redesign & Draft Ticket Modal** - Complete redesign of inbox ticket detail panel with new solution-focused workflow:
+  - New "Solution Discussion" collapsible section with AI chat interface
+  - Integrated conversation history with markdown rendering for AI responses
+  - Mode toggle: "Write" for manual solution drafting, "Chat with AI" for interactive discussion
+  - Model selector dropdown for choosing between OpenAI and Anthropic models (GPT-4o, Claude Opus 4, etc.)
+  - Real-time AI thinking indicator with animated dots
+  - Draft Ticket button generates structured tickets from conversation and solution notes
+  - New `DraftTicketModal` component with full-screen modal for ticket generation
+  - Ticket drafts include: title, description, acceptance criteria, reproduction steps (bugs), user stories (features)
+  - Editable preview with inline editing for all draft fields
+  - Copy to clipboard, regenerate, and save functionality
+  - Share ticket button with clipboard integration and fallback modal
+  - Delete ticket with confirmation modal
+  - Collapsible "Contact & Technical Details" section with submitter info and metadata
+  - Screenshot viewer and video player components integrated
+  - Device tags showing browser and OS information
+  - Toast notifications for success/error messages
+  - Three-dot menu for additional actions (delete, etc.)
+  - Ticket number display with project code prefix (e.g., #PROJ-123)
+  - Status automatically updates to "drafted" when ticket is generated
+  - Activity logging for ticket drafting actions
+  - Retro design aesthetic matching dashboard theme
+
+- **Create Project Modal** - New project creation flow accessible from dashboard:
+  - Modal triggered from "New Project" button in sidebar
+  - Project name input with validation
+  - Project description textarea
+  - Project type selector (Web App, Marketing Site, Mobile App, Other)
+  - Site URL input for widget installation
+  - Auto-generates project code from name (e.g., "My App" → "MYAPP")
+  - Creates project with widget automatically
+  - Closes modal and selects new project on success
+  - Error handling with user-friendly messages
+  - Retro design with thick borders and offset shadows
+
+- **Export Actions Component** - Bulk export functionality in feedback list:
+  - Export selected tickets to Linear, Notion, or JSON
+  - Batch processing with progress indicators
+  - Success/error toast notifications
+  - Export records tracked for each ticket
+  - Activity logging for bulk exports
+  - Retro-styled action buttons with icons
+
+- **AI Suggestions Card** - Quick AI analysis card in feedback list:
+  - Shows AI-generated type and priority suggestions
+  - Confidence scores displayed as percentages
+  - One-click apply buttons for suggestions
+  - Compact card design for list view
+  - Only shown when AI analysis exists
+
+- **Collapsed Details Component** - Reusable collapsible section for metadata:
+  - Contact information (name, email)
+  - Technical details (URL, screen size, timestamp)
+  - Browser and OS information
+  - Expandable/collapsible with arrow indicator
+  - Used in ticket detail panels
+
+- **Screenshot Viewer Component** - Dedicated screenshot viewing component:
+  - Fullscreen modal with zoom controls
+  - Zoom in/out buttons (0.5x-3x)
+  - Reset zoom functionality
+  - Click to open, click backdrop to close
+  - Retro-styled controls with thick borders
+
+- **Video Player Component** - Custom video player with retro styling:
+  - Play/pause controls
+  - Seek bar with progress indicator
+  - Time display (current/total)
+  - Mute/unmute toggle
+  - Duration display from metadata
+  - Retro-styled controls matching design system
+
+- **Status Dropdown Component** - Reusable status selector:
+  - All feedback statuses: New, Triaging, Drafted, Exported, Resolved
+  - Color-coded status badges
+  - Dropdown with hover states
+  - Activity logging on status change
+  - Used in ticket detail panels
+
+- **JSON Export Queue Section** - Settings section for managing JSON export queue:
+  - View pending JSON exports
+  - Retry failed exports
+  - Clear completed exports
+  - Export history with timestamps
+  - Retro-styled table with action buttons
+
+- **Upgrade Modal Component** - Subscription upgrade prompt:
+  - Free vs Pro plan comparison
+  - Feature highlights with checkmarks
+  - Seat selector with pricing calculation
+  - Upgrade button initiates Stripe Checkout
+  - Dismissible with "Maybe Later" option
+  - Triggered when usage limits reached
+
+- **Onboarding E2E Tests** - Comprehensive E2E test suite for onboarding flow:
+  - Tests for all 7 onboarding steps
+  - Team creation and setup validation
+  - Product walkthrough navigation
+  - Project creation with widget generation
+  - Widget installation verification
+  - Team invitation flow
+  - Upgrade prompt display
+  - Onboarding completion and dashboard redirect
+  - 475 lines of test coverage
+
+- **Widget Offline Queue Enhancements** - Improved offline submission handling:
+  - Better error messages for failed submissions
+  - Retry logic with exponential backoff
+  - Queue persistence across page reloads
+  - Success/error event dispatching
+  - Console logging for debugging
+
+- **Convex Auth Config** - Added Convex authentication configuration:
+  - `auth.config.ts` for Clerk integration
+  - Proper auth provider setup
+  - Token validation configuration
+
+### Changed
+
+- **Dashboard Sidebar Updates** - Enhanced sidebar with new features:
+  - "New Project" button with plus icon
+  - Project list with feedback counts and new feedback indicators
+  - Improved hover states and active project highlighting
+  - Better spacing and typography
+  - Team selector with dropdown menu
+
+- **Feedback List Enhancements** - Major improvements to feedback list view:
+  - Bulk selection with checkboxes for multi-select
+  - Export actions toolbar when items selected
+  - AI suggestions cards for analyzed feedback
+  - Better empty states for each view (Inbox, Backlog, Resolved)
+  - Improved loading skeleton states
+  - Enhanced hover effects with colored shadows
+  - Ticket number display with project code
+  - Better tag overflow handling (+N more)
+  - Media indicators (screenshot/video icons)
+
+- **Ticket Detail Panel Refactor** - Complete rewrite of ticket detail panel:
+  - Separated inbox view (solution discussion) from backlog view (routing)
+  - New component structure with better code organization
+  - Improved state management with React hooks
+  - Better error handling and loading states
+  - Enhanced accessibility with ARIA labels
+  - Responsive design improvements
+  - Old panel preserved as `ticket-detail-panel-old.tsx` for reference
+
+- **AI Actions Improvements** - Enhanced AI action processing:
+  - Better error handling and retry logic
+  - Improved prompt engineering for ticket drafting
+  - Support for multiple AI models in single conversation
+  - Model switching mid-conversation
+  - Better context handling for long conversations
+  - Usage tracking for AI calls
+
+- **Integration Updates** - Improvements to Linear and Notion integrations:
+  - Better error messages for failed exports
+  - Retry logic for transient failures
+  - Improved API key validation
+  - Better handling of rate limits
+  - Enhanced logging for debugging
+  - Team/project/database selectors with better UX
+
+- **Billing Section Updates** - Enhanced billing management:
+  - Better display of current plan and usage
+  - Improved upgrade flow with seat selector
+  - Clearer pricing information
+  - Better error handling for Stripe operations
+  - Enhanced loading states
+
+- **Settings Page Improvements** - Better settings organization:
+  - New JSON Export Queue tab
+  - Improved tab navigation
+  - Better section spacing and layout
+  - Enhanced form validation
+  - Better success/error messaging
+
+- **Widget Submission Improvements** - Enhanced widget submission handling:
+  - Better validation error messages
+  - Improved rate limit handling
+  - Enhanced spam detection
+  - Better file upload handling
+  - Improved success confirmation
+
+- **Project Management Enhancements** - Better project CRUD operations:
+  - Project code generation from name
+  - Better validation for project creation
+  - Enhanced project selector in dashboard
+  - Improved project deletion with cascade cleanup
+  - Better error handling
+
+- **Team Invite Improvements** - Enhanced team invitation flow:
+  - Better email validation
+  - Improved invite expiration handling
+  - Enhanced role selection UI
+  - Better error messages
+  - Improved pending invite display
+
+- **Onboarding Flow Updates** - Improvements to onboarding experience:
+  - Better step validation
+  - Improved error handling
+  - Enhanced progress indicator
+  - Better skip logic
+  - Improved completion handling
+
+- **Global CSS Updates** - New utility classes and animations:
+  - `animate-ff-fade-up` for toast notifications
+  - Better scroll behavior utilities
+  - Enhanced shadow utilities
+  - Improved border utilities
+  - New color utilities for retro theme
+
+### Fixed
+
+- **Widget Posting Issues** - Fixed issues with widget submissions not appearing in dashboard:
+  - Corrected feedback creation mutation
+  - Fixed real-time subscription updates
+  - Improved error handling in API route
+  - Better validation of widget keys
+
+- **Team Invite Bugs** - Resolved issues with team invitation flow:
+  - Fixed invite token validation
+  - Corrected email matching logic
+  - Fixed role assignment on accept
+  - Improved error messages
+
+- **Integration Errors** - Fixed various integration issues:
+  - Linear API key validation now works correctly
+  - Notion database selector properly fetches databases
+  - Export status tracking fixed
+  - Better handling of API rate limits
+
+- **Dashboard Sidebar Icons** - Fixed icon rendering issues:
+  - Removed unused Lucide icon imports
+  - Switched to Solar icons via Iconify
+  - Fixed icon sizing inconsistencies
+
+- **Stripe Import Error** - Resolved client-side Stripe initialization:
+  - Separated config into `stripe-config.ts`
+  - Fixed pricing page Stripe imports
+  - Corrected webhook handler initialization
+
+- **Convex Auth Config** - Added missing auth configuration:
+  - Created `auth.config.ts` file
+  - Fixed authentication provider setup
+  - Resolved token validation errors
+
+- **Missing Imports** - Fixed various import errors:
+  - Added missing `ArrowUpDown` import
+  - Fixed barrel export issues
+  - Corrected component import paths
+
+- **Onboarding Redirect Issues** - Fixed routing problems in onboarding:
+  - Corrected step progression logic
+  - Fixed dashboard redirect after completion
+  - Improved modal display timing
+
+### Technical
+
+- **New Dependencies** - Added packages for enhanced functionality:
+  - `react-markdown` for rendering AI responses
+  - `remark-gfm` for GitHub Flavored Markdown support
+  - Additional Iconify icon sets
+
+- **Component Refactoring** - Better code organization:
+  - Extracted reusable components from large files
+  - Improved prop types and TypeScript definitions
+  - Better separation of concerns
+  - Enhanced component composition
+
+- **Performance Improvements** - Various optimizations:
+  - Better React key usage in lists
+  - Reduced unnecessary re-renders
+  - Improved Convex query efficiency
+  - Better loading state handling
+
+- **Code Quality** - Enhanced code maintainability:
+  - Better error handling patterns
+  - Improved TypeScript types
+  - Enhanced code comments
+  - Better function naming
+
+- **Backlog View Routing Panel** - Redesigned ticket detail panel for backlog view with streamlined routing workflow:
+  - Three routing destinations: Linear, Notion, or PRD JSON (visual selection with colored borders and check icons)
+  - Dynamic footer button: "Route Ticket and Resolve" (Linear/Notion) or "Download PRD JSON" (PRD option)
+  - Inbox view maintains AI chat/draft ticket UI; backlog view shows routing UI
+  - Removed redundant export sections from content area (consolidated into footer)
+  - Uses Convex query for ticket drafts; follows bulk export API pattern for consistency
+  - Routes to Linear/Notion mark tickets as "exported"; PRD JSON marks as "resolved"
+
+- **FF-046: Onboarding Flow** - Complete 7-step blocking onboarding for new users:
+  - **Step 1: Team Setup** - Team name input creates team, free subscription, and adds user as admin
+  - **Step 2: Product Walkthrough** - Animated 4-panel walkthrough showing how FeedbackFlow works (auto-advancing slides with pause on hover)
+  - **Step 3: Create First Project** - Project name, site URL, and type selection (web app, marketing site, mobile app, other)
+  - **Step 4: Widget Installation** - Install script modal with framework-specific code snippets (HTML, Next.js, React) and copy-to-clipboard
+  - **Step 5: Verify Installation** - "Send Test Feedback" button with real-time verification watching for incoming feedback
+  - **Step 6: Invite Teammates** - Email input to invite team members (optional, skippable after verification)
+  - **Step 7: Upgrade Prompt** - Free vs Pro comparison with upgrade CTA (optional, skippable)
+  - **Hybrid Layout Architecture:**
+    - Steps 1-3: Full-page views at `/onboarding` route
+    - Steps 4-7: Modal overlay on dashboard with backdrop blur
+    - Smooth transitions between layouts
+  - **Progress Indicator:** Dot-based progress showing current step (1-7) with active state highlighting
+  - **Smart Skip Logic:** Steps 6-7 skippable only after verification completes
+  - **Route Protection:** Auth layout redirects to `/onboarding` for steps 1-3, dashboard shows modal for steps 4-7
+  - **Invite Flow Integration:** New users with pending team invites skip onboarding entirely
+  - **Retro Design Aesthetic:** Thick 2px borders, 8px offset shadows, yellow accent colors, retro paper backgrounds
+  - **Schema Updates:**
+    - Added `onboardingStep` (1-7, undefined when complete) to users table
+    - Added `onboardingCompletedAt` timestamp to users table
+    - Added `siteUrl` and `projectType` to projects table
+  - **Convex Functions:**
+    - `getOnboardingState` query - returns current step and completion status
+    - `startOnboarding` mutation - initializes onboarding at step 1
+    - `completeStep` mutation - advances to next step with validation
+    - `skipToComplete` mutation - completes onboarding from steps 6-7
+    - `createOnboardingTeam` mutation - creates team, adds user as admin, creates free subscription
+    - `createOnboardingProject` mutation - creates project with widget and advances to step 4
+    - `sendTestFeedback` mutation - creates test feedback for verification
+  - **9 New Components:**
+    - `OnboardingProgress` - Dot-based progress indicator
+    - `OnboardingStepTeam` - Team name input form
+    - `OnboardingStepWalkthrough` - Animated product walkthrough
+    - `OnboardingStepProject` - Project creation form with type selector
+    - `OnboardingModal` - Modal wrapper for steps 4-7 with backdrop
+    - `OnboardingStepInstall` - Widget installation instructions with code snippets
+    - `OnboardingStepVerify` - Test feedback sender with real-time verification
+    - `OnboardingStepInvite` - Team member invitation form
+    - `OnboardingStepUpgrade` - Free vs Pro comparison with upgrade CTA
+  - **Dashboard Integration:** OnboardingModal automatically shown in dashboard when on steps 4-7
+  - **Auth Layout Integration:** Automatic redirect to `/onboarding` when user is on steps 1-3
+  - Typecheck passes with no errors
 
 ### Changed
 

@@ -569,7 +569,7 @@ export class SubmitUI {
    */
   private async submitFeedback(): Promise<SubmissionResult> {
     const metadata = this.getMetadata();
-    const apiUrl = this.config.apiUrl || "https://feedbackflow.dev/api/widget/submit";
+    const apiUrl = this.config.apiUrl || "https://feedbackflow.cc/api/widget/submit";
 
     const formData = new FormData();
     formData.append("widgetKey", this.config.widgetKey);

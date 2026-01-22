@@ -41,7 +41,7 @@ describe("Email Service", () => {
         feedbackType: "bug",
         projectName: "MyApp",
         unsubscribeToken: "token-123",
-        baseUrl: "https://feedbackflow.dev",
+        baseUrl: "https://feedbackflow.cc",
       });
 
       expect(result.success).toBe(true);
@@ -240,7 +240,7 @@ describe("Email Service", () => {
         ],
         period: "daily",
         unsubscribeToken: "token-123",
-        baseUrl: "https://feedbackflow.dev",
+        baseUrl: "https://feedbackflow.cc",
       });
 
       expect(result.success).toBe(true);
@@ -327,7 +327,7 @@ describe("Email Service", () => {
         feedbackTitle: "Login Bug",
         projectName: "MyApp",
         token: "magic-token-xyz",
-        baseUrl: "https://feedbackflow.dev",
+        baseUrl: "https://feedbackflow.cc",
       });
 
       expect(result.success).toBe(true);
@@ -352,12 +352,12 @@ describe("Email Service", () => {
         recipientEmail: "submitter@example.com",
         feedbackTitle: "Bug",
         token: "abc123",
-        baseUrl: "https://feedbackflow.dev",
+        baseUrl: "https://feedbackflow.cc",
       });
 
       const callArgs = mockSend.mock.calls[0][0];
       expect(callArgs.html).toContain(
-        "https://feedbackflow.dev/status?token=abc123"
+        "https://feedbackflow.cc/status?token=abc123"
       );
     });
 

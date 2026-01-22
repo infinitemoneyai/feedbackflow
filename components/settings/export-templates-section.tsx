@@ -46,8 +46,8 @@ const SAMPLE_FEEDBACK = {
   tags: ["mobile", "auth", "urgent"],
   submitterName: "Jane Smith",
   submitterEmail: "jane@example.com",
-  screenshotUrl: "https://storage.feedbackflow.dev/screenshots/abc123.png",
-  recordingUrl: "https://storage.feedbackflow.dev/recordings/abc123.webm",
+  screenshotUrl: "https://storage.feedbackflow.cc/screenshots/abc123.png",
+  recordingUrl: "https://storage.feedbackflow.cc/recordings/abc123.webm",
   metadata: {
     url: "https://app.example.com/login",
     browser: "Safari 17.0",

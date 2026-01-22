@@ -872,7 +872,15 @@ const TICKET_DRAFT_PROMPT = `You are an expert technical writer creating actiona
 
 Your task is to transform user feedback into a well-structured, clear ticket that developers can act on immediately.
 
-For BUG reports, create a ticket with:
+If a current draft is provided, ENHANCE it by:
+- Keeping the user's manual edits and improvements
+- Making the content more detailed, clear, and actionable
+- Adding more specific acceptance criteria
+- Improving reproduction steps if applicable
+- Expanding on the description with technical details
+- DO NOT completely rewrite or discard the user's work
+
+For BUG reports, create/enhance a ticket with:
 - Clear, concise title (50-80 chars)
 - Detailed description explaining the issue
 - Step-by-step reproduction steps (numbered)
@@ -880,7 +888,7 @@ For BUG reports, create a ticket with:
 - Actual behavior
 - Acceptance criteria for the fix
 
-For FEATURE requests, create a ticket with:
+For FEATURE requests, create/enhance a ticket with:
 - Clear, descriptive title (50-80 chars)
 - User story format description: "As a [user type], I want to [action] so that [benefit]"
 - Detailed description expanding on the user's request
@@ -902,7 +910,8 @@ Guidelines:
 - Include all relevant context from the feedback
 - Acceptance criteria should be testable (can be checked off as done/not done)
 - For bugs: always include repro steps, expected, and actual behavior
-- For features: focus on the user story and clear acceptance criteria`;
+- For features: focus on the user story and clear acceptance criteria
+- When enhancing: preserve the user's intent and improvements`;
 
 /**
  * Build the user message for ticket drafting
@@ -926,6 +935,14 @@ function buildTicketDraftPrompt(feedback: {
     summary?: string;
     suggestions?: Array<{ title: string; description: string }>;
     nextSteps?: string[];
+  };
+  currentDraft?: {
+    title: string;
+    description: string;
+    acceptanceCriteria: string[];
+    reproSteps?: string[];
+    expectedBehavior?: string;
+    actualBehavior?: string;
   };
 }): string {
   let prompt = `# Feedback to Convert to Ticket
@@ -1007,8 +1024,40 @@ ${feedback.existingSuggestions.nextSteps.map((s, i) => `${i + 1}. ${s}`).join("\
     }
   }
 
-  prompt += `
+  if (feedback.currentDraft) {
+    prompt += `
+## Current Draft (User has already started editing this)
+**Title:** ${feedback.currentDraft.title}
+
+**Description:**
+${feedback.currentDraft.description}
+
+**Acceptance Criteria:**
+${feedback.currentDraft.acceptanceCriteria.map((c, i) => `${i + 1}. ${c}`).join("\n")}
+`;
+    if (feedback.currentDraft.reproSteps && feedback.currentDraft.reproSteps.length > 0) {
+      prompt += `
+**Reproduction Steps:**
+${feedback.currentDraft.reproSteps.map((s, i) => `${i + 1}. ${s}`).join("\n")}
+`;
+    }
+    if (feedback.currentDraft.expectedBehavior) {
+      prompt += `
+**Expected Behavior:** ${feedback.currentDraft.expectedBehavior}
+`;
+    }
+    if (feedback.currentDraft.actualBehavior) {
+      prompt += `
+**Actual Behavior:** ${feedback.currentDraft.actualBehavior}
+`;
+    }
+    
+    prompt += `
+Please ENHANCE the current draft above. Keep the user's edits and improvements, but make it more detailed, clear, and actionable. Add more specific acceptance criteria, improve the description, and enhance the reproduction steps if applicable. Return the enhanced version in JSON format.`;
+  } else {
+    prompt += `
 Please convert this ${feedback.type === "bug" ? "bug report" : "feature request"} into a well-structured ticket in JSON format.`;
+  }
 
   return prompt;
 }
@@ -1044,8 +1093,17 @@ async function callOpenAIForTicketDraft(
       suggestions?: Array<{ title: string; description: string }>;
       nextSteps?: string[];
     };
+    currentDraft?: {
+      title: string;
+      description: string;
+      acceptanceCriteria: string[];
+      reproSteps?: string[];
+      expectedBehavior?: string;
+      actualBehavior?: string;
+    };
   },
-  screenshotBase64?: string
+  screenshotBase64?: string,
+  screenshotMediaType?: string
 ): Promise<TicketDraftResult> {
   const messages: Array<{
     role: "system" | "user";
@@ -1058,6 +1116,8 @@ async function callOpenAIForTicketDraft(
   ];
 
   if (screenshotBase64) {
+    // Use detected media type or default to image/png
+    const mediaType = screenshotMediaType || "image/png";
     messages.push({
       role: "user",
       content: [
@@ -1068,7 +1128,7 @@ async function callOpenAIForTicketDraft(
         {
           type: "image_url",
           image_url: {
-            url: `data:image/png;base64,${screenshotBase64}`,
+            url: `data:${mediaType};base64,${screenshotBase64}`,
           },
         },
       ],
@@ -1131,8 +1191,17 @@ async function callAnthropicForTicketDraft(
       suggestions?: Array<{ title: string; description: string }>;
       nextSteps?: string[];
     };
+    currentDraft?: {
+      title: string;
+      description: string;
+      acceptanceCriteria: string[];
+      reproSteps?: string[];
+      expectedBehavior?: string;
+      actualBehavior?: string;
+    };
   },
-  screenshotBase64?: string
+  screenshotBase64?: string,
+  screenshotMediaType?: string
 ): Promise<TicketDraftResult> {
   const contentBlocks: Array<{
     type: "text" | "image";
@@ -1150,7 +1219,7 @@ async function callAnthropicForTicketDraft(
       type: "image",
       source: {
         type: "base64",
-        media_type: "image/png",
+        media_type: screenshotMediaType || "image/png",
         data: screenshotBase64,
       },
     });
@@ -1281,10 +1350,17 @@ export const generateTicketDraftAction = internalAction({
 
     // Fetch screenshot if available
     let screenshotBase64: string | undefined;
+    let screenshotMediaType: string = "image/png"; // Default
     if (feedback.screenshotUrl) {
       try {
         const imageResponse = await fetch(feedback.screenshotUrl);
         if (imageResponse.ok) {
+          // Detect actual media type from Content-Type header
+          const contentType = imageResponse.headers.get("content-type");
+          if (contentType) {
+            screenshotMediaType = contentType;
+          }
+          
           const arrayBuffer = await imageResponse.arrayBuffer();
           screenshotBase64 = arrayBufferToBase64(arrayBuffer);
         }
@@ -1296,9 +1372,9 @@ export const generateTicketDraftAction = internalAction({
     // Call the AI API
     let draftResult: TicketDraftResult;
     if (args.provider === "openai") {
-      draftResult = await callOpenAIForTicketDraft(args.apiKey, args.model, feedbackData, screenshotBase64);
+      draftResult = await callOpenAIForTicketDraft(args.apiKey, args.model, feedbackData, screenshotBase64, screenshotMediaType);
     } else {
-      draftResult = await callAnthropicForTicketDraft(args.apiKey, args.model, feedbackData, screenshotBase64);
+      draftResult = await callAnthropicForTicketDraft(args.apiKey, args.model, feedbackData, screenshotBase64, screenshotMediaType);
     }
 
     // Store the ticket draft
@@ -1380,6 +1456,14 @@ export const generateTicketDraft = action({
   args: {
     feedbackId: v.id("feedback"),
     teamId: v.id("teams"),
+    currentDraft: v.optional(v.object({
+      title: v.string(),
+      description: v.string(),
+      acceptanceCriteria: v.array(v.string()),
+      reproSteps: v.optional(v.array(v.string())),
+      expectedBehavior: v.optional(v.string()),
+      actualBehavior: v.optional(v.string()),
+    })),
   },
   handler: async (ctx, args) => {
     // Get current user
@@ -1468,14 +1552,22 @@ export const generateTicketDraft = action({
         role: msg.role,
         content: msg.content,
       })),
+      currentDraft: args.currentDraft,
     };
 
     // Fetch screenshot if available
     let screenshotBase64: string | undefined;
+    let screenshotMediaType: string = "image/png"; // Default
     if (feedback.screenshotUrl) {
       try {
         const imageResponse = await fetch(feedback.screenshotUrl);
         if (imageResponse.ok) {
+          // Detect actual media type from Content-Type header
+          const contentType = imageResponse.headers.get("content-type");
+          if (contentType) {
+            screenshotMediaType = contentType;
+          }
+          
           const arrayBuffer = await imageResponse.arrayBuffer();
           screenshotBase64 = arrayBufferToBase64(arrayBuffer);
         }
@@ -1487,9 +1579,9 @@ export const generateTicketDraft = action({
     // Call the AI API
     let draftResult: TicketDraftResult;
     if (aiConfig.preferredProvider === "openai") {
-      draftResult = await callOpenAIForTicketDraft(apiKeyData.key, aiConfig.preferredModel, feedbackData, screenshotBase64);
+      draftResult = await callOpenAIForTicketDraft(apiKeyData.key, aiConfig.preferredModel, feedbackData, screenshotBase64, screenshotMediaType);
     } else {
-      draftResult = await callAnthropicForTicketDraft(apiKeyData.key, aiConfig.preferredModel, feedbackData, screenshotBase64);
+      draftResult = await callAnthropicForTicketDraft(apiKeyData.key, aiConfig.preferredModel, feedbackData, screenshotBase64, screenshotMediaType);
     }
 
     // Store the ticket draft

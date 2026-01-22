@@ -98,7 +98,7 @@ export class OfflineQueue {
     }
     
     // Default to the FeedbackFlow API
-    return "https://feedbackflow.dev/api/widget/submit";
+    return "https://feedbackflow.cc/api/widget/submit";
   }
 
   /**

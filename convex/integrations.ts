@@ -502,7 +502,7 @@ export const getExportsForFeedback = query({
     // Get user details for each export
     const exportsWithUsers = await Promise.all(
       exports.map(async (exp) => {
-        const exportUser = await ctx.db.get(exp.userId);
+        const exportUser = exp.userId ? await ctx.db.get(exp.userId) : null;
         return {
           ...exp,
           user: exportUser
@@ -879,5 +879,79 @@ export const getExportsByFeedback = query({
       .collect();
 
     return exports;
+  },
+});
+
+/**
+ * Get exports for multiple feedback items (batch query)
+ * Returns a map of feedbackId to exports array
+ */
+export const getExportsForFeedbackBatch = query({
+  args: {
+    feedbackIds: v.array(v.id("feedback")),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return {};
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) {
+      return {};
+    }
+
+    // Get all feedback items to verify access
+    const feedbackItems = await Promise.all(
+      args.feedbackIds.map((id) => ctx.db.get(id))
+    );
+
+    // Get unique team IDs
+    const teamIds = new Set(
+      feedbackItems.filter((f) => f !== null).map((f) => f!.teamId)
+    );
+
+    // Check membership for all teams
+    const memberships = await Promise.all(
+      Array.from(teamIds).map((teamId) =>
+        ctx.db
+          .query("teamMembers")
+          .withIndex("by_user", (q) => q.eq("userId", user._id))
+          .filter((q) => q.eq(q.field("teamId"), teamId))
+          .first()
+      )
+    );
+
+    // Create a set of team IDs the user has access to
+    const accessibleTeamIds = new Set(
+      memberships.filter((m) => m !== null).map((m) => m!.teamId)
+    );
+
+    // Filter feedback items to only those the user has access to
+    const accessibleFeedbackIds = feedbackItems
+      .filter((f) => f !== null && accessibleTeamIds.has(f.teamId))
+      .map((f) => f!._id);
+
+    // Fetch all exports for accessible feedback items
+    const allExports = await Promise.all(
+      accessibleFeedbackIds.map((feedbackId) =>
+        ctx.db
+          .query("exports")
+          .withIndex("by_feedback", (q) => q.eq("feedbackId", feedbackId))
+          .collect()
+      )
+    );
+
+    // Build a map of feedbackId to exports
+    const exportsMap: Record<string, typeof allExports[0]> = {};
+    accessibleFeedbackIds.forEach((feedbackId, index) => {
+      exportsMap[feedbackId] = allExports[index];
+    });
+
+    return exportsMap;
   },
 });

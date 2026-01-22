@@ -8,6 +8,7 @@ import { DashboardHeader } from "./dashboard-header";
 import { TicketDetailPanel } from "./ticket-detail-panel";
 import { OnboardingModal } from "../onboarding/onboarding-modal";
 import { CreateProjectModal } from "./create-project-modal";
+import { EditProjectModal } from "./edit-project-modal";
 import { Id } from "@/convex/_generated/dataModel";
 import { api } from "@/convex/_generated/api";
 
@@ -24,8 +25,14 @@ interface DashboardContextType {
   setSidebarOpen: (open: boolean) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  filterType: "bug" | "feature" | null;
+  setFilterType: (type: "bug" | "feature" | null) => void;
   isCreateProjectModalOpen: boolean;
   setIsCreateProjectModalOpen: (open: boolean) => void;
+  isEditProjectModalOpen: boolean;
+  setIsEditProjectModalOpen: (open: boolean) => void;
+  editingProjectId: Id<"projects"> | null;
+  setEditingProjectId: (id: Id<"projects"> | null) => void;
 }
 
 const DashboardContext = createContext<DashboardContextType | null>(null);
@@ -52,7 +59,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [currentView, setCurrentView] = useState<"inbox" | "backlog" | "resolved">("inbox");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterType, setFilterType] = useState<"bug" | "feature" | null>(null);
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
+  const [isEditProjectModalOpen, setIsEditProjectModalOpen] = useState(false);
+  const [editingProjectId, setEditingProjectId] = useState<Id<"projects"> | null>(null);
 
   // Handle feedback URL parameter
   useEffect(() => {
@@ -107,8 +117,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         setSidebarOpen,
         searchQuery,
         setSearchQuery,
+        filterType,
+        setFilterType,
         isCreateProjectModalOpen,
         setIsCreateProjectModalOpen,
+        isEditProjectModalOpen,
+        setIsEditProjectModalOpen,
+        editingProjectId,
+        setEditingProjectId,
       }}
     >
       {/* Outer wrapper with retro background */}
@@ -155,6 +171,29 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           onSuccess={(projectId) => {
             setSelectedProjectId(projectId);
             setSidebarOpen(false);
+          }}
+        />
+      )}
+
+      {/* Edit Project Modal */}
+      {editingProjectId && selectedTeamId && (
+        <EditProjectModal
+          isOpen={isEditProjectModalOpen}
+          onClose={() => {
+            setIsEditProjectModalOpen(false);
+            setEditingProjectId(null);
+          }}
+          projectId={editingProjectId}
+          isAdmin={teams?.find((t) => t._id === selectedTeamId)?.role === "admin"}
+          onSuccess={() => {
+            // Modal will close itself
+          }}
+          onDelete={() => {
+            // If the deleted project was selected, select another one
+            if (selectedProjectId === editingProjectId) {
+              const otherProject = projects?.find((p) => p._id !== editingProjectId);
+              setSelectedProjectId(otherProject?._id || null);
+            }
           }}
         />
       )}

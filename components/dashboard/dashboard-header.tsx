@@ -17,6 +17,8 @@ export function DashboardHeader() {
     searchQuery,
     setSearchQuery,
     setSelectedFeedbackId,
+    filterType,
+    setFilterType,
   } = useDashboard();
 
   // Mobile search expanded state
@@ -66,8 +68,22 @@ export function DashboardHeader() {
     }
   };
 
-  // Filter type state for header filter pills
-  const [filterType, setFilterType] = useState<"all" | "bugs" | "features">("all");
+  // Get feedback counts for filter pills
+  const allFeedback = useQuery(
+    api.feedback.listFeedback,
+    selectedProjectId
+      ? {
+          projectId: selectedProjectId,
+          sortBy: "createdAt",
+          sortOrder: "desc",
+          view: currentView,
+        }
+      : "skip"
+  );
+
+  const bugCount = allFeedback?.filter((f) => f.type === "bug").length ?? 0;
+  const featureCount = allFeedback?.filter((f) => f.type === "feature").length ?? 0;
+  const totalCount = allFeedback?.length ?? 0;
 
   return (
     <header className="flex h-16 flex-shrink-0 items-center justify-between border-b-2 border-retro-black bg-white px-6">
@@ -121,37 +137,37 @@ export function DashboardHeader() {
         {/* Filter pills */}
         <div className="hidden gap-2 sm:flex">
           <button
-            onClick={() => setFilterType("all")}
+            onClick={() => setFilterType(null)}
             className={cn(
               "rounded px-2 py-1 font-mono text-xs transition-colors",
-              filterType === "all"
+              filterType === null
                 ? "bg-retro-black text-white"
                 : "bg-stone-100 text-stone-600 hover:bg-stone-200"
             )}
           >
-            All (12)
+            All ({totalCount})
           </button>
           <button
-            onClick={() => setFilterType("bugs")}
+            onClick={() => setFilterType("bug")}
             className={cn(
               "rounded px-2 py-1 font-mono text-xs transition-colors",
-              filterType === "bugs"
+              filterType === "bug"
                 ? "bg-retro-black text-white"
                 : "bg-stone-100 text-stone-600 hover:bg-stone-200"
             )}
           >
-            Bugs
+            Bugs ({bugCount})
           </button>
           <button
-            onClick={() => setFilterType("features")}
+            onClick={() => setFilterType("feature")}
             className={cn(
               "rounded px-2 py-1 font-mono text-xs transition-colors",
-              filterType === "features"
+              filterType === "feature"
                 ? "bg-retro-black text-white"
                 : "bg-stone-100 text-stone-600 hover:bg-stone-200"
             )}
           >
-            Features
+            Features ({featureCount})
           </button>
         </div>
       </div>

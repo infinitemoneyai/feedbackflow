@@ -1270,7 +1270,7 @@ export function OnboardingStepInstall({ widgetKey, projectId }: OnboardingStepIn
   const project = useQuery(api.projects.getProject, { projectId });
 
   const scriptSnippet = `<script
-  src="https://cdn.feedbackflow.dev/widget.js"
+  src="https://cdn.feedbackflow.cc/widget.js"
   data-widget-key="${widgetKey}"
   async
 ></script>`;
@@ -1279,7 +1279,7 @@ export function OnboardingStepInstall({ widgetKey, projectId }: OnboardingStepIn
 import Script from 'next/script'
 
 <Script
-  src="https://cdn.feedbackflow.dev/widget.js"
+  src="https://cdn.feedbackflow.cc/widget.js"
   data-widget-key="${widgetKey}"
   strategy="lazyOnload"
 />`;
@@ -1287,7 +1287,7 @@ import Script from 'next/script'
   const reactSnippet = `// In your index.html or App component
 useEffect(() => {
   const script = document.createElement('script');
-  script.src = 'https://cdn.feedbackflow.dev/widget.js';
+  script.src = 'https://cdn.feedbackflow.cc/widget.js';
   script.dataset.widgetKey = '${widgetKey}';
   script.async = true;
   document.body.appendChild(script);
