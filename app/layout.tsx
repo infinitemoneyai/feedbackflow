@@ -98,7 +98,7 @@ export default function RootLayout({
         </ConvexClientProvider>
         <Script
           src="https://www.feedbackflow.cc/widget.js"
-          data-widget-key="wk_jUHmNX2EXhOqCLXNlGlMocRp"
+          data-widget-key="wk_U7oFyZs9Z8Fs53AtvIfjPRqu"
           data-api-url="https://www.feedbackflow.cc/api/widget/submit"
           strategy="lazyOnload"
         />
