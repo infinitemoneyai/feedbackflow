@@ -3,7 +3,7 @@
 import { useStoreUser } from "@/lib/hooks/use-store-user";
 import { useQuery } from "convex/react";
 import { useRouter, usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { api } from "@/convex/_generated/api";
 import { OnboardingModal } from "@/components/onboarding/onboarding-modal";
 
@@ -12,18 +12,19 @@ export default function AuthLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isLoaded } = useStoreUser();
+  const { user, isLoaded, isUserSynced } = useStoreUser();
   const router = useRouter();
   const pathname = usePathname();
+  const [hasRedirected, setHasRedirected] = useState(false);
 
-  // Get onboarding state (skip if no user)
+  // Get onboarding state - only query after user is synced to Convex
   const onboardingState = useQuery(
     api.onboarding.getOnboardingState,
-    user ? {} : "skip"
+    user && isUserSynced ? {} : "skip"
   );
 
   // Get user's team and project for onboarding modal
-  const teams = useQuery(api.teams.getMyTeams, user ? {} : "skip");
+  const teams = useQuery(api.teams.getMyTeams, user && isUserSynced ? {} : "skip");
   const projects = useQuery(
     api.projects.getProjects,
     teams && teams.length > 0 && teams[0]?._id ? { teamId: teams[0]._id } : "skip"
@@ -41,7 +42,18 @@ export default function AuthLayout({
 
   // Redirect to onboarding if needed (steps 1-3 or needs onboarding)
   useEffect(() => {
-    if (!onboardingState) return;
+    // Wait for user to be synced and onboarding state to load
+    if (!isUserSynced || onboardingState === undefined) return;
+    
+    // If onboardingState is null, user record doesn't exist yet - redirect to onboarding
+    // This handles the case where the query runs before upsertUser completes
+    if (onboardingState === null) {
+      if (pathname !== "/onboarding" && !hasRedirected) {
+        setHasRedirected(true);
+        router.push("/onboarding");
+      }
+      return;
+    }
 
     const step = onboardingState.step;
     const isComplete = onboardingState.isComplete;
@@ -51,14 +63,20 @@ export default function AuthLayout({
     // 1. User needs onboarding (never started, no completedAt)
     // 2. User is in steps 1-3
     if (needsOnboarding || (!isComplete && step !== undefined && step >= 1 && step <= 3)) {
-      if (pathname !== "/onboarding") {
+      if (pathname !== "/onboarding" && !hasRedirected) {
+        setHasRedirected(true);
         router.push("/onboarding");
       }
     }
-  }, [onboardingState, pathname, router]);
+  }, [onboardingState, pathname, router, isUserSynced, hasRedirected]);
 
-  // Show loading while checking auth
-  if (!isLoaded) {
+  // Reset redirect flag when pathname changes (user navigated elsewhere)
+  useEffect(() => {
+    setHasRedirected(false);
+  }, [pathname]);
+
+  // Show loading while checking auth or syncing user
+  if (!isLoaded || (user && !isUserSynced)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-retro-paper">
         <div className="animate-pulse font-mono text-sm text-stone-500">
