@@ -318,25 +318,46 @@ export const updateSubscriptionFromStripe = mutation({
     currentPeriodStart: v.number(),
     currentPeriodEnd: v.number(),
     cancelAtPeriodEnd: v.boolean(),
+    teamId: v.optional(v.id("teams")), // Optional teamId for fallback lookup
   },
   handler: async (ctx, args) => {
-    // Find subscription by Stripe customer ID
-    const subscription = await ctx.db
+    // Try to find subscription by Stripe customer ID first
+    let subscription = await ctx.db
       .query("subscriptions")
       .withIndex("by_stripe_customer", (q) =>
         q.eq("stripeCustomerId", args.stripeCustomerId)
       )
       .first();
 
+    // If not found by customer ID and teamId is provided, try by teamId
+    if (!subscription && args.teamId !== undefined) {
+      subscription = await ctx.db
+        .query("subscriptions")
+        .withIndex("by_team", (q) => q.eq("teamId", args.teamId as Id<"teams">))
+        .first();
+      
+      if (subscription) {
+        console.log(
+          "Found subscription by teamId, updating stripeCustomerId:",
+          args.teamId
+        );
+      }
+    }
+
     if (!subscription) {
       console.error(
         "Subscription not found for customer:",
-        args.stripeCustomerId
+        args.stripeCustomerId,
+        "teamId:",
+        args.teamId
       );
-      return;
+      throw new Error(
+        `Subscription not found for customer ${args.stripeCustomerId}${args.teamId ? ` or team ${args.teamId}` : ""}`
+      );
     }
 
     await ctx.db.patch(subscription._id, {
+      stripeCustomerId: args.stripeCustomerId, // Always update this
       stripeSubscriptionId: args.stripeSubscriptionId,
       stripePriceId: args.stripePriceId,
       plan: args.plan,
