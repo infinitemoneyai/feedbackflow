@@ -29,10 +29,13 @@ const OPENAI_MODELS = [
 ];
 
 const ANTHROPIC_MODELS = [
-  { id: "claude-opus-4-20250514", name: "Claude Opus 4 (Latest)", description: "Most capable Claude model" },
+  { id: "claude-sonnet-4-5-20250514", name: "Claude Sonnet 4.5", description: "Best for complex agents and coding" },
+  { id: "claude-opus-4-5-20250514", name: "Claude Opus 4.5", description: "Maximum intelligence for specialized tasks" },
+  { id: "claude-opus-4-20250514", name: "Claude Opus 4", description: "Exceptional reasoning for complex tasks" },
   { id: "claude-sonnet-4-20250514", name: "Claude Sonnet 4", description: "Balanced performance and cost" },
+  { id: "claude-haiku-4-5-20250514", name: "Claude Haiku 4.5", description: "Fastest and most economical" },
   { id: "claude-3-5-sonnet-20241022", name: "Claude 3.5 Sonnet", description: "Great balance of speed and quality" },
-  { id: "claude-3-5-haiku-20241022", name: "Claude 3.5 Haiku", description: "Fastest, most cost-effective" },
+  { id: "claude-3-5-haiku-20241022", name: "Claude 3.5 Haiku", description: "Fast and cost-effective" },
   { id: "claude-3-opus-20240229", name: "Claude 3 Opus", description: "Previous generation, very capable" },
 ];
 
