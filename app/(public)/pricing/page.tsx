@@ -356,8 +356,9 @@ function PricingPageContent() {
                         onClick={decrementSeats}
                         className="flex h-10 w-10 items-center justify-center border-2 border-retro-black bg-stone-50 transition-colors hover:bg-stone-100 disabled:opacity-50"
                         disabled={seats <= 1}
+                        aria-label="Decrease seats"
                       >
-                        <Icon name="solar:minus-linear" size={18} />
+                        <span className="text-xl font-bold leading-none">−</span>
                       </button>
                       <span className="w-10 text-center font-mono text-xl font-bold">
                         {seats}
@@ -365,8 +366,9 @@ function PricingPageContent() {
                       <button
                         onClick={incrementSeats}
                         className="flex h-10 w-10 items-center justify-center border-2 border-retro-black bg-stone-50 transition-colors hover:bg-stone-100"
+                        aria-label="Increase seats"
                       >
-                        <Icon name="solar:add-linear" size={18} />
+                        <span className="text-xl font-bold leading-none">+</span>
                       </button>
                     </div>
                   </div>
