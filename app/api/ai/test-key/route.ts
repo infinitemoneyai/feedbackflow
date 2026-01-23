@@ -54,10 +54,12 @@ async function testOpenAIKey(apiKey: string): Promise<NextResponse> {
       // Get available models for the UI
       const chatModels = data.data
         .filter((model: { id: string }) =>
+          model.id.includes("gpt-5") ||
           model.id.includes("gpt-4") ||
           model.id.includes("gpt-3.5") ||
           model.id.includes("o1") ||
-          model.id.includes("o3")
+          model.id.includes("o3") ||
+          model.id.includes("o4")
         )
         .map((model: { id: string }) => model.id)
         .sort();
