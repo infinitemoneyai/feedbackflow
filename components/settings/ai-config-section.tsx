@@ -22,9 +22,6 @@ interface AiConfigSectionProps {
 }
 
 const OPENAI_MODELS = [
-  { id: "gpt-5.2", name: "GPT-5.2", description: "Best for coding and agentic tasks" },
-  { id: "gpt-5-mini", name: "GPT-5 Mini", description: "Fast, cost-efficient for well-defined tasks" },
-  { id: "gpt-5-nano", name: "GPT-5 Nano", description: "Fastest, most cost-efficient" },
   { id: "gpt-4.1", name: "GPT-4.1", description: "Smartest non-reasoning model" },
   { id: "gpt-4o", name: "GPT-4o", description: "Fast, intelligent, flexible" },
   { id: "gpt-4o-mini", name: "GPT-4o Mini", description: "Fast and cost-effective" },

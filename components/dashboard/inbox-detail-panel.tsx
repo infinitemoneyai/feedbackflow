@@ -16,9 +16,6 @@ import remarkGfm from "remark-gfm";
 type FeedbackStatus = "new" | "triaging" | "drafted" | "exported" | "resolved";
 
 const OPENAI_MODELS = [
-  { id: "gpt-5.2", name: "GPT-5.2 (Best for coding/agents)" },
-  { id: "gpt-5-mini", name: "GPT-5 Mini (Fast & cost-efficient)" },
-  { id: "gpt-5-nano", name: "GPT-5 Nano (Fastest)" },
   { id: "gpt-4.1", name: "GPT-4.1 (Smartest non-reasoning)" },
   { id: "gpt-4o", name: "GPT-4o" },
   { id: "gpt-4o-mini", name: "GPT-4o Mini" },
