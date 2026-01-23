@@ -99,4 +99,7 @@ PRE_LAUNCH_SECURITY_CHECKLIST.md
 SEO_IMPLEMENTATION.md
 UPDATE_URLS.md
 
+# Deployment docs with sensitive info
+VERCEL_ENV_VARS.md
+
 
