@@ -15,10 +15,10 @@ export function ProblemSection() {
             }}
           ></div>
 
-          <h2 className="relative z-10 mb-6 text-4xl font-medium tracking-tighter lg:text-5xl">
+          <h2 className="relative z-10 mb-6 text-3xl font-medium tracking-tighter sm:text-4xl lg:text-5xl">
             The Real Problem
           </h2>
-          <p className="relative z-10 text-xl font-light leading-relaxed opacity-90 md:text-2xl">
+          <p className="relative z-10 text-lg font-light leading-relaxed opacity-90 md:text-2xl">
             Your AI agent can ship a feature in an afternoon. <br />
             <br />
             But it still needs you to manually translate &ldquo;this button is
@@ -36,7 +36,7 @@ export function ProblemSection() {
                 />
               </div>
               <div>
-                <p className="text-lg font-medium">Screenshots in Slack.</p>
+                <p className="text-base font-medium md:text-lg">Screenshots in Slack.</p>
                 <p className="text-sm text-stone-500">
                   &ldquo;Hey, is this supposed to look like this?&rdquo;
                 </p>
@@ -51,7 +51,7 @@ export function ProblemSection() {
                 />
               </div>
               <div>
-                <p className="text-lg font-medium">Thoughts in DMs.</p>
+                <p className="text-base font-medium md:text-lg">Thoughts in DMs.</p>
                 <p className="text-sm text-stone-500">
                   Lost in the void of history.
                 </p>
@@ -66,7 +66,7 @@ export function ProblemSection() {
                 />
               </div>
               <div>
-                <p className="text-lg font-medium">
+                <p className="text-base font-medium md:text-lg">
                   Half-formed ideas at 2am.
                 </p>
                 <p className="text-sm text-stone-500">
@@ -79,7 +79,7 @@ export function ProblemSection() {
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 border border-stone-200 bg-white px-2 font-mono text-xs text-stone-400">
               DIAGNOSIS
             </div>
-            <p className="text-lg font-medium tracking-tight">
+            <p className="text-base font-medium tracking-tight md:text-lg">
               AI accelerated building. It didn&apos;t accelerate listening.
             </p>
           </div>

@@ -23,6 +23,7 @@ export function DashboardHeader() {
 
   // Mobile search expanded state
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const desktopInputRef = useRef<HTMLInputElement>(null);
 
@@ -86,7 +87,7 @@ export function DashboardHeader() {
   const totalCount = allFeedback?.length ?? 0;
 
   return (
-    <header className="flex h-16 flex-shrink-0 items-center justify-between border-b-2 border-retro-black bg-white px-6">
+    <header className="flex h-16 flex-shrink-0 items-center justify-between border-b-2 border-retro-black bg-white px-4 sm:px-6">
       {/* Mobile search overlay */}
       {mobileSearchOpen && (
         <div className="absolute inset-0 z-10 flex items-center bg-white px-4 sm:hidden">
@@ -173,7 +174,7 @@ export function DashboardHeader() {
       </div>
 
       {/* Right side - search and actions */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
         {/* Search input (desktop) */}
         <div className="relative hidden sm:block">
           <Icon name="solar:magnifer-linear" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
@@ -183,7 +184,7 @@ export function DashboardHeader() {
             placeholder="Search tickets..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-48 rounded-full border-2 border-stone-200 bg-stone-50 py-1.5 pl-9 pr-4 text-sm outline-none transition-colors focus:border-retro-black"
+            className="w-36 rounded-full border-2 border-stone-200 bg-stone-50 py-1.5 pl-9 pr-4 text-sm outline-none transition-colors focus:border-retro-black lg:w-48"
           />
           {searchQuery && (
             <button
@@ -193,6 +194,71 @@ export function DashboardHeader() {
             >
               <X className="h-4 w-4" />
             </button>
+          )}
+        </div>
+
+        {/* Mobile Filter Button */}
+        <div className="relative sm:hidden">
+          <button
+            onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
+            className={cn(
+              "rounded p-2 transition-colors",
+              filterType
+                ? "bg-retro-black text-white"
+                : "text-stone-600 hover:bg-stone-100 hover:text-retro-black"
+            )}
+          >
+            <Icon name="solar:filter-linear" size={20} />
+          </button>
+
+          {isFilterMenuOpen && (
+            <>
+              <div
+                className="fixed inset-0 z-10"
+                onClick={() => setIsFilterMenuOpen(false)}
+              />
+              <div className="absolute right-0 top-full z-20 mt-1 w-48 rounded border-2 border-retro-black bg-white p-1 shadow-lg">
+                <button
+                  onClick={() => {
+                    setFilterType(null);
+                    setIsFilterMenuOpen(false);
+                  }}
+                  className={cn(
+                    "flex w-full items-center justify-between rounded px-3 py-2 text-sm transition-colors",
+                    filterType === null ? "bg-stone-100 font-medium" : "hover:bg-stone-50"
+                  )}
+                >
+                  <span>All</span>
+                  <span className="text-xs text-stone-500">{totalCount}</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setFilterType("bug");
+                    setIsFilterMenuOpen(false);
+                  }}
+                  className={cn(
+                    "flex w-full items-center justify-between rounded px-3 py-2 text-sm transition-colors",
+                    filterType === "bug" ? "bg-stone-100 font-medium" : "hover:bg-stone-50"
+                  )}
+                >
+                  <span>Bugs</span>
+                  <span className="text-xs text-stone-500">{bugCount}</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setFilterType("feature");
+                    setIsFilterMenuOpen(false);
+                  }}
+                  className={cn(
+                    "flex w-full items-center justify-between rounded px-3 py-2 text-sm transition-colors",
+                    filterType === "feature" ? "bg-stone-100 font-medium" : "hover:bg-stone-50"
+                  )}
+                >
+                  <span>Features</span>
+                  <span className="text-xs text-stone-500">{featureCount}</span>
+                </button>
+              </div>
+            </>
           )}
         </div>
 

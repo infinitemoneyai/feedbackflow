@@ -85,7 +85,7 @@ export function TicketContentArea({
   onToggleSolution,
 }: TicketContentAreaProps) {
   return (
-    <div className="flex-grow space-y-6 overflow-y-auto p-6">
+    <div className="flex-grow space-y-6 overflow-y-auto p-4 md:p-6">
       <TicketContent feedback={feedback} />
 
       {currentView === "resolved" ? (

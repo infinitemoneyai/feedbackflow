@@ -6,11 +6,11 @@ export function OpenSourceSection() {
     <ScrollReveal>
       <div className="grid grid-cols-1 divide-y-2 divide-retro-black border-b-2 border-retro-black md:grid-cols-2 md:divide-x-2 md:divide-y-0">
         <div className="bg-retro-black p-10 text-white md:p-16">
-          <h2 className="mb-8 text-3xl font-medium tracking-tight">
+          <h2 className="mb-8 text-2xl font-medium tracking-tight md:text-3xl">
             Open Source Because Obviously
           </h2>
           <div className="space-y-4">
-            <div className="group flex cursor-pointer items-center gap-3 text-lg transition-colors hover:text-retro-yellow">
+            <div className="group flex cursor-pointer items-center gap-3 text-base transition-colors hover:text-retro-yellow md:text-lg">
               <Icon
                 name="solar:arrow-right-linear"
                 size={20}
@@ -18,7 +18,7 @@ export function OpenSourceSection() {
               />
               Self-host it
             </div>
-            <div className="group flex cursor-pointer items-center gap-3 text-lg transition-colors hover:text-retro-yellow">
+            <div className="group flex cursor-pointer items-center gap-3 text-base transition-colors hover:text-retro-yellow md:text-lg">
               <Icon
                 name="solar:arrow-right-linear"
                 size={20}
@@ -26,7 +26,7 @@ export function OpenSourceSection() {
               />
               Read the code
             </div>
-            <div className="group flex cursor-pointer items-center gap-3 text-lg transition-colors hover:text-retro-yellow">
+            <div className="group flex cursor-pointer items-center gap-3 text-base transition-colors hover:text-retro-yellow md:text-lg">
               <Icon
                 name="solar:arrow-right-linear"
                 size={20}
@@ -34,7 +34,7 @@ export function OpenSourceSection() {
               />
               Fork it
             </div>
-            <div className="group flex cursor-pointer items-center gap-3 text-lg transition-colors hover:text-retro-yellow">
+            <div className="group flex cursor-pointer items-center gap-3 text-base transition-colors hover:text-retro-yellow md:text-lg">
               <Icon
                 name="solar:arrow-right-linear"
                 size={20}
@@ -43,7 +43,7 @@ export function OpenSourceSection() {
               Break it
             </div>
           </div>
-          <p className="mt-10 text-lg leading-relaxed text-stone-400">
+          <p className="mt-10 text-base leading-relaxed text-stone-400 md:text-lg">
             Or don&apos;t think at all and use our hosted version.
             <br />
             Your data stays yours. Export everything. Walk away anytime.
@@ -56,10 +56,10 @@ export function OpenSourceSection() {
 
         <div className="flex flex-col">
           <div className="flex-grow bg-retro-paper p-10 md:p-16">
-            <h3 className="mb-6 inline-block border-b-2 border-retro-black pb-2 text-xl font-bold uppercase tracking-wider">
+            <h3 className="mb-6 inline-block border-b-2 border-retro-black pb-2 text-lg font-bold uppercase tracking-wider md:text-xl">
               Why InfiniteMoney Built This
             </h3>
-            <p className="mb-6 text-xl leading-relaxed">
+            <p className="mb-6 text-lg leading-relaxed md:text-xl">
               Because we&apos;re building with AI agents, and they need
               structured feedback to know what to fix next.
               <br />
@@ -68,7 +68,7 @@ export function OpenSourceSection() {
               did not—because the feedback loop was still manual.
             </p>
             <div className="rounded border border-retro-black/10 bg-white p-4">
-              <p className="text-lg font-medium">
+              <p className="text-base font-medium md:text-lg">
                 AI made building faster. This makes understanding what you
                 built faster.
               </p>

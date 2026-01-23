@@ -13,7 +13,7 @@ export function HeroSection() {
             System Online v.01
           </div>
 
-          <h1 className="animate-ff-fade-up -ml-1 text-5xl font-medium leading-[0.9] tracking-tighter md:text-7xl lg:text-8xl [animation-delay:60ms]">
+          <h1 className="animate-ff-fade-up -ml-1 text-4xl font-medium leading-[0.9] tracking-tighter sm:text-5xl md:text-7xl lg:text-8xl [animation-delay:60ms]">
             Your AI Agent <br />
             <span className="text-stone-400">Can Ship Fast.</span>
             <br />
@@ -29,7 +29,7 @@ export function HeroSection() {
           <div className="animate-ff-fade-up flex flex-col gap-4 pt-6 sm:flex-row [animation-delay:180ms]">
             <Link
               href="/sign-up"
-              className="ff-cta-sheen group flex items-center justify-center gap-3 border-2 border-retro-black bg-retro-black px-8 py-4 text-lg font-medium text-white shadow-[4px_4px_0px_0px_#888] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-retro-blue hover:text-retro-black hover:shadow-[2px_2px_0px_0px_#000]"
+              className="ff-cta-sheen group flex items-center justify-center gap-3 border-2 border-retro-black bg-retro-black px-6 py-3 text-base font-medium text-white shadow-[4px_4px_0px_0px_#888] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-retro-blue hover:text-retro-black hover:shadow-[2px_2px_0px_0px_#000] md:px-8 md:py-4 md:text-lg"
             >
               <span>Install the Script</span>
               <Icon
@@ -40,7 +40,7 @@ export function HeroSection() {
             </Link>
             <Link
               href="/docs"
-              className="flex items-center justify-center gap-3 border-2 border-retro-black bg-transparent px-8 py-4 text-lg font-medium text-retro-black transition-all hover:bg-stone-200"
+              className="flex items-center justify-center gap-3 border-2 border-retro-black bg-transparent px-6 py-3 text-base font-medium text-retro-black transition-all hover:bg-stone-200 md:px-8 md:py-4 md:text-lg"
             >
               <span>Read the README</span>
               <Icon name="solar:book-2-linear" size={20} />
@@ -64,13 +64,13 @@ export function HeroSection() {
             </div>
 
             <div className="animate-ff-float will-change-transform">
-              <div className="relative transform space-y-4 border-2 border-retro-black bg-white p-5 font-mono text-sm shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-transform duration-300 hover:-translate-y-1">
+              <div className="relative transform space-y-4 border-2 border-retro-black bg-white p-4 font-mono text-sm shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-transform duration-300 hover:-translate-y-1 md:p-5">
                 <div className="flex items-center gap-2 border-b border-stone-100 pb-2 text-xs text-stone-500">
                   <Icon name="solar:user-circle-linear" size={14} />
                   <span>@user_209</span>
                   <span className="ml-auto text-[10px]">2m ago</span>
                 </div>
-                <p className="text-base font-semibold leading-snug tracking-tight">
+                <p className="text-sm font-semibold leading-snug tracking-tight md:text-base">
                   &ldquo;The checkout button is broken on mobile&rdquo;
                 </p>
 
@@ -136,7 +136,7 @@ export function HeroSection() {
             </div>
 
             {/* AI Processing Indicator */}
-            <div className="animate-ff-fade-in mt-6 flex items-center gap-3 rounded border border-retro-black/20 bg-retro-black/10 p-3 font-mono text-xs [animation-delay:220ms]">
+            <div className="animate-ff-fade-in mt-6 flex items-center gap-3 rounded border border-retro-black/20 bg-retro-black/10 p-3 font-mono text-[10px] [animation-delay:220ms] sm:text-xs">
               <Icon
                 name="solar:magic-stick-3-linear"
                 size={16}

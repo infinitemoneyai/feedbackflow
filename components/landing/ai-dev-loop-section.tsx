@@ -6,7 +6,7 @@ export function AIDevLoopSection() {
     <ScrollReveal>
       <div className="border-b-2 border-retro-black bg-white p-10 md:p-16">
         <div className="mx-auto max-w-5xl">
-          <h2 className="mb-12 text-center text-4xl font-medium tracking-tight md:text-5xl">
+          <h2 className="mb-12 text-center text-3xl font-medium tracking-tight sm:text-4xl md:text-5xl">
             Close the AI Development Loop
           </h2>
 
@@ -62,7 +62,7 @@ export function AIDevLoopSection() {
           </div>
 
           <div className="mt-12 border-2 border-retro-black bg-retro-lavender/30 p-8 text-center">
-            <p className="text-2xl font-medium tracking-tight">
+            <p className="text-xl font-medium tracking-tight md:text-2xl">
               You&apos;re not collecting feedback. <br />
               You&apos;re feeding your AI development pipeline.
             </p>
