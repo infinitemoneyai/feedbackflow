@@ -12,13 +12,13 @@ export default function SignInPage() {
   return (
     <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
       {/* Left Panel - Control Center Visual */}
-      <div className="ff-scanline-noise relative hidden flex-col justify-between border-r-2 border-retro-black bg-retro-black p-8 text-white md:p-12 lg:flex lg:p-16">
+      <div className="ff-scanline-noise relative hidden flex-col justify-between border-r-2 border-retro-black bg-retro-black p-4 text-white sm:p-6 md:p-12 lg:flex lg:p-16">
         <div className="relative z-10 flex items-start justify-between">
           <Link href="/" className="group flex items-center gap-2 text-white">
             <Icon name="solar:arrow-left-linear" size={20} className="transition-transform group-hover:-translate-x-1" />
             <span className="font-mono text-sm uppercase tracking-widest">Back to Home</span>
           </Link>
-          <div className="flex items-center gap-2 rounded border border-retro-yellow/30 bg-retro-yellow/5 px-2 py-1 font-mono text-[10px] uppercase text-retro-yellow">
+          <div className="flex items-center gap-2 rounded border border-retro-yellow/30 bg-retro-yellow/5 px-2 py-1 font-mono text-[10px] uppercase text-retro-yellow sm:text-xs">
             <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-retro-yellow" />
             Restricted Access
           </div>
@@ -81,7 +81,7 @@ export default function SignInPage() {
       </div>
 
       {/* Right Panel - Form */}
-      <div className="flex flex-col items-center justify-center bg-retro-paper p-8 md:p-12">
+      <div className="flex flex-col items-center justify-center bg-retro-paper p-4 sm:p-6 md:p-12">
         <div className="w-full max-w-md">
           {/* Mobile Back Link */}
           <div className="mb-8 lg:hidden">

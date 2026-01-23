@@ -527,7 +527,7 @@ export function TicketDetailPanel() {
   // Loading state
   if (feedback === undefined) {
     return (
-      <aside className="relative z-10 hidden w-[480px] flex-shrink-0 flex-col border-l-2 border-retro-black bg-retro-paper lg:flex">
+      <aside className="fixed inset-0 z-50 flex w-full flex-col border-l-2 border-retro-black bg-retro-paper lg:relative lg:z-10 lg:flex lg:w-[480px] lg:flex-shrink-0">
         <div className="flex flex-1 flex-col items-center justify-center p-8">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-stone-200 border-t-retro-black" />
           <p className="mt-4 text-sm text-stone-500">Loading feedback...</p>
@@ -539,7 +539,7 @@ export function TicketDetailPanel() {
   // Error state - feedback not found
   if (feedback === null) {
     return (
-      <aside className="relative z-10 hidden w-[480px] flex-shrink-0 flex-col border-l-2 border-retro-black bg-retro-paper lg:flex">
+      <aside className="fixed inset-0 z-50 flex w-full flex-col border-l-2 border-retro-black bg-retro-paper lg:relative lg:z-10 lg:flex lg:w-[480px] lg:flex-shrink-0">
         <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2 border-retro-red/20 bg-retro-red/10">
             <X className="h-8 w-8 text-retro-red" />
@@ -560,7 +560,7 @@ export function TicketDetailPanel() {
   }
 
   return (
-    <aside className="relative z-10 hidden w-[480px] flex-shrink-0 flex-col border-l-2 border-retro-black bg-retro-paper lg:flex">
+    <aside className="fixed inset-0 z-50 flex w-full flex-col border-l-2 border-retro-black bg-retro-paper lg:relative lg:z-10 lg:flex lg:w-[480px] lg:flex-shrink-0">
       {/* Toast */}
       {toast && <Toast kind={toast.kind} message={toast.message} />}
 

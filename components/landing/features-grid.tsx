@@ -7,10 +7,10 @@ export function FeaturesGrid() {
       <div className="border-b-2 border-retro-black bg-retro-paper">
         <div className="flex flex-col items-start justify-between gap-4 border-b-2 border-retro-black p-8 md:flex-row md:items-center md:p-10">
           <div>
-            <h2 className="text-3xl font-medium tracking-tight">
+            <h2 className="text-2xl font-medium tracking-tight md:text-3xl">
               Built for AI Development Pipelines
             </h2>
-            <p className="mt-1 text-lg text-stone-500">
+            <p className="mt-1 text-base text-stone-500 md:text-lg">
               The feedback layer your AI agents can actually consume.
             </p>
           </div>
@@ -19,14 +19,14 @@ export function FeaturesGrid() {
           </div>
         </div>
 
-        <div className="grid h-auto grid-cols-1 divide-y-2 divide-retro-black md:h-80 md:grid-cols-2 md:divide-x-2 md:divide-y-0 lg:grid-cols-4">
+        <div className="grid h-auto grid-cols-1 divide-y-2 divide-retro-black md:grid-cols-2 md:divide-x-2 md:divide-y-0 lg:h-80 lg:grid-cols-4">
           {/* Feature 1 */}
           <div className="group flex cursor-default flex-col justify-between p-8 transition-colors hover:bg-stone-50">
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-retro-blue bg-retro-blue/20 text-retro-blue transition-transform group-hover:scale-110">
               <Icon name="solar:camera-linear" size={24} />
             </div>
             <div>
-              <h3 className="mb-2 text-xl font-medium tracking-tight">
+              <h3 className="mb-2 text-lg font-medium tracking-tight md:text-xl">
                 Screenshot DOM
               </h3>
               <p className="text-sm leading-relaxed text-stone-600">
@@ -42,7 +42,7 @@ export function FeaturesGrid() {
               <Icon name="solar:pen-new-square-linear" size={24} />
             </div>
             <div>
-              <h3 className="mb-2 text-xl font-medium tracking-tight">
+              <h3 className="mb-2 text-lg font-medium tracking-tight md:text-xl">
                 Scribble on it
               </h3>
               <p className="text-sm leading-relaxed text-stone-600">
@@ -58,7 +58,7 @@ export function FeaturesGrid() {
               <RubberDuckIcon size={24} className="text-amber-600" />
             </div>
             <div>
-              <h3 className="mb-2 text-xl font-medium tracking-tight">
+              <h3 className="mb-2 text-lg font-medium tracking-tight md:text-xl">
                 AI Rubber Duck
               </h3>
               <p className="text-sm leading-relaxed text-stone-600">
@@ -77,7 +77,7 @@ export function FeaturesGrid() {
               <Icon name="solar:ticket-linear" size={24} />
             </div>
             <div className="relative z-10">
-              <h3 className="mb-2 text-xl font-medium tracking-tight">
+              <h3 className="mb-2 text-lg font-medium tracking-tight md:text-xl">
                 Machine-Readable Output
               </h3>
               <p className="text-sm leading-relaxed text-stone-600">
