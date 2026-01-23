@@ -14,6 +14,7 @@ import { SubmitUI } from "./submit-ui";
 import { getOfflineQueue } from "./offline-queue";
 import type { CaptureResult } from "./capture";
 import type { RecordingResult } from "./record";
+import { isMobileDevice, isScreenRecordingSupported } from "./mobile-utils";
 import { debug } from "./debug";
 
 /**
@@ -169,8 +170,14 @@ export class FeedbackFlowWidget {
    */
   private createCaptureOptions(): HTMLElement {
     const container = createElement("div", { className: "ff-capture-options" });
+    const isMobile = isMobileDevice();
+    const canRecord = isScreenRecordingSupported() && !isMobile;
 
-    // Screenshot option
+    // Screenshot option - adjust text for mobile
+    const screenshotDescription = isMobile
+      ? "Take a photo or select from gallery"
+      : "Capture and annotate your screen";
+
     const screenshotOption = createElement(
       "button",
       {
@@ -184,20 +191,28 @@ export class FeedbackFlowWidget {
         ]),
         createElement("div", { className: "ff-capture-text" }, [
           createElement("p", { className: "ff-capture-title" }, [
-            "Take a Screenshot",
+            isMobile ? "Add a Photo" : "Take a Screenshot",
           ]),
           createElement("p", { className: "ff-capture-description" }, [
-            "Capture and annotate your screen",
+            screenshotDescription,
           ]),
         ]),
       ]
     );
 
-    // Record option
+    // Record option - show as disabled on mobile
+    const recordOptionClasses = canRecord
+      ? "ff-capture-option"
+      : "ff-capture-option ff-capture-option-disabled";
+
+    const recordDescription = canRecord
+      ? "Record with voice narration (up to 2 min)"
+      : "Desktop only";
+
     const recordOption = createElement(
       "button",
       {
-        className: "ff-capture-option",
+        className: recordOptionClasses,
         "data-capture-type": "record",
         type: "button",
       },
@@ -210,7 +225,7 @@ export class FeedbackFlowWidget {
             "Record Your Screen",
           ]),
           createElement("p", { className: "ff-capture-description" }, [
-            "Record with voice narration (up to 2 min)",
+            recordDescription,
           ]),
         ]),
       ]
@@ -266,6 +281,11 @@ export class FeedbackFlowWidget {
           }
         });
       });
+
+    // Listen for switch-to-screenshot event (from recording UI when not supported)
+    window.addEventListener("ff:switch-to-screenshot", () => {
+      this.startCapture("screenshot");
+    });
   }
 
   /**

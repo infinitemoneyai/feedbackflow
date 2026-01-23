@@ -48,10 +48,20 @@ export const getOnboardingState = query({
       return null;
     }
 
+    // isComplete is true ONLY if onboardingCompletedAt is set
+    // This distinguishes between "never started" (undefined step, no completedAt)
+    // and "actually completed" (undefined step, has completedAt)
+    const isComplete = user.onboardingCompletedAt !== undefined;
+    
+    // needsOnboarding: user has no step set AND hasn't completed onboarding
+    // This catches new users who haven't started yet
+    const needsOnboarding = user.onboardingStep === undefined && !isComplete;
+    
     return {
       step: user.onboardingStep,
       completedAt: user.onboardingCompletedAt,
-      isComplete: user.onboardingStep === undefined || user.onboardingStep >= 8,
+      isComplete,
+      needsOnboarding,
       data: user.onboardingData,
     };
   },

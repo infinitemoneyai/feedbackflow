@@ -6,7 +6,15 @@
 import { createElement, createElementFromHTML } from "./dom";
 import { icons } from "./icons";
 import { AnnotationCanvas, AnnotationTool } from "./annotate";
-import { captureScreenshot, compressImage, CaptureResult } from "./capture";
+import {
+  captureScreenshot,
+  compressImage,
+  CaptureResult,
+  captureFromFile,
+  selectImageFile,
+  canCaptureScreen,
+} from "./capture";
+import { isMobileDevice } from "./mobile-utils";
 import type { WidgetConfig } from "./types";
 import { debug } from "./debug";
 
@@ -38,13 +46,47 @@ export class ScreenshotUI {
    */
   public async start(): Promise<void> {
     try {
-      // Capture the screenshot
+      // On mobile or when screen capture isn't supported, show file picker
+      if (isMobileDevice() || !canCaptureScreen()) {
+        await this.startMobileCapture();
+        return;
+      }
+
+      // Desktop: use native screen capture
       this.capturedImage = await captureScreenshot();
 
       // Show the preview UI
       this.showPreviewUI();
     } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Unknown error";
+
+      // If mobile device, show file upload option
+      if (errorMsg === "MOBILE_DEVICE") {
+        await this.startMobileCapture();
+        return;
+      }
+
       debug.error("Screenshot capture failed", error);
+      this.callbacks.onCancel();
+    }
+  }
+
+  /**
+   * Start mobile-friendly capture flow (file upload)
+   */
+  private async startMobileCapture(): Promise<void> {
+    try {
+      const file = await selectImageFile();
+      this.capturedImage = await captureFromFile(file);
+      this.showPreviewUI();
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "";
+      // Don't show error for user cancellation
+      if (errorMsg.includes("cancelled") || errorMsg.includes("canceled")) {
+        debug.log("Screenshot selection cancelled");
+      } else {
+        debug.error("Mobile screenshot capture failed", error);
+      }
       this.callbacks.onCancel();
     }
   }
@@ -283,14 +325,8 @@ export class ScreenshotUI {
    */
   private async retake(): Promise<void> {
     this.destroy();
-
-    try {
-      this.capturedImage = await captureScreenshot();
-      this.showPreviewUI();
-    } catch (error) {
-      debug.error("Screenshot retake failed", error);
-      this.callbacks.onCancel();
-    }
+    // Re-run the full capture flow which handles mobile detection
+    await this.start();
   }
 
   /**
@@ -490,6 +526,72 @@ export class ScreenshotUI {
       .ff-btn-primary:hover {
         transform: translate(2px, 2px);
         box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.3);
+      }
+
+      /* Mobile responsive styles */
+      @media (max-width: 600px) {
+        .ff-screenshot-wrapper {
+          max-width: 100%;
+          max-height: 100%;
+          width: 100%;
+          height: 100%;
+          border: none;
+          box-shadow: none;
+        }
+
+        .ff-screenshot-header {
+          padding: 10px 12px;
+        }
+
+        .ff-screenshot-title {
+          font-size: 14px;
+        }
+
+        .ff-screenshot-toolbar {
+          padding: 6px 12px;
+          gap: 2px;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        .ff-tool-button {
+          padding: 10px;
+          min-width: 44px;
+          min-height: 44px;
+        }
+
+        .ff-screenshot-canvas-container {
+          padding: 8px;
+          min-height: 150px;
+        }
+
+        .ff-screenshot-canvas {
+          max-height: 50vh;
+        }
+
+        .ff-screenshot-actions {
+          padding: 10px 12px;
+          gap: 8px;
+        }
+
+        .ff-screenshot-btn {
+          padding: 12px 16px;
+          flex: 1;
+          text-align: center;
+        }
+      }
+
+      /* Touch-friendly targets */
+      @media (pointer: coarse) {
+        .ff-tool-button {
+          min-width: 48px;
+          min-height: 48px;
+        }
+
+        .ff-screenshot-close {
+          padding: 8px;
+          margin: -4px;
+        }
       }
     `;
 

@@ -39,15 +39,18 @@ export default function AuthLayout({
     }
   }, [isLoaded, user, router]);
 
-  // Redirect to onboarding if needed (steps 1-3)
+  // Redirect to onboarding if needed (steps 1-3 or needs onboarding)
   useEffect(() => {
     if (!onboardingState) return;
 
     const step = onboardingState.step;
     const isComplete = onboardingState.isComplete;
+    const needsOnboarding = onboardingState.needsOnboarding;
 
-    // If onboarding is in steps 1-3 and we're not on /onboarding, redirect
-    if (!isComplete && step !== undefined && step >= 1 && step <= 3) {
+    // Redirect to onboarding if:
+    // 1. User needs onboarding (never started, no completedAt)
+    // 2. User is in steps 1-3
+    if (needsOnboarding || (!isComplete && step !== undefined && step >= 1 && step <= 3)) {
       if (pathname !== "/onboarding") {
         router.push("/onboarding");
       }

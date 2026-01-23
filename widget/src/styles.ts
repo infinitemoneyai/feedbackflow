@@ -190,6 +190,23 @@ export function generateStyles(config: WidgetConfig): string {
       box-shadow: 1px 1px 0px 0px rgba(0, 0, 0, 1);
     }
 
+    /* Disabled state for unsupported options (e.g., recording on mobile) */
+    .ff-capture-option-disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.5);
+    }
+
+    .ff-capture-option-disabled:hover {
+      transform: none;
+      box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.5);
+    }
+
+    .ff-capture-option-disabled:active {
+      transform: none;
+      box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.5);
+    }
+
     .ff-capture-icon {
       width: 48px;
       height: 48px;
@@ -254,6 +271,67 @@ export function generateStyles(config: WidgetConfig): string {
 
     .ff-powered-by a:hover {
       text-decoration: underline;
+    }
+
+    /* Mobile-specific styles */
+    @media (max-width: 480px) {
+      .ff-trigger-button {
+        padding: 10px 16px;
+        font-size: 13px;
+      }
+
+      .ff-modal {
+        width: 95%;
+        max-width: none;
+        margin: 10px;
+      }
+
+      .ff-modal-header {
+        padding: 14px 16px;
+      }
+
+      .ff-modal-content {
+        padding: 16px;
+      }
+
+      .ff-capture-option {
+        padding: 14px;
+        gap: 12px;
+      }
+
+      .ff-capture-icon {
+        width: 40px;
+        height: 40px;
+      }
+
+      .ff-capture-icon svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      .ff-capture-title {
+        font-size: 14px;
+      }
+
+      .ff-capture-description {
+        font-size: 12px;
+      }
+    }
+
+    /* Touch-friendly tap targets */
+    @media (pointer: coarse) {
+      .ff-capture-option {
+        min-height: 70px;
+      }
+
+      .ff-close-button {
+        padding: 8px;
+        margin: -4px;
+      }
+
+      .ff-trigger-button {
+        min-height: 48px;
+      }
     }
   `;
 }
