@@ -36,6 +36,8 @@ export async function POST(request: Request) {
   }
 
   try {
+    console.log(`[Stripe Webhook] Processing event: ${event.type} (${event.id})`);
+    
     switch (event.type) {
       case "checkout.session.completed":
         await handleCheckoutSessionCompleted(
@@ -69,14 +71,16 @@ export async function POST(request: Request) {
         break;
 
       default:
-        // Unhandled event type
+        console.log(`[Stripe Webhook] Unhandled event type: ${event.type}`);
     }
 
+    console.log(`[Stripe Webhook] Successfully processed: ${event.type} (${event.id})`);
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error("Error handling webhook:", error);
+    console.error(`[Stripe Webhook] Error handling ${event.type}:`, error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { error: "Webhook handler failed" },
+      { error: "Webhook handler failed", details: errorMessage },
       { status: 500 }
     );
   }
@@ -88,13 +92,13 @@ export async function POST(request: Request) {
 async function handleCheckoutSessionCompleted(
   session: Stripe.Checkout.Session
 ) {
-  // Handle checkout session completion
-
+  console.log(`[Checkout Session] Processing session: ${session.id}`);
+  
   // Get the team ID from metadata
   const teamId = session.metadata?.teamId;
   if (!teamId) {
-    console.error("No teamId in checkout session metadata");
-    return;
+    console.error("[Checkout Session] No teamId in checkout session metadata");
+    throw new Error("No teamId in checkout session metadata");
   }
 
   const customerId =
@@ -103,12 +107,15 @@ async function handleCheckoutSessionCompleted(
       : session.customer?.id;
 
   if (!customerId) {
-    console.error("No customer ID in checkout session");
-    return;
+    console.error("[Checkout Session] No customer ID in checkout session");
+    throw new Error("No customer ID in checkout session");
   }
+
+  console.log(`[Checkout Session] Team: ${teamId}, Customer: ${customerId}`);
 
   try {
     // Update the customer ID on the subscription
+    console.log(`[Checkout Session] Updating customer ID for team: ${teamId}`);
     await convex.mutation(api.billing.updateStripeCustomerIdPublic, {
       teamId: teamId as Id<"teams">,
       stripeCustomerId: customerId,
@@ -116,6 +123,8 @@ async function handleCheckoutSessionCompleted(
 
     // If we have a subscription ID, fetch it from Stripe and update the subscription
     if (session.subscription) {
+      console.log(`[Checkout Session] Fetching subscription from Stripe: ${session.subscription}`);
+      
       const stripeSubscriptionId = typeof session.subscription === "string" 
         ? session.subscription 
         : session.subscription.id;
@@ -128,6 +137,8 @@ async function handleCheckoutSessionCompleted(
       const priceId = subscriptionItem?.price.id;
       const quantity = subscriptionItem?.quantity || 1;
       
+      console.log(`[Checkout Session] Updating subscription: plan=pro, seats=${quantity}, status=${stripeSubscription.status}`);
+      
       // Update the subscription to Pro
       await convex.mutation(api.billing.updateSubscriptionFromStripe, {
         stripeCustomerId: customerId,
@@ -139,7 +150,10 @@ async function handleCheckoutSessionCompleted(
         currentPeriodStart: subscriptionItem?.current_period_start ? subscriptionItem.current_period_start * 1000 : Date.now(),
         currentPeriodEnd: subscriptionItem?.current_period_end ? subscriptionItem.current_period_end * 1000 : Date.now() + 30 * 24 * 60 * 60 * 1000,
         cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
+        teamId: teamId as Id<"teams">, // Pass teamId for fallback lookup
       });
+
+      console.log(`[Checkout Session] Subscription updated successfully`);
 
       // Track checkout completed event
       captureServerEvent(teamId, "checkout_session_completed", {
@@ -150,9 +164,11 @@ async function handleCheckoutSessionCompleted(
         amount_total: session.amount_total ? session.amount_total / 100 : 0,
         currency: session.currency,
       });
+    } else {
+      console.log(`[Checkout Session] No subscription ID in session`);
     }
   } catch (error) {
-    console.error("Error handling checkout session:", error);
+    console.error("[Checkout Session] Error handling checkout session:", error);
     throw error;
   }
 }
@@ -190,6 +206,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     currentPeriodStart: subscriptionItem?.current_period_start ? subscriptionItem.current_period_start * 1000 : Date.now(),
     currentPeriodEnd: subscriptionItem?.current_period_end ? subscriptionItem.current_period_end * 1000 : Date.now() + 30 * 24 * 60 * 60 * 1000,
     cancelAtPeriodEnd: subscription.cancel_at_period_end,
+    teamId: teamId ? (teamId as Id<"teams">) : undefined, // Pass teamId for fallback lookup
   });
 
   // Track subscription updated event
@@ -231,6 +248,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     currentPeriodStart,
     currentPeriodEnd,
     cancelAtPeriodEnd: true,
+    teamId: subscription.metadata?.teamId ? (subscription.metadata.teamId as Id<"teams">) : undefined,
   });
 
   // Track subscription cancelled event
