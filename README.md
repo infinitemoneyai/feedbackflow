@@ -21,6 +21,15 @@
       <img src="https://img.shields.io/github/issues/infinitemoneyai/feedbackflow" alt="GitHub issues" />
     </a>
   </p>
+
+  <p>
+    <a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Finfinitemoneyai%2Ffeedbackflow&env=NEXT_PUBLIC_CONVEX_URL,CONVEX_DEPLOYMENT,NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,CLERK_SECRET_KEY&envDescription=Required%20API%20keys%20for%20FeedbackFlow&envLink=https%3A%2F%2Fgithub.com%2Finfinitemoneyai%2Ffeedbackflow%23environment-variables&project-name=feedbackflow&repository-name=feedbackflow">
+      <img src="https://vercel.com/button" alt="Deploy with Vercel" />
+    </a>
+    <a href="https://feedbackflow.cc">
+      <img src="https://img.shields.io/badge/demo-feedbackflow.cc-black" alt="Live Demo" />
+    </a>
+  </p>
 </div>
 
 ---
@@ -238,13 +247,14 @@ FeedbackFlow provides a REST API for programmatic access. See the [API documenta
 
 ## Deployment
 
-### Deploy to Vercel
+### Deploy to Vercel (Recommended)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/infinitemoneyai/feedbackflow)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Finfinitemoneyai%2Ffeedbackflow&env=NEXT_PUBLIC_CONVEX_URL,CONVEX_DEPLOYMENT,NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,CLERK_SECRET_KEY&envDescription=Required%20API%20keys%20for%20FeedbackFlow&envLink=https%3A%2F%2Fgithub.com%2Finfinitemoneyai%2Ffeedbackflow%23environment-variables&project-name=feedbackflow&repository-name=feedbackflow)
 
-1. Click the button above or manually deploy to Vercel
-2. Add environment variables from `.env.example`
-3. Deploy!
+1. Click the button above
+2. Vercel will prompt you for the required environment variables
+3. Get your keys from [Convex](https://dashboard.convex.dev) and [Clerk](https://dashboard.clerk.com)
+4. Deploy!
 
 ### Self-Hosting
 
