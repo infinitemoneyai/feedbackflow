@@ -38,7 +38,7 @@ export const getTeamAiConfig = query({
       preferredModel = openaiKey.model || "gpt-4o";
     } else if (anthropicKey) {
       preferredProvider = "anthropic";
-      preferredModel = anthropicKey.model || "claude-sonnet-4-5-20250514";
+      preferredModel = anthropicKey.model || "claude-sonnet-4-5-20250929";
     }
 
     return {

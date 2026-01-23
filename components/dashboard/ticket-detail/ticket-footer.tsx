@@ -289,14 +289,11 @@ const OPENAI_MODELS = [
 ];
 
 const ANTHROPIC_MODELS = [
-  { id: "claude-sonnet-4-5-20250514", name: "Claude Sonnet 4.5 (Best for agents/coding)" },
-  { id: "claude-opus-4-5-20250514", name: "Claude Opus 4.5 (Max intelligence)" },
-  { id: "claude-opus-4-20250514", name: "Claude Opus 4" },
-  { id: "claude-sonnet-4-20250514", name: "Claude Sonnet 4" },
-  { id: "claude-haiku-4-5-20250514", name: "Claude Haiku 4.5 (Fast & economical)" },
+  { id: "claude-sonnet-4-5-20250929", name: "Claude Sonnet 4.5 (Best for agents/coding)" },
+  { id: "claude-opus-4-5-20251101", name: "Claude Opus 4.5 (Max intelligence)" },
+  { id: "claude-haiku-4-5-20251001", name: "Claude Haiku 4.5 (Fast & economical)" },
   { id: "claude-3-5-sonnet-20241022", name: "Claude 3.5 Sonnet" },
   { id: "claude-3-5-haiku-20241022", name: "Claude 3.5 Haiku" },
-  { id: "claude-3-opus-20240229", name: "Claude 3 Opus" },
 ];
 
 export function InboxFooter({
