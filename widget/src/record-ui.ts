@@ -11,6 +11,7 @@ import {
   formatDuration,
   getMaxDuration,
 } from "./record";
+import { isMobileDevice, isScreenRecordingSupported } from "./mobile-utils";
 import type { WidgetConfig } from "./types";
 import { debug } from "./debug";
 
@@ -47,9 +48,14 @@ export class RecordUI {
    * Start the recording flow
    */
   public async start(): Promise<void> {
-    if (!ScreenRecorder.isSupported()) {
-      alert("Screen recording is not supported in this browser.");
-      this.callbacks.onCancel();
+    // Check for mobile devices first
+    if (isMobileDevice()) {
+      this.showMobileUnsupportedMessage();
+      return;
+    }
+
+    if (!ScreenRecorder.isSupported() || !isScreenRecordingSupported()) {
+      this.showUnsupportedMessage();
       return;
     }
 
@@ -80,6 +86,91 @@ export class RecordUI {
       this.hideRecordingIndicator();
       this.callbacks.onCancel();
     }
+  }
+
+  /**
+   * Show mobile-specific unsupported message
+   */
+  private showMobileUnsupportedMessage(): void {
+    this.showMessageOverlay(
+      "Recording Not Available on Mobile",
+      "Screen recording requires a desktop browser. You can still take a screenshot to share feedback!",
+      [
+        { text: "Take Screenshot Instead", action: "screenshot", primary: true },
+        { text: "Cancel", action: "cancel", primary: false },
+      ]
+    );
+  }
+
+  /**
+   * Show general unsupported message
+   */
+  private showUnsupportedMessage(): void {
+    this.showMessageOverlay(
+      "Recording Not Supported",
+      "Your browser doesn't support screen recording. Try using Chrome, Edge, or Firefox on desktop.",
+      [
+        { text: "Take Screenshot Instead", action: "screenshot", primary: true },
+        { text: "Cancel", action: "cancel", primary: false },
+      ]
+    );
+  }
+
+  /**
+   * Show a message overlay with action buttons
+   */
+  private showMessageOverlay(
+    title: string,
+    message: string,
+    buttons: Array<{ text: string; action: string; primary: boolean }>
+  ): void {
+    const overlay = createElement("div", {
+      className: "ff-recording-preview-overlay",
+    });
+
+    const wrapper = createElement("div", { className: "ff-recording-message-wrapper" });
+
+    const content = createElement("div", { className: "ff-recording-message-content" }, [
+      createElement("div", { className: "ff-recording-message-icon" }, [
+        createElementFromHTML(icons.video),
+      ]),
+      createElement("h3", { className: "ff-recording-message-title" }, [title]),
+      createElement("p", { className: "ff-recording-message-text" }, [message]),
+    ]);
+
+    const actions = createElement("div", { className: "ff-recording-message-actions" });
+
+    buttons.forEach(({ text, action, primary }) => {
+      const button = createElement(
+        "button",
+        {
+          className: `ff-recording-btn ff-btn-${primary ? "primary" : "secondary"}`,
+          type: "button",
+        },
+        [text]
+      );
+
+      button.addEventListener("click", () => {
+        overlay.remove();
+        if (action === "cancel") {
+          this.callbacks.onCancel();
+        } else if (action === "screenshot") {
+          // Dispatch event to switch to screenshot mode
+          const event = new CustomEvent("ff:switch-to-screenshot", {
+            detail: { widgetKey: this.config.widgetKey },
+          });
+          window.dispatchEvent(event);
+          this.callbacks.onCancel();
+        }
+      });
+
+      actions.appendChild(button);
+    });
+
+    wrapper.appendChild(content);
+    wrapper.appendChild(actions);
+    overlay.appendChild(wrapper);
+    document.body.appendChild(overlay);
   }
 
   /**
@@ -520,6 +611,62 @@ export class RecordUI {
       .ff-recording-btn.ff-btn-primary:hover {
         transform: translate(2px, 2px);
         box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 0.3);
+      }
+
+      /* Message overlay for unsupported browsers */
+      .ff-recording-message-wrapper {
+        background-color: ${this.config.backgroundColor};
+        border: 2px solid ${this.config.primaryColor};
+        box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1);
+        max-width: 400px;
+        margin: 20px;
+        overflow: hidden;
+      }
+
+      .ff-recording-message-content {
+        padding: 24px;
+        text-align: center;
+      }
+
+      .ff-recording-message-icon {
+        width: 48px;
+        height: 48px;
+        margin: 0 auto 16px;
+        color: ${this.config.primaryColor};
+        opacity: 0.6;
+      }
+
+      .ff-recording-message-icon svg {
+        width: 100%;
+        height: 100%;
+      }
+
+      .ff-recording-message-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: ${this.config.textColor};
+        margin: 0 0 8px;
+      }
+
+      .ff-recording-message-text {
+        font-size: 14px;
+        color: #666;
+        margin: 0;
+        line-height: 1.5;
+      }
+
+      .ff-recording-message-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 16px 24px 24px;
+      }
+
+      @media (min-width: 400px) {
+        .ff-recording-message-actions {
+          flex-direction: row;
+          justify-content: center;
+        }
       }
     `;
 

@@ -516,6 +516,86 @@ export function injectSubmitUIStyles(config: WidgetConfig): void {
     .ff-consent-link:hover {
       color: #4a7ba0;
     }
+
+    /* Mobile responsive styles */
+    @media (max-width: 480px) {
+      .ff-submit-wrapper {
+        width: 100%;
+        max-width: 100%;
+        height: 100%;
+        max-height: 100%;
+        border: none;
+        box-shadow: none;
+      }
+
+      .ff-submit-header {
+        padding: 14px 16px;
+      }
+
+      .ff-submit-content {
+        padding: 14px;
+      }
+
+      .ff-type-selector {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .ff-type-option {
+        flex: none;
+        padding: 14px;
+      }
+
+      .ff-input,
+      .ff-textarea {
+        font-size: 16px; /* Prevents zoom on iOS */
+      }
+
+      .ff-textarea {
+        min-height: 100px;
+      }
+
+      .ff-submit-actions {
+        flex-direction: column-reverse;
+        gap: 8px;
+        padding: 14px;
+      }
+
+      .ff-submit-btn {
+        width: 100%;
+        padding: 14px 20px;
+        text-align: center;
+      }
+
+      .ff-success-icon,
+      .ff-error-icon {
+        width: 56px;
+        height: 56px;
+      }
+
+      .ff-success-icon svg,
+      .ff-error-icon svg {
+        width: 28px;
+        height: 28px;
+      }
+    }
+
+    /* Touch-friendly tap targets */
+    @media (pointer: coarse) {
+      .ff-type-option {
+        min-height: 56px;
+      }
+
+      .ff-consent-checkbox {
+        width: 20px;
+        height: 20px;
+      }
+
+      .ff-submit-close {
+        padding: 8px;
+        margin: -4px;
+      }
+    }
   `;
 
   const styleEl = document.createElement("style");

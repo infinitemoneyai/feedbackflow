@@ -23,8 +23,8 @@ export default function OnboardingPage() {
   };
 
   useEffect(() => {
-    // Start onboarding if not started
-    if (onboardingState && onboardingState.step === undefined && !onboardingState.isComplete) {
+    // Start onboarding if user needs it (never started, no completedAt)
+    if (onboardingState?.needsOnboarding) {
       startOnboarding();
     }
   }, [onboardingState, startOnboarding]);
