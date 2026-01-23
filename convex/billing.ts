@@ -289,7 +289,19 @@ export const updateStripeCustomerIdPublic = mutation({
       .first();
 
     if (!subscription) {
-      throw new Error("Subscription not found");
+      // Create a new subscription if one doesn't exist
+      console.log("Creating new subscription for team:", args.teamId);
+      await ctx.db.insert("subscriptions", {
+        teamId: args.teamId,
+        stripeCustomerId: args.stripeCustomerId,
+        plan: "free", // Will be updated by subsequent webhook
+        seats: 1,
+        status: "active",
+        cancelAtPeriodEnd: false,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      return;
     }
 
     await ctx.db.patch(subscription._id, {
