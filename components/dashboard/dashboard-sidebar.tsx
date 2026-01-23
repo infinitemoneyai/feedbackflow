@@ -12,6 +12,7 @@ import { useDashboard } from "./dashboard-layout";
 import { cn } from "@/lib/utils";
 import { Id } from "@/convex/_generated/dataModel";
 import { UsageIndicator } from "./usage-indicator";
+import { UpgradeModal } from "@/components/settings";
 
 export function DashboardSidebar() {
   const { user } = useUser();
@@ -32,10 +33,17 @@ export function DashboardSidebar() {
   } = useDashboard();
 
   const [openMenuProjectId, setOpenMenuProjectId] = useState<Id<"projects"> | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // Get projects for selected team
   const projects = useQuery(
     api.projects.getProjects,
+    selectedTeamId ? { teamId: selectedTeamId } : "skip"
+  );
+
+  // Get subscription to check if user is on free plan
+  const subscription = useQuery(
+    api.billing.getSubscription,
     selectedTeamId ? { teamId: selectedTeamId } : "skip"
   );
 
@@ -56,6 +64,7 @@ export function DashboardSidebar() {
 
   const selectedTeam = teams?.find((t) => t?._id === selectedTeamId) ?? null;
   const isAdmin = selectedTeam?.role === "admin";
+  const isFreeAccount = subscription?.plan === "free" || !subscription?.plan;
 
   const navItems = [
     {
@@ -76,6 +85,7 @@ export function DashboardSidebar() {
   ];
 
   return (
+    <>
     <aside
       className={cn(
         "fixed inset-y-0 left-0 z-50 flex w-64 flex-shrink-0 flex-col border-b-2 border-retro-black bg-stone-50 transition-transform md:relative md:translate-x-0 md:border-b-0 md:border-r-2",
@@ -103,7 +113,13 @@ export function DashboardSidebar() {
               Projects
             </span>
             <button
-              onClick={() => setIsCreateProjectModalOpen(true)}
+              onClick={() => {
+                if (isFreeAccount) {
+                  setShowUpgradeModal(true);
+                } else {
+                  setIsCreateProjectModalOpen(true);
+                }
+              }}
               className="rounded p-1 transition-colors hover:bg-stone-200"
               title="Create project"
             >
@@ -209,7 +225,13 @@ export function DashboardSidebar() {
 
             {/* Add Project Button */}
             <button
-              onClick={() => setIsCreateProjectModalOpen(true)}
+              onClick={() => {
+                if (isFreeAccount) {
+                  setShowUpgradeModal(true);
+                } else {
+                  setIsCreateProjectModalOpen(true);
+                }
+              }}
               className="mt-2 flex w-full items-center justify-center gap-2 border-2 border-dashed border-stone-300 px-3 py-2 text-sm text-stone-400 transition-colors hover:border-retro-black hover:bg-stone-100 hover:text-retro-black"
             >
               <Icon name="solar:add-square-linear" size={16} />
@@ -307,5 +329,14 @@ export function DashboardSidebar() {
         </div>
       </div>
     </aside>
+
+    {/* Upgrade Modal - rendered outside sidebar */}
+    <UpgradeModal
+      isOpen={showUpgradeModal}
+      onClose={() => setShowUpgradeModal(false)}
+      feature="create additional projects"
+      teamId={selectedTeamId || undefined}
+    />
+  </>
   );
 }

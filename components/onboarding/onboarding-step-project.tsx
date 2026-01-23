@@ -7,6 +7,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
+import { Analytics } from "@/lib/posthog-provider";
 
 type ProjectType = "web_app" | "marketing_site" | "mobile_app" | "other";
 
@@ -88,6 +89,9 @@ export function OnboardingStepProject({ teamId }: OnboardingStepProjectProps) {
         siteUrl: formattedUrl,
         projectType,
       });
+
+      Analytics.projectCreated();
+      Analytics.onboardingStepCompleted("project");
 
       // Redirect to dashboard where modal will take over
       router.push("/dashboard");

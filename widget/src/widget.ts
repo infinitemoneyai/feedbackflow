@@ -14,6 +14,7 @@ import { SubmitUI } from "./submit-ui";
 import { getOfflineQueue } from "./offline-queue";
 import type { CaptureResult } from "./capture";
 import type { RecordingResult } from "./record";
+import { debug } from "./debug";
 
 /**
  * FeedbackFlow Widget Class
@@ -353,7 +354,7 @@ export class FeedbackFlowWidget {
     });
     window.dispatchEvent(event);
 
-    console.log("FeedbackFlow: Screenshot captured", {
+    debug.log("Screenshot captured", {
       width: result.width,
       height: result.height,
       size: result.blob ? `${(result.blob.size / 1024).toFixed(2)}KB` : "unknown",
@@ -414,7 +415,7 @@ export class FeedbackFlowWidget {
     });
     window.dispatchEvent(event);
 
-    console.log("FeedbackFlow: Recording captured", {
+    debug.log("Recording captured", {
       duration: `${(result.duration / 1000).toFixed(1)}s`,
       size: `${(result.blob.size / (1024 * 1024)).toFixed(2)}MB`,
       mimeType: result.mimeType,
@@ -476,7 +477,7 @@ export class FeedbackFlowWidget {
     });
     window.dispatchEvent(event);
 
-    console.log("FeedbackFlow: Feedback submitted successfully", { feedbackId });
+    debug.log("Feedback submitted successfully", { feedbackId });
 
     // Clean up
     this.cleanupAfterSubmission();
@@ -486,7 +487,7 @@ export class FeedbackFlowWidget {
    * Handle submission cancellation
    */
   private handleSubmissionCancel(): void {
-    console.log("FeedbackFlow: Submission cancelled");
+    debug.log("Submission cancelled");
     this.cleanupAfterSubmission();
   }
 
@@ -503,7 +504,7 @@ export class FeedbackFlowWidget {
     });
     window.dispatchEvent(event);
 
-    console.warn("FeedbackFlow: Submission error", { error });
+    debug.warn("Submission error", { error });
     this.cleanupAfterSubmission();
   }
 

@@ -5,6 +5,7 @@ import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Icon } from "@/components/ui/icon";
+import { Analytics } from "@/lib/posthog-provider";
 
 interface OnboardingStepTeamProps {
   onComplete: (teamId: Id<"teams">) => void;
@@ -26,6 +27,8 @@ export function OnboardingStepTeam({ onComplete }: OnboardingStepTeamProps) {
 
     try {
       const result = await createTeam({ name: teamName.trim() });
+      Analytics.teamCreated();
+      Analytics.onboardingStepCompleted("team");
       onComplete(result.teamId);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create team");

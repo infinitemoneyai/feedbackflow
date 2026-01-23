@@ -4,6 +4,8 @@
  * and retrying with exponential backoff
  */
 
+import { debug } from './debug';
+
 export interface QueuedSubmission {
   id: string;
   widgetKey: string;
@@ -108,7 +110,7 @@ export class OfflineQueue {
     if (typeof window === "undefined") return;
 
     window.addEventListener("online", () => {
-      console.log("FeedbackFlow: Connection restored, processing queue...");
+      debug.log("Connection restored, processing queue...");
       this.processQueue();
     });
   }
@@ -132,7 +134,7 @@ export class OfflineQueue {
     try {
       localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(queue));
     } catch (error) {
-      console.error("FeedbackFlow: Failed to save queue", error);
+      debug.error("Failed to save queue", error);
     }
   }
 
@@ -253,8 +255,8 @@ export class OfflineQueue {
         if (item.nextRetryAt > now) continue;
         if (item.retryCount >= MAX_RETRIES) {
           // Max retries exceeded, remove from queue
-          console.warn(
-            `FeedbackFlow: Max retries exceeded for submission ${item.id}, removing from queue`
+          debug.warn(
+            `Max retries exceeded for submission ${item.id}, removing from queue`
           );
           this.removeFromQueue(item.id);
           continue;
@@ -264,8 +266,8 @@ export class OfflineQueue {
           const result = await this.submitToApi(item);
 
           if (result.success) {
-            console.log(
-              `FeedbackFlow: Queued submission ${item.id} succeeded, feedback ID: ${result.feedbackId}`
+            debug.log(
+              `Queued submission ${item.id} succeeded, feedback ID: ${result.feedbackId}`
             );
             this.removeFromQueue(item.id);
 
@@ -279,8 +281,8 @@ export class OfflineQueue {
             throw new Error(result.error || "Submission failed");
           }
         } catch (error) {
-          console.warn(
-            `FeedbackFlow: Queue submission ${item.id} failed, scheduling retry`,
+          debug.warn(
+            `Queue submission ${item.id} failed, scheduling retry`,
             error
           );
 

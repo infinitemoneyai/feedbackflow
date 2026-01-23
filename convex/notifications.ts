@@ -325,6 +325,49 @@ export const queueForDigest = internalMutation({
 });
 
 /**
+ * Public mutation wrapper for queueForDigest
+ * Called from API routes (no auth required as it's called from internal API)
+ */
+export const queueForDigestPublic = mutation({
+  args: {
+    userId: v.id("users"),
+    notificationType: v.union(
+      v.literal("new_feedback"),
+      v.literal("assignment"),
+      v.literal("comment"),
+      v.literal("mention"),
+      v.literal("export_complete"),
+      v.literal("export_failed")
+    ),
+    feedbackId: v.optional(v.id("feedback")),
+    title: v.string(),
+    body: v.optional(v.string()),
+    projectName: v.optional(v.string()),
+    metadata: v.optional(
+      v.object({
+        feedbackTitle: v.optional(v.string()),
+        actorName: v.optional(v.string()),
+        commentPreview: v.optional(v.string()),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    const id = await ctx.db.insert("emailDigestQueue", {
+      userId: args.userId,
+      notificationType: args.notificationType,
+      feedbackId: args.feedbackId,
+      title: args.title,
+      body: args.body,
+      projectName: args.projectName,
+      metadata: args.metadata,
+      createdAt: Date.now(),
+      sentAt: undefined,
+    });
+    return id;
+  },
+});
+
+/**
  * Get pending digest items for a user
  */
 export const getPendingDigestItems = query({
@@ -343,7 +386,7 @@ export const getPendingDigestItems = query({
 /**
  * Mark digest items as sent
  */
-export const markDigestItemsSent = internalMutation({
+export const markDigestItemsSent = mutation({
   args: {
     itemIds: v.array(v.id("emailDigestQueue")),
   },

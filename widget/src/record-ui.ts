@@ -12,6 +12,7 @@ import {
   getMaxDuration,
 } from "./record";
 import type { WidgetConfig } from "./types";
+import { debug } from "./debug";
 
 export interface RecordUICallbacks {
   onConfirm: (result: RecordingResult) => void;
@@ -58,13 +59,13 @@ export class RecordUI {
 
       this.recorder = new ScreenRecorder({
         onStart: () => {
-          console.log("FeedbackFlow: Recording started");
+          debug.log("Recording started");
         },
         onStop: (result) => {
           this.handleRecordingComplete(result);
         },
         onError: (error) => {
-          console.error("FeedbackFlow: Recording error", error);
+          debug.error("Recording error", error);
           this.hideRecordingIndicator();
           this.callbacks.onCancel();
         },
@@ -75,7 +76,7 @@ export class RecordUI {
 
       await this.recorder.start();
     } catch (error) {
-      console.error("FeedbackFlow: Failed to start recording", error);
+      debug.error("Failed to start recording", error);
       this.hideRecordingIndicator();
       this.callbacks.onCancel();
     }

@@ -17,6 +17,7 @@ import {
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
+import { Analytics } from "@/lib/posthog-provider";
 
 interface LinearConfigSectionProps {
   teamId: Id<"teams">;
@@ -257,6 +258,7 @@ export function LinearConfigSection({ teamId }: LinearConfigSectionProps) {
         linearLabelIds: selectedLabelIds.length > 0 ? selectedLabelIds : undefined,
       });
 
+      Analytics.integrationConnected("linear");
       setApiKey("");
       setTestResult({ valid: true, organization: testResultData.organization });
 
@@ -295,6 +297,7 @@ export function LinearConfigSection({ teamId }: LinearConfigSectionProps) {
 
     try {
       await deleteIntegration({ teamId });
+      Analytics.integrationDisconnected("linear");
       setTestResult(null);
       setLinearTeams([]);
       setLinearProjects([]);

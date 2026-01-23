@@ -17,6 +17,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { PLANS } from "@/lib/stripe-config";
 import { format } from "date-fns";
+import { Analytics } from "@/lib/posthog-provider";
 
 interface BillingSectionProps {
   teamId: Id<"teams">;
@@ -48,6 +49,8 @@ export function BillingSection({ teamId }: BillingSectionProps) {
         console.error("Checkout error:", data.error);
         alert(`Failed to create checkout session: ${data.error}`);
       } else if (data.url) {
+        // Track upgrade initiation (actual subscription tracked via webhook)
+        Analytics.featureUsed("upgrade_checkout_started");
         window.location.href = data.url;
       } else {
         console.error("No checkout URL returned");
@@ -71,6 +74,7 @@ export function BillingSection({ teamId }: BillingSectionProps) {
 
       const data = await response.json();
       if (data.url) {
+        Analytics.featureUsed("billing_portal_opened");
         window.location.href = data.url;
       } else {
         console.error("No portal URL returned:", data.error);
@@ -176,6 +180,7 @@ export function BillingSection({ teamId }: BillingSectionProps) {
                 onClick={() => {
                   setSelectedSeats(usage?.memberCount || 1);
                   setShowSeatSelector(true);
+                  Analytics.featureUsed("upgrade_modal_opened");
                 }}
                 disabled={loading === "checkout"}
                 className="flex items-center gap-2 rounded border-2 border-retro-black bg-retro-yellow px-4 py-2 text-sm font-medium text-retro-black shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(26,26,26,1)] disabled:opacity-50"

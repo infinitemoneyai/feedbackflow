@@ -4,6 +4,7 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { constructWebhookEvent, mapStripeStatus } from "@/lib/stripe";
+import { captureServerEvent } from "@/lib/posthog-server";
 
 // Initialize Convex client
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
@@ -139,6 +140,16 @@ async function handleCheckoutSessionCompleted(
         currentPeriodEnd: subscriptionItem?.current_period_end ? subscriptionItem.current_period_end * 1000 : Date.now() + 30 * 24 * 60 * 60 * 1000,
         cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
       });
+
+      // Track checkout completed event
+      captureServerEvent(teamId, "checkout_session_completed", {
+        plan: "pro",
+        seats: quantity,
+        stripe_customer_id: customerId,
+        stripe_subscription_id: stripeSubscription.id,
+        amount_total: session.amount_total ? session.amount_total / 100 : 0,
+        currency: session.currency,
+      });
     }
   } catch (error) {
     console.error("Error handling checkout session:", error);
@@ -180,6 +191,16 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     currentPeriodEnd: subscriptionItem?.current_period_end ? subscriptionItem.current_period_end * 1000 : Date.now() + 30 * 24 * 60 * 60 * 1000,
     cancelAtPeriodEnd: subscription.cancel_at_period_end,
   });
+
+  // Track subscription updated event
+  captureServerEvent(teamId, "subscription_updated", {
+    plan: "pro",
+    seats: quantity,
+    status: mapStripeStatus(subscription.status),
+    stripe_customer_id: customerId,
+    stripe_subscription_id: subscription.id,
+    cancel_at_period_end: subscription.cancel_at_period_end,
+  });
 }
 
 /**
@@ -211,6 +232,15 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     currentPeriodEnd,
     cancelAtPeriodEnd: true,
   });
+
+  // Track subscription cancelled event
+  const teamId = subscription.metadata?.teamId;
+  if (teamId) {
+    captureServerEvent(teamId, "subscription_cancelled", {
+      stripe_customer_id: subscription.customer as string,
+      stripe_subscription_id: subscription.id,
+    });
+  }
 }
 
 /**
@@ -267,4 +297,18 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
     stripeSubscriptionId: subscriptionId,
     status: "past_due",
   });
+
+  // Track payment failed event
+  const customerId =
+    typeof invoice.customer === "string"
+      ? invoice.customer
+      : invoice.customer?.id;
+  if (customerId) {
+    captureServerEvent(customerId, "payment_failed", {
+      stripe_subscription_id: subscriptionId,
+      amount_due: invoice.amount_due ? invoice.amount_due / 100 : 0,
+      currency: invoice.currency,
+      attempt_count: invoice.attempt_count,
+    });
+  }
 }

@@ -8,6 +8,7 @@ import { icons } from "./icons";
 import { AnnotationCanvas, AnnotationTool } from "./annotate";
 import { captureScreenshot, compressImage, CaptureResult } from "./capture";
 import type { WidgetConfig } from "./types";
+import { debug } from "./debug";
 
 export interface ScreenshotUICallbacks {
   onConfirm: (result: CaptureResult) => void;
@@ -43,7 +44,7 @@ export class ScreenshotUI {
       // Show the preview UI
       this.showPreviewUI();
     } catch (error) {
-      console.error("FeedbackFlow: Screenshot capture failed", error);
+      debug.error("Screenshot capture failed", error);
       this.callbacks.onCancel();
     }
   }
@@ -287,7 +288,7 @@ export class ScreenshotUI {
       this.capturedImage = await captureScreenshot();
       this.showPreviewUI();
     } catch (error) {
-      console.error("FeedbackFlow: Screenshot retake failed", error);
+      debug.error("Screenshot retake failed", error);
       this.callbacks.onCancel();
     }
   }
@@ -309,7 +310,7 @@ export class ScreenshotUI {
       this.destroy();
       this.callbacks.onConfirm(compressed);
     } catch (error) {
-      console.error("FeedbackFlow: Failed to process screenshot", error);
+      debug.error("Failed to process screenshot", error);
       this.callbacks.onCancel();
     }
   }

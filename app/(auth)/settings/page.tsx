@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useQuery } from "convex/react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Bot, Settings as SettingsIcon, Users, CreditCard, Plug, Webhook, Key, Zap, Bell, Palette, HardDrive, User, FileCode } from "lucide-react";
+import { ArrowLeft, Bot, Settings as SettingsIcon, Users, CreditCard, Plug, Webhook, Key, Zap, Bell, Palette, HardDrive, User, FileCode, LogOut, Shield } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { AiConfigSection } from "@/components/settings/ai-config-section";
@@ -21,8 +21,10 @@ import { TeamSettingsSection } from "@/components/settings/team-settings-section
 import { UserProfileSection } from "@/components/settings/user-profile-section";
 import { ExportTemplatesSection } from "@/components/settings/export-templates-section";
 import { JsonExportQueueSection } from "@/components/settings/json-export-queue-section";
+import { LogoutSection } from "@/components/settings/logout-section";
+import { PrivacySection } from "@/components/settings/privacy-section";
 
-type SettingsTab = "profile" | "widget" | "ai" | "storage" | "integrations" | "templates" | "webhooks" | "automation" | "api-keys" | "notifications" | "team" | "billing";
+type SettingsTab = "profile" | "widget" | "ai" | "storage" | "integrations" | "templates" | "webhooks" | "automation" | "api-keys" | "notifications" | "team" | "billing" | "privacy" | "logout";
 
 function SettingsContent() {
   const searchParams = useSearchParams();
@@ -34,7 +36,7 @@ function SettingsContent() {
   // Read tab from URL on mount
   useEffect(() => {
     const tabParam = searchParams.get("tab") as SettingsTab | null;
-    if (tabParam && ["profile", "widget", "ai", "storage", "integrations", "templates", "webhooks", "automation", "api-keys", "notifications", "team", "billing"].includes(tabParam)) {
+    if (tabParam && ["profile", "widget", "ai", "storage", "integrations", "templates", "webhooks", "automation", "api-keys", "notifications", "team", "billing", "privacy", "logout"].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
@@ -137,6 +139,18 @@ function SettingsContent() {
       label: "Billing",
       icon: CreditCard,
       description: "Subscription and usage",
+    },
+    {
+      id: "privacy" as const,
+      label: "Privacy",
+      icon: Shield,
+      description: "Analytics and data preferences",
+    },
+    {
+      id: "logout" as const,
+      label: "Logout",
+      icon: LogOut,
+      description: "Sign out of your account",
     },
   ];
 
@@ -433,6 +447,14 @@ function SettingsContent() {
 
             {activeTab === "billing" && selectedTeamId && (
               <BillingSection teamId={selectedTeamId} />
+            )}
+
+            {activeTab === "privacy" && (
+              <PrivacySection />
+            )}
+
+            {activeTab === "logout" && (
+              <LogoutSection />
             )}
           </main>
         </div>

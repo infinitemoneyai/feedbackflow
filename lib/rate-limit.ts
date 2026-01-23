@@ -1,7 +1,182 @@
 /**
- * Simple in-memory rate limiter
- * For production, consider using @upstash/ratelimit with Redis
+ * Production-grade rate limiting using Upstash Redis
+ * Supports distributed deployments and serverless environments
  */
+
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+
+// Initialize Redis client
+// Falls back to in-memory if credentials are not set (for development)
+let redis: Redis | null = null;
+
+try {
+  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+    redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    });
+  }
+} catch (error) {
+  console.warn("Failed to initialize Redis for rate limiting:", error);
+}
+
+// Widget submission rate limit: 10 requests per minute per IP
+export const widgetRateLimit = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(10, "1 m"),
+      analytics: true,
+      prefix: "ratelimit:widget",
+    })
+  : null;
+
+// REST API rate limit: 100 requests per minute per API key
+export const apiRateLimit = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(100, "1 m"),
+      analytics: true,
+      prefix: "ratelimit:api",
+    })
+  : null;
+
+// Submitter portal rate limit: 20 requests per minute per token
+export const submitterRateLimit = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(20, "1 m"),
+      analytics: true,
+      prefix: "ratelimit:submitter",
+    })
+  : null;
+
+// Auth endpoints rate limit: 5 requests per minute per IP
+export const authRateLimit = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(5, "1 m"),
+      analytics: true,
+      prefix: "ratelimit:auth",
+    })
+  : null;
+
+// Widget daily limit: 100 submissions per day per widget
+export const widgetDailyLimit = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(100, "1 d"),
+      analytics: true,
+      prefix: "ratelimit:widget:daily",
+    })
+  : null;
+
+export interface RateLimitResult {
+  success: boolean;
+  limit: number;
+  remaining: number;
+  reset: number;
+}
+
+/**
+ * Check IP-based rate limit (for widget submissions)
+ * Falls back to in-memory rate limiting if Redis is not configured
+ */
+export async function checkIpRateLimit(ip: string): Promise<RateLimitResult> {
+  if (widgetRateLimit) {
+    try {
+      const result = await widgetRateLimit.limit(ip);
+      return {
+        success: result.success,
+        limit: result.limit,
+        remaining: result.remaining,
+        reset: result.reset,
+      };
+    } catch (error) {
+      console.error("Rate limit check failed:", error);
+      // Fall through to in-memory fallback
+    }
+  }
+
+  // Fallback to in-memory rate limiting (development only)
+  return inMemoryIpRateLimit(ip);
+}
+
+/**
+ * Check widget daily rate limit
+ */
+export async function checkWidgetDailyRateLimit(
+  widgetKey: string
+): Promise<RateLimitResult> {
+  if (widgetDailyLimit) {
+    try {
+      const result = await widgetDailyLimit.limit(widgetKey);
+      return {
+        success: result.success,
+        limit: result.limit,
+        remaining: result.remaining,
+        reset: result.reset,
+      };
+    } catch (error) {
+      console.error("Widget daily rate limit check failed:", error);
+      // Fall through to in-memory fallback
+    }
+  }
+
+  // Fallback to in-memory rate limiting (development only)
+  return inMemoryWidgetDailyLimit(widgetKey);
+}
+
+/**
+ * Check API rate limit (for REST API)
+ */
+export async function checkApiRateLimit(apiKey: string): Promise<RateLimitResult> {
+  if (apiRateLimit) {
+    try {
+      const result = await apiRateLimit.limit(apiKey);
+      return {
+        success: result.success,
+        limit: result.limit,
+        remaining: result.remaining,
+        reset: result.reset,
+      };
+    } catch (error) {
+      console.error("API rate limit check failed:", error);
+      return { success: true, limit: 100, remaining: 100, reset: Date.now() + 60000 };
+    }
+  }
+
+  // No fallback for API - if Redis is not configured, allow requests
+  return { success: true, limit: 100, remaining: 100, reset: Date.now() + 60000 };
+}
+
+/**
+ * Get client IP from request headers
+ */
+export function getClientIp(request: Request): string {
+  // Check various headers that might contain the real IP
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) {
+    return forwarded.split(",")[0].trim();
+  }
+
+  const realIp = request.headers.get("x-real-ip");
+  if (realIp) {
+    return realIp;
+  }
+
+  const cfConnectingIp = request.headers.get("cf-connecting-ip");
+  if (cfConnectingIp) {
+    return cfConnectingIp;
+  }
+
+  // Fallback to a default (in development, this will be common)
+  return "127.0.0.1";
+}
+
+// ============================================================================
+// IN-MEMORY FALLBACK (Development Only)
+// ============================================================================
 
 interface RateLimitEntry {
   count: number;
@@ -12,7 +187,6 @@ interface RateLimitStore {
   [key: string]: RateLimitEntry;
 }
 
-// In-memory stores (cleared on server restart)
 const ipStore: RateLimitStore = {};
 const widgetDailyStore: RateLimitStore = {};
 
@@ -38,18 +212,7 @@ function maybeCleanup(): void {
   }
 }
 
-export interface RateLimitResult {
-  success: boolean;
-  limit: number;
-  remaining: number;
-  resetAt: number;
-}
-
-/**
- * Check and increment IP-based rate limit
- * 10 requests per minute per IP
- */
-export function checkIpRateLimit(ip: string): RateLimitResult {
+function inMemoryIpRateLimit(ip: string): RateLimitResult {
   maybeCleanup();
 
   const key = `ip:${ip}`;
@@ -69,7 +232,7 @@ export function checkIpRateLimit(ip: string): RateLimitResult {
       success: true,
       limit,
       remaining: limit - 1,
-      resetAt: ipStore[key].resetAt,
+      reset: ipStore[key].resetAt,
     };
   }
 
@@ -78,7 +241,7 @@ export function checkIpRateLimit(ip: string): RateLimitResult {
       success: false,
       limit,
       remaining: 0,
-      resetAt: entry.resetAt,
+      reset: entry.resetAt,
     };
   }
 
@@ -87,19 +250,11 @@ export function checkIpRateLimit(ip: string): RateLimitResult {
     success: true,
     limit,
     remaining: limit - entry.count,
-    resetAt: entry.resetAt,
+    reset: entry.resetAt,
   };
 }
 
-/**
- * Check widget daily rate limit
- * 100 submissions per day per widget
- * This is supplementary to the database check
- */
-export function checkWidgetDailyLimit(
-  widgetKey: string,
-  currentDbCount: number
-): RateLimitResult {
+function inMemoryWidgetDailyLimit(widgetKey: string): RateLimitResult {
   maybeCleanup();
 
   const key = `widget:${widgetKey}`;
@@ -109,69 +264,48 @@ export function checkWidgetDailyLimit(
   // Calculate end of day
   const endOfDay = new Date();
   endOfDay.setHours(23, 59, 59, 999);
-  const resetAt = endOfDay.getTime();
+  const reset = endOfDay.getTime();
 
   const entry = widgetDailyStore[key];
-
-  // If we have a database count, use the max of in-memory and db
-  const dbCount = currentDbCount;
 
   if (!entry || entry.resetAt < now) {
     // New day or first check
     widgetDailyStore[key] = {
-      count: dbCount + 1,
-      resetAt,
+      count: 1,
+      resetAt: reset,
     };
-    const remaining = limit - widgetDailyStore[key].count;
     return {
-      success: remaining >= 0,
+      success: true,
       limit,
-      remaining: Math.max(0, remaining),
-      resetAt,
+      remaining: limit - 1,
+      reset,
     };
   }
 
-  // Use max of in-memory and db count for accuracy
-  const currentCount = Math.max(entry.count, dbCount);
-
-  if (currentCount >= limit) {
+  if (entry.count >= limit) {
     return {
       success: false,
       limit,
       remaining: 0,
-      resetAt: entry.resetAt,
+      reset: entry.resetAt,
     };
   }
 
-  entry.count = currentCount + 1;
+  entry.count++;
   return {
     success: true,
     limit,
     remaining: limit - entry.count,
-    resetAt: entry.resetAt,
+    reset: entry.resetAt,
   };
 }
 
-/**
- * Get client IP from request headers
- */
-export function getClientIp(request: Request): string {
-  // Check various headers that might contain the real IP
-  const forwarded = request.headers.get("x-forwarded-for");
-  if (forwarded) {
-    return forwarded.split(",")[0].trim();
-  }
-
-  const realIp = request.headers.get("x-real-ip");
-  if (realIp) {
-    return realIp;
-  }
-
-  const cfConnectingIp = request.headers.get("cf-connecting-ip");
-  if (cfConnectingIp) {
-    return cfConnectingIp;
-  }
-
-  // Fallback to a default (in development, this will be common)
-  return "127.0.0.1";
+// Log warning if Redis is not configured
+if (!redis && process.env.NODE_ENV === "production") {
+  console.warn(
+    "⚠️  WARNING: Upstash Redis is not configured. Using in-memory rate limiting.\n" +
+    "   This will not work correctly in production with multiple server instances.\n" +
+    "   Please set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN environment variables.\n" +
+    "   See UPSTASH_SETUP.md for instructions."
+  );
 }

@@ -35,6 +35,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -63,3 +64,39 @@ next-env.d.ts
 # OS
 .DS_Store
 Thumbs.db
+
+# AI module refactoring documentation (internal)
+convex/ai/README.md
+convex/ai/REFACTORING_SUMMARY.md
+convex/ai/db/README.md
+convex/ai/db/REFACTORING.md
+
+# Widget submit-ui refactoring documentation (internal)
+widget/src/submit-ui/README.md
+
+# Dashboard feedback-list refactoring documentation (internal)
+components/dashboard/feedback-list/README.md
+
+# Project changelog (internal)
+CHANGELOG.md
+
+# Refactoring documentation (internal)
+REFACTORING_SUMMARY.md
+
+# Internal documentation (contains deployment-specific info)
+README.INTERNAL.md
+DEPLOYMENT_SUMMARY.md
+PRODUCTION_DEPLOYMENT.md
+UPSTASH_SETUP.md
+Production_Launch_Guide.md
+
+widget/DEBUG_LOGGING.md
+OPEN_SOURCE_PREP.md
+PRE_LAUNCH_SECURITY_CHECKLIST.md
+
+# SEO DOCS
+
+SEO_IMPLEMENTATION.md
+UPDATE_URLS.md
+
+

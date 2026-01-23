@@ -176,7 +176,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       )}
 
       {/* Edit Project Modal */}
-      {editingProjectId && selectedTeamId && (
+      {editingProjectId && (
         <EditProjectModal
           isOpen={isEditProjectModalOpen}
           onClose={() => {
@@ -184,7 +184,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             setEditingProjectId(null);
           }}
           projectId={editingProjectId}
-          isAdmin={teams?.find((t) => t?._id === selectedTeamId)?.role === "admin"}
+          isAdmin={selectedTeamId ? teams?.find((t) => t?._id === selectedTeamId)?.role === "admin" : false}
           onSuccess={() => {
             // Modal will close itself
           }}

@@ -607,7 +607,7 @@ export const exportSubmitterData = query({
       },
       feedback: {
         id: feedback._id,
-        referenceId: feedback.referenceId,
+        ticketNumber: feedback.ticketNumber || null,
         title: feedback.title,
         description: feedback.description,
         type: feedback.type,
@@ -711,8 +711,9 @@ export const requestDataDeletion = mutation({
     // Create activity log entry for audit trail
     await ctx.db.insert("activityLog", {
       feedbackId: feedback._id,
-      action: "gdpr_data_deleted",
+      action: "exported",
       details: {
+        to: "gdpr_deletion",
         extra: `Submitter PII removed via GDPR deletion request. Original email: ${submitterEmail ? "[REDACTED]" : "none"}`,
       },
       createdAt: Date.now(),

@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query, internalQuery } from "./_generated/server";
+import { Doc } from "./_generated/dataModel";
 
 /**
  * Generate a secure random API key
@@ -411,7 +412,7 @@ export const getFeedbackForApi = query({
     }
 
     // Get all feedback for these projects
-    let allFeedback: Awaited<ReturnType<typeof ctx.db.get>>[] = [];
+    let allFeedback: Doc<"feedback">[] = [];
     for (const project of projects) {
       const projectFeedback = await ctx.db
         .query("feedback")

@@ -4,6 +4,22 @@ const nextConfig: NextConfig = {
   // Enable React strict mode for better development experience
   reactStrictMode: true,
 
+  // PostHog reverse proxy for better tracking reliability
+  async rewrites() {
+    return [
+      {
+        source: "/ingest/static/:path*",
+        destination: "https://us-assets.i.posthog.com/static/:path*",
+      },
+      {
+        source: "/ingest/:path*",
+        destination: "https://us.i.posthog.com/:path*",
+      },
+    ];
+  },
+  // Required to support PostHog trailing slash API requests
+  skipTrailingSlashRedirect: true,
+
   // Image optimization configuration
   images: {
     // Allow external images from Convex storage and user avatars
