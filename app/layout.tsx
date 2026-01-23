@@ -4,6 +4,10 @@ import "./globals.css";
 import { ConvexClientProvider } from "@/lib/convex-provider";
 import { PostHogProvider } from "@/lib/posthog-provider";
 import { StructuredData } from "@/components/structured-data";
+// In your layout.tsx
+import Script from 'next/script'
+
+
 
 const inter = Inter({
   variable: "--font-inter",
@@ -92,6 +96,12 @@ export default function RootLayout({
         <ConvexClientProvider>
           <PostHogProvider>{children}</PostHogProvider>
         </ConvexClientProvider>
+        <Script
+          src="https://www.feedbackflow.cc/widget.js"
+          data-widget-key="wk_jUHmNX2EXhOqCLXNlGlMocRp"
+          data-api-url="https://www.feedbackflow.cc/api/widget/submit"
+          strategy="lazyOnload"
+        />
       </body>
     </html>
   );
