@@ -1,0 +1,80 @@
+[
+  {
+    "event": "checkout_session_completed",
+    "description": "Server-side: User completes Stripe checkout successfully",
+    "file": "app/api/webhooks/stripe/route.ts",
+    "type": "server"
+  },
+  {
+    "event": "subscription_updated",
+    "description": "Server-side: Subscription status changes (upgrade, downgrade, renewal)",
+    "file": "app/api/webhooks/stripe/route.ts",
+    "type": "server"
+  },
+  {
+    "event": "subscription_cancelled",
+    "description": "Server-side: User cancels their subscription",
+    "file": "app/api/webhooks/stripe/route.ts",
+    "type": "server"
+  },
+  {
+    "event": "payment_failed",
+    "description": "Server-side: Invoice payment fails",
+    "file": "app/api/webhooks/stripe/route.ts",
+    "type": "server"
+  },
+  {
+    "event": "feedback_submitted",
+    "description": "Server-side: Widget successfully submits feedback",
+    "file": "app/api/widget/submit/route.ts",
+    "type": "server"
+  },
+  {
+    "event": "feedback_rate_limited",
+    "description": "Server-side: Widget submission blocked by rate limit",
+    "file": "app/api/widget/submit/route.ts",
+    "type": "server"
+  },
+  {
+    "event": "usage_limit_exceeded",
+    "description": "Server-side: Team exceeds monthly feedback limit (free plan)",
+    "file": "app/api/widget/submit/route.ts",
+    "type": "server"
+  },
+  {
+    "event": "project_created",
+    "description": "Client-side: User creates a new project",
+    "file": "components/dashboard/create-project-modal.tsx",
+    "type": "client"
+  },
+  {
+    "event": "onboarding_step_completed",
+    "description": "Client-side: User completes an onboarding step",
+    "file": "app/onboarding/page.tsx",
+    "type": "client"
+  },
+  {
+    "event": "ai_chat_message_sent",
+    "description": "Client-side: User sends a message in AI chat",
+    "file": "components/dashboard/ai-chat-slideout.tsx",
+    "type": "client"
+  },
+  {
+    "event": "ai_conversation_cleared",
+    "description": "Client-side: User clears AI conversation history",
+    "file": "components/dashboard/ai-chat-slideout.tsx",
+    "type": "client"
+  },
+  {
+    "event": "upgrade_modal_opened",
+    "description": "Client-side: User opens upgrade/seat selector modal",
+    "file": "components/settings/billing-section.tsx",
+    "type": "client"
+  },
+  {
+    "event": "billing_portal_opened",
+    "description": "Client-side: User navigates to Stripe billing portal",
+    "file": "components/settings/billing-section.tsx",
+    "type": "client"
+  }
+]

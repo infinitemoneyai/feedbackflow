@@ -3,9 +3,10 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import {
   checkIpRateLimit,
-  checkWidgetDailyLimit,
+  checkWidgetDailyRateLimit,
   getClientIp,
 } from "@/lib/rate-limit";
+import { captureServerEvent } from "@/lib/posthog-server";
 
 // Lazy initialize Convex client
 function getConvexClient() {
@@ -82,21 +83,25 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const clientIp = getClientIp(request);
 
     // Check IP rate limit (10 per minute)
-    const ipRateLimit = checkIpRateLimit(clientIp);
+    const ipRateLimit = await checkIpRateLimit(clientIp);
     if (!ipRateLimit.success) {
+      // Track rate limited event (use IP hash for privacy)
+      captureServerEvent(`ip_${clientIp.slice(0, 8)}`, "feedback_rate_limited", {
+        limit_type: "ip",
+      });
       return jsonResponse(
         {
           error: "Rate limit exceeded",
           message: "Too many requests. Please try again later.",
-          retryAfter: Math.ceil((ipRateLimit.resetAt - Date.now()) / 1000),
+          retryAfter: Math.ceil((ipRateLimit.reset - Date.now()) / 1000),
         },
         429,
         {
           "X-RateLimit-Limit": ipRateLimit.limit.toString(),
           "X-RateLimit-Remaining": "0",
-          "X-RateLimit-Reset": ipRateLimit.resetAt.toString(),
+          "X-RateLimit-Reset": ipRateLimit.reset.toString(),
           "Retry-After": Math.ceil(
-            (ipRateLimit.resetAt - Date.now()) / 1000
+            (ipRateLimit.reset - Date.now()) / 1000
           ).toString(),
         }
       );
@@ -161,20 +166,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       widgetKey,
     });
 
-    const widgetRateLimit = checkWidgetDailyLimit(widgetKey, dailyCount.count);
+    const widgetRateLimit = await checkWidgetDailyRateLimit(widgetKey);
     if (!widgetRateLimit.success) {
       return jsonResponse(
         {
           error: "Daily limit exceeded",
           message:
             "This widget has reached its daily submission limit. Please try again tomorrow.",
-          retryAfter: Math.ceil((widgetRateLimit.resetAt - Date.now()) / 1000),
+          retryAfter: Math.ceil((widgetRateLimit.reset - Date.now()) / 1000),
         },
         429,
         {
           "X-RateLimit-Limit": widgetRateLimit.limit.toString(),
           "X-RateLimit-Remaining": "0",
-          "X-RateLimit-Reset": widgetRateLimit.resetAt.toString(),
+          "X-RateLimit-Reset": widgetRateLimit.reset.toString(),
         }
       );
     }
@@ -194,6 +199,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
 
     if (!usageCheck.allowed) {
+      // Track usage limit exceeded event
+      captureServerEvent(project.teamId, "usage_limit_exceeded", {
+        plan: usageCheck.plan,
+        current_count: usageCheck.currentCount,
+        limit: usageCheck.limit,
+        project_id: widgetInfo.projectId,
+      });
       return jsonResponse(
         {
           error: "Usage limit exceeded",
@@ -265,18 +277,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     // Handle video recording
-    // For now, videos are stored as URL references to external storage
-    // The widget would need to upload to S3/R2/GCS and provide the URL
-    let recordingUrl: string | undefined;
+    let recordingStorageId: string | undefined;
     let recordingDuration: number | undefined;
     let recordingWarning: string | undefined;
     const recording = formData.get("recording") as File | null;
 
     if (recording && recording.size > 0) {
-      // TODO: Upload to external storage (S3/R2/GCS) when configured
-      // For now, we'll store smaller recordings in Convex storage
-      // In production, large videos should go to external storage
-
       // Check file size (Convex storage limit is typically 10MB per file)
       const MAX_CONVEX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -285,19 +291,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           const uploadUrl = await convex.mutation(
             api.feedback.generateUploadUrl
           );
+          // Strip codec parameters from MIME type (e.g., "video/webm;codecs=vp9,opus" -> "video/webm")
+          const contentType = recording.type.split(';')[0];
           const uploadResponse = await fetch(uploadUrl, {
             method: "POST",
             headers: {
-              "Content-Type": recording.type,
+              "Content-Type": contentType,
             },
             body: recording,
           });
 
           if (uploadResponse.ok) {
             const { storageId } = await uploadResponse.json();
-            // Get the URL for the uploaded video
-            // We'll store the storage ID and generate URL on demand
-            recordingUrl = `convex-storage:${storageId}`;
+            recordingStorageId = storageId;
           }
         } catch (error) {
           console.error("Error uploading recording:", error);
@@ -346,7 +352,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       submitterEmail: email?.trim(),
       submitterName: name?.trim(),
       screenshotStorageId: screenshotStorageId as any,
-      recordingUrl,
+      recordingStorageId: recordingStorageId as any,
       recordingDuration,
       metadata: feedbackMetadata,
     });
@@ -418,6 +424,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       console.warn("Failed to trigger background tasks:", err);
     }
 
+    // Track feedback submitted event
+    captureServerEvent(project.teamId, "feedback_submitted", {
+      feedback_type: type,
+      project_id: widgetInfo.projectId,
+      has_screenshot: !!screenshotStorageId,
+      has_recording: !!recordingStorageId,
+      browser,
+      os,
+    });
+
     // Return success response
     return jsonResponse(
       {
@@ -430,7 +446,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       {
         "X-RateLimit-Limit": ipRateLimit.limit.toString(),
         "X-RateLimit-Remaining": ipRateLimit.remaining.toString(),
-        "X-RateLimit-Reset": ipRateLimit.resetAt.toString(),
+        "X-RateLimit-Reset": ipRateLimit.reset.toString(),
       }
     );
   } catch (error) {

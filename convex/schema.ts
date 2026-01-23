@@ -170,6 +170,7 @@ export default defineSchema({
     screenshotUrl: v.optional(v.string()),
     screenshotStorageId: v.optional(v.id("_storage")),
     recordingUrl: v.optional(v.string()),
+    recordingStorageId: v.optional(v.id("_storage")),
     recordingDuration: v.optional(v.number()), // in seconds
 
     // Status and priority

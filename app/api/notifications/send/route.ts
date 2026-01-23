@@ -136,7 +136,7 @@ export async function POST(request: Request): Promise<Response> {
 
     if (frequency !== "instant") {
       // Queue for digest instead of sending immediately
-      await convex.mutation(internal.notifications.queueForDigest, {
+      await convex.mutation(api.notifications.queueForDigestPublic, {
         userId: userId as Id<"users">,
         notificationType: type,
         feedbackId: feedbackId as Id<"feedback"> | undefined,

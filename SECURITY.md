@@ -46,7 +46,7 @@ When self-hosting FeedbackFlow, we recommend:
 
 FeedbackFlow includes several built-in security features:
 
-- **Encryption**: User-provided API keys (OpenAI, Anthropic, Linear, Notion) are encrypted at rest using AES-256-GCM
+- **API Key Storage**: User-provided API keys (OpenAI, Anthropic, Linear, Notion) are obfuscated using base64 encoding before storage in Convex. **Note**: This is not cryptographic encryption. For production deployments, we recommend implementing proper AES-256-GCM encryption via a Convex action that uses a secure key management service.
 - **Rate Limiting**: Built-in rate limiting for API endpoints and widget submissions
 - **Honeypot**: Anti-spam honeypot field in widget submissions
 - **GDPR Compliance**: Data export and deletion capabilities
@@ -54,6 +54,21 @@ FeedbackFlow includes several built-in security features:
 - **Webhook Verification**: All webhooks verify signatures before processing
 - **Input Validation**: Comprehensive input validation and sanitization
 - **XSS Protection**: React's built-in XSS protection and Content Security Policy headers
+
+### API Key Storage Implementation
+
+The current implementation in `convex/apiKeys.ts` uses base64 encoding to obfuscate API keys. This provides basic protection against casual viewing but is **not cryptographically secure**. The keys are:
+
+1. Base64 encoded before storage
+2. Stored in Convex database
+3. Decoded when needed for API calls
+4. Only accessible to authenticated team members
+
+**For production use**, consider:
+- Implementing proper encryption using AES-256-GCM
+- Using a key management service (AWS KMS, Google Cloud KMS, HashiCorp Vault)
+- Rotating encryption keys regularly
+- Implementing key access logging and monitoring
 
 ## Disclosure Policy
 

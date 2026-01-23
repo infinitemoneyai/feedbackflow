@@ -99,8 +99,8 @@ export async function POST(request: Request): Promise<Response> {
 
         if (result.success) {
           // Mark items as sent
-          await convex.mutation(internal.notifications.markDigestItemsSent, {
-            itemIds: pendingItems.map((item: { _id: string }) => item._id),
+          await convex.mutation(api.notifications.markDigestItemsSent, {
+            itemIds: pendingItems.map((item: any) => item._id as any),
           });
           results.sent++;
         } else {

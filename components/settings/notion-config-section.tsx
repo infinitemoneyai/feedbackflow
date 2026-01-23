@@ -17,6 +17,7 @@ import {
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
+import { Analytics } from "@/lib/posthog-provider";
 
 interface NotionConfigSectionProps {
   teamId: Id<"teams">;
@@ -170,6 +171,7 @@ export function NotionConfigSection({ teamId }: NotionConfigSectionProps) {
         notionDatabaseId: selectedDatabaseId || undefined,
       });
 
+      Analytics.integrationConnected("notion");
       setApiKey("");
       setTestResult({ valid: true, botName: testResultData.botName });
 
@@ -206,6 +208,7 @@ export function NotionConfigSection({ teamId }: NotionConfigSectionProps) {
 
     try {
       await deleteIntegration({ teamId });
+      Analytics.integrationDisconnected("notion");
       setTestResult(null);
       setNotionDatabases([]);
       setSelectedDatabaseId("");

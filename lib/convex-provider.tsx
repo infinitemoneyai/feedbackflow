@@ -4,6 +4,7 @@ import { ClerkProvider, useAuth } from "@clerk/nextjs";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { ConvexReactClient } from "convex/react";
 import { ReactNode } from "react";
+import { PostHogProvider } from "./posthog-provider";
 
 const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL!;
 

@@ -5,6 +5,7 @@ import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
+import { Analytics } from "@/lib/posthog-provider";
 
 const slides = [
   {
@@ -50,6 +51,7 @@ export function OnboardingStepWalkthrough() {
   }, [isPaused]);
 
   const handleContinue = async () => {
+    Analytics.onboardingStepCompleted("walkthrough");
     await completeStep({ step: 2 });
   };
 

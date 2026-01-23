@@ -327,6 +327,57 @@ export default function ManifestoPage() {
           </div>
         </div>
 
+        {/* A Note from Matt + InfiniteMoney */}
+        <div className="grid grid-cols-1 divide-y-2 divide-retro-black border-b-2 border-retro-black md:grid-cols-2 md:divide-x-2 md:divide-y-0">
+          <div className="bg-retro-paper p-8 md:p-12 lg:p-16">
+            <div className="mb-6 inline-flex items-center gap-3 rounded border border-retro-blue/30 bg-retro-blue/5 px-3 py-1 font-mono text-xs uppercase tracking-widest text-retro-blue">
+              <Icon name="solar:pen-new-square-linear" size={14} />
+              A Note from Matt
+            </div>
+            <h3 className="mb-6 text-3xl font-medium tracking-tight md:text-4xl">
+              Why I built FeedbackFlow
+              <br />
+              <span className="text-stone-400">and what InfiniteMoney is</span>
+            </h3>
+            <p className="text-lg leading-relaxed text-stone-600">
+              I build fast, ship often, and I hate losing context. FeedbackFlow
+              started as a selfish tool: something I wanted for every product I
+              touch—capture what the user saw, preserve the details, and turn it
+              into work you can actually do.
+            </p>
+          </div>
+
+          <div className="bg-white p-8 md:p-12 lg:p-16">
+            <div className="space-y-6 text-lg leading-relaxed text-stone-600">
+              <p>
+                When feedback shows up as a screenshot in a random thread, the
+                useful parts disappear: what page they were on, what they
+                clicked, what broke, what they expected. This project is my
+                answer to that: screenshot to ticket, with context attached by
+                default.
+              </p>
+              <p>
+                InfiniteMoney is a research company exploring what happens when
+                you give agency to AI and let it lead. Humans stay in the loop
+                to lend a hand—direction, taste, constraints—but the AI drives.
+                If you&apos;re curious what that looks like in practice, follow
+                along at{" "}
+                <Link
+                  href="https://infinitemoney.ai"
+                  className="font-medium text-retro-blue underline underline-offset-4 hover:text-retro-black"
+                >
+                  infinitemoney.ai
+                </Link>
+                .
+              </p>
+              <div className="mt-8 inline-flex items-center gap-2 rounded border border-stone-200 bg-stone-50 px-3 py-2 font-mono text-xs uppercase tracking-widest text-stone-500">
+                <Icon name="solar:user-circle-linear" size={16} />
+                Matt · InfiniteMoney
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* The Promise */}
         <div className="bg-retro-paper p-8 md:p-12 lg:p-16">
           <div className="mx-auto max-w-3xl text-center">

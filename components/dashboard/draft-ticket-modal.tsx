@@ -94,7 +94,22 @@ export function DraftTicketModal({
       });
 
       if (result.success && result.draft) {
-        setTicketDraft(result.draft);
+        const draft = result.draft as {
+          title: string;
+          description: string;
+          acceptanceCriteria: string[];
+          reproSteps?: string[];
+          expectedBehavior?: string;
+          actualBehavior?: string;
+        };
+        setTicketDraft({
+          title: draft.title,
+          description: draft.description,
+          acceptanceCriteria: draft.acceptanceCriteria,
+          reproSteps: draft.reproSteps,
+          expectedBehavior: draft.expectedBehavior,
+          actualBehavior: draft.actualBehavior,
+        });
       }
     } catch (error) {
       console.error("Error generating ticket draft:", error);

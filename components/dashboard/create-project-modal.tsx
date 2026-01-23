@@ -5,6 +5,7 @@ import { useMutation } from "convex/react";
 import { X, Loader2 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { Analytics } from "@/lib/posthog-provider";
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -90,6 +91,7 @@ export function CreateProjectModal({
       });
 
       // Success - call callback and close
+      Analytics.projectCreated(projectType);
       if (onSuccess && result.projectId) {
         onSuccess(result.projectId);
       }

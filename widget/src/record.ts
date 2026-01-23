@@ -3,6 +3,8 @@
  * Uses MediaRecorder API for screen capture with audio
  */
 
+import { debug } from './debug';
+
 export interface RecordingResult {
   blob: Blob;
   duration: number;
@@ -99,7 +101,7 @@ export class ScreenRecorder {
         });
       } catch {
         // Audio is optional - continue without it
-        console.log("FeedbackFlow: Microphone not available, recording without audio");
+        debug.log("Microphone not available, recording without audio");
       }
 
       // Combine streams

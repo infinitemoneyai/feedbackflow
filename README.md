@@ -11,14 +11,14 @@
   </p>
 
   <p>
-    <a href="https://github.com/yourusername/feedbackflow/blob/main/LICENSE">
-      <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License" />
+    <a href="https://github.com/infinitemoneyai/feedbackflow/blob/main/LICENSE">
+      <img src="https://img.shields.io/badge/license-AGPL--3.0-blue.svg" alt="License" />
     </a>
-    <a href="https://github.com/yourusername/feedbackflow/stargazers">
-      <img src="https://img.shields.io/github/stars/yourusername/feedbackflow" alt="GitHub stars" />
+    <a href="https://github.com/infinitemoneyai/feedbackflow/stargazers">
+      <img src="https://img.shields.io/github/stars/infinitemoneyai/feedbackflow" alt="GitHub stars" />
     </a>
-    <a href="https://github.com/yourusername/feedbackflow/issues">
-      <img src="https://img.shields.io/github/issues/yourusername/feedbackflow" alt="GitHub issues" />
+    <a href="https://github.com/infinitemoneyai/feedbackflow/issues">
+      <img src="https://img.shields.io/github/issues/infinitemoneyai/feedbackflow" alt="GitHub issues" />
     </a>
   </p>
 </div>
@@ -105,7 +105,7 @@ FeedbackFlow is a modern, open-source feedback management platform that helps te
 1. **Clone the repository**
 
 ```bash
-git clone https://github.com/yourusername/feedbackflow.git
+git clone https://github.com/infinitemoneyai/feedbackflow.git
 cd feedbackflow
 ```
 
@@ -168,6 +168,10 @@ Add this snippet to your website:
 ```
 
 ## Documentation
+
+- [Self-Hosting Guide](SELF_HOSTING.md) - Configuration for self-hosted deployments
+- [Convex Security Guide](CONVEX_SECURITY.md) - Security architecture and best practices
+- [Pre-Launch Security Checklist](PRE_LAUNCH_SECURITY_CHECKLIST.md) - Complete before going public
 
 ### Project Structure
 
@@ -236,7 +240,7 @@ FeedbackFlow provides a REST API for programmatic access. See the [API documenta
 
 ### Deploy to Vercel
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/feedbackflow)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/infinitemoneyai/feedbackflow)
 
 1. Click the button above or manually deploy to Vercel
 2. Add environment variables from `.env.example`
@@ -244,14 +248,18 @@ FeedbackFlow provides a REST API for programmatic access. See the [API documenta
 
 ### Self-Hosting
 
-FeedbackFlow can be self-hosted on any platform that supports Next.js:
+FeedbackFlow can be self-hosted on any platform that supports Next.js. For detailed self-hosting instructions, including configuration of hardcoded URLs and widget setup, see [SELF_HOSTING.md](SELF_HOSTING.md).
+
+Quick steps:
 
 1. Build the application: `npm run build`
 2. Start the server: `npm start`
-3. Configure environment variables
+3. Configure environment variables (see `.env.example`)
 4. Set up Convex backend
 5. Configure Clerk authentication
 6. (Optional) Set up Stripe for billing
+
+**Important:** Set `NEXT_PUBLIC_APP_URL` to your production domain and configure widget `apiUrl` to point to your instance.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed setup instructions.
 
@@ -280,10 +288,10 @@ Run `npm run lint` to check code style.
 
 ## Community & Support
 
-- 🐛 [Report a bug](https://github.com/yourusername/feedbackflow/issues/new?labels=bug)
-- 💡 [Request a feature](https://github.com/yourusername/feedbackflow/issues/new?labels=enhancement)
+- 🐛 [Report a bug](https://github.com/infinitemoneyai/feedbackflow/issues/new?labels=bug)
+- 💡 [Request a feature](https://github.com/infinitemoneyai/feedbackflow/issues/new?labels=enhancement)
 - 💬 [Join our Discord](https://discord.gg/your-invite) (if applicable)
-- 📧 [Email us](mailto:hello@feedbackflow.cc)
+- 📧 [Email us](mailto:hello@yourdomain.com)
 
 ## Security
 
@@ -308,8 +316,8 @@ Built with amazing open-source tools:
 <div align="center">
   <p>Made with ❤️ by the FeedbackFlow team</p>
   <p>
-    <a href="https://github.com/yourusername/feedbackflow">GitHub</a> ·
-    <a href="https://feedbackflow.cc">Website</a> ·
+    <a href="https://github.com/infinitemoneyai/feedbackflow">GitHub</a> ·
+    <a href="https://yourdomain.com">Website</a> ·
     <a href="https://twitter.com/feedbackflow">Twitter</a>
   </p>
 </div>

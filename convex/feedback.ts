@@ -38,7 +38,7 @@ export const submitFromWidget = mutation({
     submitterEmail: v.optional(v.string()),
     submitterName: v.optional(v.string()),
     screenshotStorageId: v.optional(v.id("_storage")),
-    recordingUrl: v.optional(v.string()),
+    recordingStorageId: v.optional(v.id("_storage")),
     recordingDuration: v.optional(v.number()),
     metadata: v.object({
       browser: v.optional(v.string()),
@@ -83,6 +83,15 @@ export const submitFromWidget = mutation({
       }
     }
 
+    // Get recording URL if storage ID is provided
+    let recordingUrl: string | undefined;
+    if (args.recordingStorageId) {
+      const url = await ctx.storage.getUrl(args.recordingStorageId);
+      if (url) {
+        recordingUrl = url;
+      }
+    }
+
     // Create the feedback record
     const feedbackId = await ctx.db.insert("feedback", {
       widgetId: widget._id,
@@ -94,7 +103,8 @@ export const submitFromWidget = mutation({
       description: args.description,
       screenshotUrl: screenshotUrl ?? undefined,
       screenshotStorageId: args.screenshotStorageId,
-      recordingUrl: args.recordingUrl,
+      recordingUrl: recordingUrl ?? undefined,
+      recordingStorageId: args.recordingStorageId,
       recordingDuration: args.recordingDuration,
       status: "new",
       priority: project.settings?.defaultPriority ?? "medium",

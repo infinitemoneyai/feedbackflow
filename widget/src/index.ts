@@ -12,6 +12,7 @@
 
 import { FeedbackFlowWidget } from "./widget";
 import type { WidgetConfig, WidgetPosition } from "./types";
+import { debug } from "./debug";
 
 // Store widget instance globally for access
 let widgetInstance: FeedbackFlowWidget | null = null;
@@ -25,13 +26,13 @@ function parseConfigFromScript(): Partial<WidgetConfig> | null {
   const script = scripts[scripts.length - 1] as HTMLScriptElement | null;
 
   if (!script) {
-    console.error("FeedbackFlow: No script tag with data-widget-key found");
+    debug.error("No script tag with data-widget-key found");
     return null;
   }
 
   const widgetKey = script.dataset.widgetKey;
   if (!widgetKey) {
-    console.error("FeedbackFlow: data-widget-key is required");
+    debug.error("data-widget-key is required");
     return null;
   }
 
@@ -84,7 +85,7 @@ function parseConfigFromScript(): Partial<WidgetConfig> | null {
 function initWidget(): void {
   // Don't initialize twice
   if (widgetInstance) {
-    console.warn("FeedbackFlow: Widget already initialized");
+    debug.warn("Widget already initialized");
     return;
   }
 
@@ -97,9 +98,9 @@ function initWidget(): void {
     widgetInstance = new FeedbackFlowWidget(
       config as Partial<WidgetConfig> & { widgetKey: string }
     );
-    console.log("FeedbackFlow: Widget initialized");
+    debug.log("Widget initialized");
   } catch (error) {
-    console.error("FeedbackFlow: Failed to initialize widget", error);
+    debug.error("Failed to initialize widget", error);
   }
 }
 
@@ -112,14 +113,14 @@ const FeedbackFlow = {
    */
   init(config: Partial<WidgetConfig> & { widgetKey: string }): void {
     if (widgetInstance) {
-      console.warn("FeedbackFlow: Widget already initialized");
+      debug.warn("Widget already initialized");
       return;
     }
 
     try {
       widgetInstance = new FeedbackFlowWidget(config);
     } catch (error) {
-      console.error("FeedbackFlow: Failed to initialize widget", error);
+      debug.error("Failed to initialize widget", error);
     }
   },
 

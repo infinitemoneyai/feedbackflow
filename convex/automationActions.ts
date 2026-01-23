@@ -299,16 +299,6 @@ export const assignFeedback = internalAction({
     assigneeId: v.id("users"),
   },
   handler: async (ctx, args) => {
-    await ctx.runMutation(internal.automationActions.assignFeedbackInternal, args);
-  },
-});
-
-export const assignFeedbackInternal = internalAction({
-  args: {
-    feedbackId: v.id("feedback"),
-    assigneeId: v.id("users"),
-  },
-  handler: async (ctx, args) => {
     // Use internal mutation to update feedback
     await ctx.runMutation(internal.automationActions.updateFeedbackInternal, {
       feedbackId: args.feedbackId,
@@ -416,14 +406,14 @@ export const updateFeedbackInternal = internalMutation({
 /**
  * Execute Linear export for automation
  */
-export const executeLinearExport: any = internalAction({
+export const executeLinearExport = internalAction({
   args: {
     feedbackId: v.id("feedback"),
     teamId: v.id("teams"),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<{ success: boolean; issueId: string }> => {
     // Get Linear integration
-    const linearConfig = await ctx.runQuery(api.integrations.getLinearApiKey, {
+    const linearConfig: any = await ctx.runQuery(api.integrations.getLinearApiKey, {
       teamId: args.teamId,
     });
 
@@ -504,7 +494,7 @@ ${feedback.screenshotUrl ? `### Screenshot\n![Screenshot](${feedback.screenshotU
       input.labelIds = linearConfig.settings.linearLabelIds;
     }
 
-    const response = await fetch(linearApiUrl, {
+    const response: any = await fetch(linearApiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -516,13 +506,13 @@ ${feedback.screenshotUrl ? `### Screenshot\n![Screenshot](${feedback.screenshotU
       }),
     });
 
-    const data = await response.json();
+    const data: any = await response.json();
 
     if (data.errors) {
       throw new Error(data.errors[0]?.message || "Linear API error");
     }
 
-    const issue = data.data?.issueCreate?.issue;
+    const issue: any = data.data?.issueCreate?.issue;
 
     if (!issue) {
       throw new Error("Failed to create Linear issue");
@@ -550,14 +540,14 @@ ${feedback.screenshotUrl ? `### Screenshot\n![Screenshot](${feedback.screenshotU
 /**
  * Execute Notion export for automation
  */
-export const executeNotionExport: any = internalAction({
+export const executeNotionExport = internalAction({
   args: {
     feedbackId: v.id("feedback"),
     teamId: v.id("teams"),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<{ success: boolean; pageId: string }> => {
     // Get Notion integration
-    const notionConfig = await ctx.runQuery(api.integrations.getNotionApiKey, {
+    const notionConfig: any = await ctx.runQuery(api.integrations.getNotionApiKey, {
       teamId: args.teamId,
     });
 
@@ -570,7 +560,7 @@ export const executeNotionExport: any = internalAction({
     }
 
     // Get feedback
-    const feedback = await ctx.runQuery(api.feedback.getFeedbackInternal, {
+    const feedback: any = await ctx.runQuery(api.feedback.getFeedbackInternal, {
       feedbackId: args.feedbackId,
     });
 
@@ -595,7 +585,7 @@ export const executeNotionExport: any = internalAction({
 
     // Add select properties if they exist in the database
     // These are optional and will be ignored if not present
-    const response = await fetch(notionApiUrl, {
+    const response: any = await fetch(notionApiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -708,7 +698,7 @@ export const executeNotionExport: any = internalAction({
       }),
     });
 
-    const data = await response.json();
+    const data: any = await response.json();
 
     if (!response.ok) {
       throw new Error(data.message || "Notion API error");

@@ -16,6 +16,7 @@ import {
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
+import { Analytics } from "@/lib/posthog-provider";
 
 interface AIChatSlideoutProps {
   feedbackId: Id<"feedback">;
@@ -181,6 +182,7 @@ export function AIChatSlideout({
         setSendError(result.error || "Failed to send message");
       } else {
         setMessage("");
+        Analytics.featureUsed("ai_chat_message_sent");
       }
     } catch (error) {
       setSendError(error instanceof Error ? error.message : "Failed to send message");
@@ -201,6 +203,7 @@ export function AIChatSlideout({
 
     try {
       await clearConversation({ feedbackId });
+      Analytics.featureUsed("ai_conversation_cleared");
     } catch (error) {
       console.error("Failed to clear conversation:", error);
     }

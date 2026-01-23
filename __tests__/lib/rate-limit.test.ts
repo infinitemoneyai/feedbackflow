@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   checkIpRateLimit,
-  checkWidgetDailyLimit,
+  checkWidgetDailyRateLimit,
   getClientIp,
 } from "@/lib/rate-limit";
 
@@ -22,12 +22,12 @@ describe("Rate Limiting", () => {
       // Dynamically import to get fresh module state
       const { checkIpRateLimit } = await import("@/lib/rate-limit");
 
-      const result = checkIpRateLimit("192.168.1.1");
+      const result = await checkIpRateLimit("192.168.1.1");
 
       expect(result.success).toBe(true);
       expect(result.limit).toBe(10);
       expect(result.remaining).toBe(9);
-      expect(result.resetAt).toBeGreaterThan(Date.now());
+      expect(result.reset).toBeGreaterThan(Date.now());
     });
 
     it("decrements remaining count on subsequent requests", async () => {
@@ -35,15 +35,15 @@ describe("Rate Limiting", () => {
       const ip = "192.168.1.2";
 
       // First request
-      const first = checkIpRateLimit(ip);
+      const first = await checkIpRateLimit(ip);
       expect(first.remaining).toBe(9);
 
       // Second request
-      const second = checkIpRateLimit(ip);
+      const second = await checkIpRateLimit(ip);
       expect(second.remaining).toBe(8);
 
       // Third request
-      const third = checkIpRateLimit(ip);
+      const third = await checkIpRateLimit(ip);
       expect(third.remaining).toBe(7);
     });
 
@@ -53,11 +53,11 @@ describe("Rate Limiting", () => {
 
       // Use up all 10 requests
       for (let i = 0; i < 10; i++) {
-        checkIpRateLimit(ip);
+        await checkIpRateLimit(ip);
       }
 
       // 11th request should be blocked
-      const result = checkIpRateLimit(ip);
+      const result = await checkIpRateLimit(ip);
       expect(result.success).toBe(false);
       expect(result.remaining).toBe(0);
     });
@@ -69,11 +69,11 @@ describe("Rate Limiting", () => {
 
       // Use up limit for ip1
       for (let i = 0; i < 10; i++) {
-        checkIpRateLimit(ip1);
+        await checkIpRateLimit(ip1);
       }
 
       // ip2 should still be allowed
-      const result = checkIpRateLimit(ip2);
+      const result = await checkIpRateLimit(ip2);
       expect(result.success).toBe(true);
       expect(result.remaining).toBe(9);
     });
@@ -84,11 +84,11 @@ describe("Rate Limiting", () => {
 
       // Use up all requests
       for (let i = 0; i < 10; i++) {
-        checkIpRateLimit(ip);
+        await checkIpRateLimit(ip);
       }
 
       // Should be blocked
-      expect(checkIpRateLimit(ip).success).toBe(false);
+      expect((await checkIpRateLimit(ip)).success).toBe(false);
 
       // Mock time passing beyond the window (1 minute = 60000ms)
       vi.useFakeTimers();
@@ -101,84 +101,67 @@ describe("Rate Limiting", () => {
       );
 
       // Should be allowed again
-      const result = freshCheckIpRateLimit(ip);
+      const result = await freshCheckIpRateLimit(ip);
       expect(result.success).toBe(true);
 
       vi.useRealTimers();
     });
   });
 
-  describe("checkWidgetDailyLimit", () => {
+  describe("checkWidgetDailyRateLimit", () => {
     it("allows first submission for a widget", async () => {
-      const { checkWidgetDailyLimit } = await import("@/lib/rate-limit");
+      const { checkWidgetDailyRateLimit } = await import("@/lib/rate-limit");
 
-      const result = checkWidgetDailyLimit("wk_test123", 0);
+      const result = await checkWidgetDailyRateLimit("wk_test123");
 
       expect(result.success).toBe(true);
       expect(result.limit).toBe(100);
       expect(result.remaining).toBe(99);
     });
 
-    it("accounts for existing database count", async () => {
-      const { checkWidgetDailyLimit } = await import("@/lib/rate-limit");
+    it("decrements remaining count on subsequent requests", async () => {
+      const { checkWidgetDailyRateLimit } = await import("@/lib/rate-limit");
+      const widgetKey = "wk_test456";
 
-      // Simulate 50 submissions already in database
-      const result = checkWidgetDailyLimit("wk_test456", 50);
+      // First request
+      const first = await checkWidgetDailyRateLimit(widgetKey);
+      expect(first.remaining).toBe(99);
 
-      expect(result.success).toBe(true);
-      expect(result.remaining).toBe(49);
+      // Second request
+      const second = await checkWidgetDailyRateLimit(widgetKey);
+      expect(second.remaining).toBe(98);
     });
 
-    it("blocks when database count reaches limit", async () => {
-      const { checkWidgetDailyLimit } = await import("@/lib/rate-limit");
+    it("blocks when limit is reached", async () => {
+      const { checkWidgetDailyRateLimit } = await import("@/lib/rate-limit");
+      const widgetKey = "wk_test789";
 
-      // Simulate 100 submissions already in database
-      const result = checkWidgetDailyLimit("wk_test789", 100);
+      // Use up all 100 requests
+      for (let i = 0; i < 100; i++) {
+        await checkWidgetDailyRateLimit(widgetKey);
+      }
 
+      // 101st request should be blocked
+      const result = await checkWidgetDailyRateLimit(widgetKey);
       expect(result.success).toBe(false);
       expect(result.remaining).toBe(0);
     });
 
-    it("blocks when combined in-memory and db count reaches limit", async () => {
-      const { checkWidgetDailyLimit } = await import("@/lib/rate-limit");
-      const widgetKey = "wk_combined";
-
-      // Start with 90 in database
-      for (let i = 0; i < 10; i++) {
-        checkWidgetDailyLimit(widgetKey, 90);
-      }
-
-      // Should now be blocked (90 db + 10 in-memory = 100)
-      const result = checkWidgetDailyLimit(widgetKey, 90);
-      expect(result.success).toBe(false);
-    });
-
     it("treats different widgets independently", async () => {
-      const { checkWidgetDailyLimit } = await import("@/lib/rate-limit");
+      const { checkWidgetDailyRateLimit } = await import("@/lib/rate-limit");
 
-      // Widget 1 at limit
-      const widget1Result = checkWidgetDailyLimit("wk_widget1", 100);
+      // Widget 1 - use up limit
+      for (let i = 0; i < 100; i++) {
+        await checkWidgetDailyRateLimit("wk_widget1");
+      }
+      const widget1Result = await checkWidgetDailyRateLimit("wk_widget1");
       expect(widget1Result.success).toBe(false);
 
       // Widget 2 should still be allowed
-      const widget2Result = checkWidgetDailyLimit("wk_widget2", 0);
+      const widget2Result = await checkWidgetDailyRateLimit("wk_widget2");
       expect(widget2Result.success).toBe(true);
     });
 
-    it("uses max of in-memory and db count", async () => {
-      const { checkWidgetDailyLimit } = await import("@/lib/rate-limit");
-      const widgetKey = "wk_maxtest";
-
-      // First call with db count 20
-      checkWidgetDailyLimit(widgetKey, 20);
-      // In-memory now 21
-
-      // Call again with higher db count (e.g., another process submitted)
-      const result = checkWidgetDailyLimit(widgetKey, 50);
-
-      // Should use max(21, 50) + 1 = 51
-      expect(result.remaining).toBe(49); // 100 - 51 = 49
-    });
   });
 
   describe("getClientIp", () => {

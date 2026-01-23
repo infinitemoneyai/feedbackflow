@@ -14,12 +14,16 @@ const buildOptions = {
   outfile: "widget/dist/feedbackflow.js",
   format: "iife",
   globalName: "FeedbackFlow",
+  // Define NODE_ENV for conditional debug logging
+  define: {
+    "process.env.NODE_ENV": isDev ? '"development"' : '"production"',
+  },
   // Performance optimizations
   treeShaking: true,
-  // Drop console.log in production for smaller bundle
+  // Drop console.log and debugger in production for smaller bundle
   drop: isDev ? [] : ["console", "debugger"],
   // Pure annotations for better tree shaking
-  pure: ["console.log", "console.debug"],
+  pure: ["console.log", "console.debug", "console.warn", "console.error"],
   // Inline small assets
   legalComments: "none",
   // Charset for smaller output
