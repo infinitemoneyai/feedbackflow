@@ -203,7 +203,7 @@ export default function DocsPage() {
           </h2>
           <div className="grid gap-4 sm:grid-cols-3">
             <a
-              href="https://github.com/Mlock/feedbackflow"
+              href="https://github.com/infinitemoneyai/feedbackflow"
               target="_blank"
               rel="noopener noreferrer"
               className="group flex items-center gap-3 rounded border-2 border-stone-200 bg-white p-4 transition-colors hover:border-retro-black"
@@ -255,7 +255,7 @@ export default function DocsPage() {
             </p>
             <div className="mt-4 flex flex-wrap justify-center gap-4">
               <a
-                href="https://github.com/Mlock/feedbackflow/issues"
+                href="https://github.com/infinitemoneyai/feedbackflow/issues"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 rounded border-2 border-retro-black bg-white px-4 py-2 text-sm font-medium text-retro-black transition-colors hover:bg-stone-50"
