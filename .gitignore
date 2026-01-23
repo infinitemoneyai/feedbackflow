@@ -102,4 +102,5 @@ UPDATE_URLS.md
 # Deployment docs with sensitive info
 VERCEL_ENV_VARS.md
 
-
+# Claude/AI agent skills (internal development tooling)
+.claude/
