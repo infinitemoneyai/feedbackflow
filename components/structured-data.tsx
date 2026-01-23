@@ -22,7 +22,7 @@ export function StructuredData() {
       name: "InfiniteMoney",
     },
     sameAs: [
-      "https://github.com/Mlock/feedbackflow",
+      "https://github.com/infinitemoneyai/feedbackflow",
       "https://twitter.com/infinitemoney_ai",
     ],
   };

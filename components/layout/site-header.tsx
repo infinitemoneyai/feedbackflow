@@ -54,7 +54,7 @@ export function SiteHeader() {
             Pricing
           </Link>
           <Link
-            href="https://github.com/Mlock/feedbackflow"
+            href="https://github.com/infinitemoneyai/feedbackflow"
             className="tracking-tight transition-colors hover:text-retro-blue"
             target="_blank"
             rel="noopener noreferrer"

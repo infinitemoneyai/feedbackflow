@@ -462,7 +462,7 @@ export default function ManifestoPage() {
               <Icon name="solar:arrow-right-linear" size={20} />
             </Link>
             <Link
-              href="https://github.com/Mlock/feedbackflow"
+              href="https://github.com/infinitemoneyai/feedbackflow"
               className="flex items-center justify-center gap-2 border-2 border-retro-black bg-white px-8 py-4 text-lg font-medium text-retro-black shadow-[6px_6px_0px_0px_#E85D52] transition-all hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[3px_3px_0px_0px_#E85D52]"
             >
               <Icon name="mdi:github" size={20} />

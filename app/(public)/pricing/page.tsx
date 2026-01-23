@@ -596,7 +596,7 @@ function PricingPageContent() {
             </ul>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link
-                href="https://github.com/Mlock/feedbackflow"
+                href="https://github.com/infinitemoneyai/feedbackflow"
                 className="flex items-center justify-center gap-2 border-2 border-retro-black bg-white px-6 py-3 font-medium text-retro-black transition-all hover:bg-stone-50"
               >
                 <Icon name="mdi:github" size={20} />
