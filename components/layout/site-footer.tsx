@@ -27,7 +27,7 @@ export function SiteFooter() {
         <a href="#" className="hover:text-retro-blue hover:underline">
           Twitter
         </a>
-        <a href="#" className="hover:text-retro-blue hover:underline">
+        <a href="https://discord.gg/2sTEE3wceB" target="_blank" rel="noopener noreferrer" className="hover:text-retro-blue hover:underline">
           Discord
         </a>
         <a href="#" className="hover:text-retro-blue hover:underline">
