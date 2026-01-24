@@ -309,7 +309,7 @@ See [SECURITY.md](SECURITY.md) for our security policy and how to report vulnera
 
 ## License
 
-FeedbackFlow is open-source software licensed under the [MIT License](LICENSE).
+FeedbackFlow is open-source software licensed under the [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE).
 
 ## Acknowledgments
 
