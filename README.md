@@ -300,7 +300,7 @@ Run `npm run lint` to check code style.
 
 - 🐛 [Report a bug](https://github.com/infinitemoneyai/feedbackflow/issues/new?labels=bug)
 - 💡 [Request a feature](https://github.com/infinitemoneyai/feedbackflow/issues/new?labels=enhancement)
-- 💬 [Join our Discord](https://discord.gg/your-invite) (if applicable)
+- 💬 [Join our Discord](https://discord.gg/2sTEE3wceB)
 - 📧 [Email us](mailto:hello@yourdomain.com)
 
 ## Security

@@ -217,7 +217,7 @@ export default function DocsPage() {
             </a>
 
             <a
-              href="https://discord.gg/feedbackflow"
+              href="https://discord.gg/2sTEE3wceB"
               target="_blank"
               rel="noopener noreferrer"
               className="group flex items-center gap-3 rounded border-2 border-stone-200 bg-white p-4 transition-colors hover:border-retro-black"
@@ -264,7 +264,7 @@ export default function DocsPage() {
                 Report an Issue
               </a>
               <a
-                href="https://discord.gg/feedbackflow"
+                href="https://discord.gg/2sTEE3wceB"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 rounded border-2 border-retro-black bg-retro-black px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-stone-800"
