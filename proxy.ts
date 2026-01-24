@@ -8,6 +8,7 @@ const isPublicRoute = createRouteMatcher([
   "/manifesto(.*)",
   "/status/(.*)",
   "/unsubscribe(.*)",
+  "/demo(.*)", // Interactive demo page
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/api/widget/(.*)",

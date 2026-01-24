@@ -39,11 +39,15 @@ export function HeroSection() {
               />
             </Link>
             <Link
-              href="/docs"
-              className="flex items-center justify-center gap-3 border-2 border-retro-black bg-transparent px-6 py-3 text-base font-medium text-retro-black transition-all hover:bg-stone-200 md:px-8 md:py-4 md:text-lg"
+              href="/demo"
+              className="group flex items-center justify-center gap-3 border-2 border-retro-black bg-retro-yellow px-6 py-3 text-base font-medium text-retro-black shadow-[4px_4px_0px_0px_#888] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000] md:px-8 md:py-4 md:text-lg"
             >
-              <span>Read the README</span>
-              <Icon name="solar:book-2-linear" size={20} />
+              <span>Try Demo</span>
+              <Icon
+                name="solar:play-linear"
+                size={20}
+                className="transition-transform group-hover:translate-x-1"
+              />
             </Link>
           </div>
         </div>
