@@ -104,11 +104,15 @@ export default function RootLayout({
           strategy="lazyOnload"
         />
      
-        <Script
-          src="http://localhost:3000/api/widget/v1.js"
-          data-team="feedbackflow"
-          strategy="lazyOnload"
-        />
+        {/* Development widget - only load in local environment */}
+        {/* {process.env.NODE_ENV === 'development' && (
+          <Script
+            src="http://localhost:3003/api/widget/v1.js"
+            data-team="feedbackflow"
+            data-convex-url="https://coordinated-ocelot-174.convex.cloud"
+            strategy="lazyOnload"
+          />
+        )} */}
         
       </body>
     </html>
