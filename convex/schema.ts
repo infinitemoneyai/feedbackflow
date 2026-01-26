@@ -27,6 +27,11 @@ export default defineSchema({
     onboardingData: v.optional(v.object({
       pendingInvites: v.optional(v.string()),
     })),
+    // Legal acceptance
+    termsAcceptedAt: v.optional(v.number()),
+    termsVersion: v.optional(v.string()),
+    privacyAcceptedAt: v.optional(v.number()),
+    privacyVersion: v.optional(v.string()),
   })
     .index("by_clerk_id", ["clerkId"])
     .index("by_email", ["email"]),
