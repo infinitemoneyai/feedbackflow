@@ -140,6 +140,72 @@ export const updateProfile = mutation({
 });
 
 /**
+ * Accept legal terms (Privacy Policy and Terms of Service)
+ * Called during signup or when terms are updated
+ */
+export const acceptLegalTerms = mutation({
+  args: {
+    termsVersion: v.string(),
+    privacyVersion: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const now = Date.now();
+    await ctx.db.patch(user._id, {
+      termsAcceptedAt: now,
+      termsVersion: args.termsVersion,
+      privacyAcceptedAt: now,
+      privacyVersion: args.privacyVersion,
+    });
+
+    return { success: true };
+  },
+});
+
+/**
+ * Check if user has accepted current legal terms
+ */
+export const hasAcceptedLegalTerms = query({
+  args: {
+    requiredTermsVersion: v.string(),
+    requiredPrivacyVersion: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return false;
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .first();
+
+    if (!user) {
+      return false;
+    }
+
+    return (
+      user.termsVersion === args.requiredTermsVersion &&
+      user.privacyVersion === args.requiredPrivacyVersion
+    );
+  },
+});
+
+/**
  * Delete user account
  * Note: This should also clean up related data (handled separately)
  */

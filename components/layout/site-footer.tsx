@@ -1,4 +1,5 @@
 import { Icon } from "@/components/ui/icon";
+import Link from "next/link";
 
 export function SiteFooter() {
   return (
@@ -23,7 +24,14 @@ export function SiteFooter() {
           </a>
         </div>
       </div>
-      <div className="flex gap-6">
+      <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
+        <Link href="/privacy" className="hover:text-retro-blue hover:underline">
+          Privacy
+        </Link>
+        <Link href="/terms" className="hover:text-retro-blue hover:underline">
+          Terms
+        </Link>
+        <div className="hidden h-4 w-px bg-retro-black/20 sm:block" />
         <a href="#" className="hover:text-retro-blue hover:underline">
           Twitter
         </a>
