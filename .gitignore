@@ -83,6 +83,7 @@ CHANGELOG.md
 
 # Refactoring documentation (internal)
 REFACTORING_SUMMARY.md
+REFACTORING.md
 
 # Internal documentation (contains deployment-specific info)
 README.INTERNAL.md
@@ -94,6 +95,7 @@ Production_Launch_Guide.md
 widget/DEBUG_LOGGING.md
 OPEN_SOURCE_PREP.md
 PRE_LAUNCH_SECURITY_CHECKLIST.md
+
 
 # SEO DOCS
 

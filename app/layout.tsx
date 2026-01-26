@@ -96,12 +96,20 @@ export default function RootLayout({
         <ConvexClientProvider>
           <PostHogProvider>{children}</PostHogProvider>
         </ConvexClientProvider>
+       
         <Script
           src="https://www.feedbackflow.cc/widget.js"
           data-widget-key="wk_U7oFyZs9Z8Fs53AtvIfjPRqu"
           data-api-url="https://www.feedbackflow.cc/api/widget/submit"
           strategy="lazyOnload"
         />
+     
+        <Script
+          src="http://localhost:3000/api/widget/v1.js"
+          data-team="feedbackflow"
+          strategy="lazyOnload"
+        />
+        
       </body>
     </html>
   );
