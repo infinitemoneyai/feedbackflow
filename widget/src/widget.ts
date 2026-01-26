@@ -1,35 +1,42 @@
 import type { WidgetConfig, WidgetState } from "./types";
 import { DEFAULT_CONFIG } from "./types";
 import { generateStyles } from "./styles";
-import { icons } from "./icons";
-import {
-  createElement,
-  createElementFromHTML,
-  injectStyles,
-  createWidgetRoot,
-} from "./dom";
+import { injectStyles, createWidgetRoot } from "./dom";
 import { ScreenshotUI } from "./screenshot-ui";
 import { RecordUI } from "./record-ui";
 import { SubmitUI } from "./submit-ui";
 import { getOfflineQueue } from "./offline-queue";
 import type { CaptureResult } from "./capture";
 import type { RecordingResult } from "./record";
-import { isMobileDevice, isScreenRecordingSupported } from "./mobile-utils";
 import { debug } from "./debug";
+import { TriggerButton } from "./components/TriggerButton";
+import { CornerIndicators } from "./components/CornerIndicators";
+import { Modal } from "./components/Modal";
+import { HoverDetection } from "./components/HoverDetection";
+import { StateManager } from "./components/StateManager";
 
 /**
  * FeedbackFlow Widget Class
- * Handles all widget functionality without external dependencies
+ * Orchestrates all widget components and functionality
  */
 export class FeedbackFlowWidget {
   private config: WidgetConfig;
   private state: WidgetState;
   private root: HTMLElement | null = null;
-  private triggerButton: HTMLElement | null = null;
-  private modalOverlay: HTMLElement | null = null;
+  
+  // Components
+  private triggerButton: TriggerButton;
+  private cornerIndicators: CornerIndicators;
+  private modal: Modal;
+  private hoverDetection: HoverDetection | null = null;
+  private stateManager: StateManager | null = null;
+  
+  // UI Components
   private screenshotUI: ScreenshotUI | null = null;
   private recordUI: RecordUI | null = null;
   private submitUI: SubmitUI | null = null;
+  
+  // Captured data
   private capturedScreenshot: CaptureResult | null = null;
   private capturedRecording: RecordingResult | null = null;
 
@@ -45,6 +52,21 @@ export class FeedbackFlowWidget {
       captureMode: null,
     };
 
+    // Initialize components
+    this.triggerButton = new TriggerButton(
+      this.config,
+      () => this.open(),
+      () => this.minimize()
+    );
+
+    this.cornerIndicators = new CornerIndicators(() => this.restore());
+
+    this.modal = new Modal(
+      this.config,
+      () => this.close(),
+      (mode) => this.startCapture(mode)
+    );
+
     this.init();
   }
 
@@ -58,229 +80,58 @@ export class FeedbackFlowWidget {
     // Create root container
     this.root = createWidgetRoot();
 
-    // Create trigger button
-    this.createTriggerButton();
+    // Create and append trigger button
+    const buttonElement = this.triggerButton.create();
+    this.root.appendChild(buttonElement);
 
-    // Create modal
-    this.createModal();
+    // Create and append corner indicators
+    const indicatorElements = this.cornerIndicators.create();
+    indicatorElements.forEach(indicator => this.root?.appendChild(indicator));
+
+    // Create and append modal
+    const modalElement = this.modal.create();
+    this.root.appendChild(modalElement);
+
+    // Initialize state manager
+    this.stateManager = new StateManager(
+      this.triggerButton.getElement(),
+      this.cornerIndicators.getElements()
+    );
+
+    // Initialize hover detection
+    this.hoverDetection = new HoverDetection(
+      this.config,
+      this.triggerButton.getElement(),
+      () => this.stateManager?.getIsMinimized() ?? false,
+      () => this.state.isOpen
+    );
 
     // Set up event listeners
     this.setupEventListeners();
+
+    // Apply initial state
+    this.stateManager.applyInitialState();
 
     // Initialize offline queue to process any pending submissions
     getOfflineQueue(this.config.apiUrl);
   }
 
   /**
-   * Create the floating trigger button
-   */
-  private createTriggerButton(): void {
-    this.triggerButton = createElement(
-      "button",
-      {
-        className: "ff-trigger-button",
-        "aria-label": "Open feedback widget",
-        type: "button",
-      },
-      [createElementFromHTML(icons.feedback), this.config.buttonText]
-    );
-
-    this.root?.appendChild(this.triggerButton);
-  }
-
-  /**
-   * Create the modal overlay and content
-   */
-  private createModal(): void {
-    // Create overlay
-    this.modalOverlay = createElement("div", {
-      className: "ff-modal-overlay",
-      role: "dialog",
-      "aria-modal": "true",
-      "aria-labelledby": "ff-modal-title",
-    });
-
-    // Create modal container
-    const modal = createElement("div", { className: "ff-modal" });
-
-    // Create header
-    const header = createElement("div", { className: "ff-modal-header" }, [
-      createElement("h2", { className: "ff-modal-title", id: "ff-modal-title" }, [
-        "Share Feedback",
-      ]),
-      this.createCloseButton(),
-    ]);
-
-    // Create content with capture options
-    const content = createElement("div", { className: "ff-modal-content" }, [
-      this.createCaptureOptions(),
-    ]);
-
-    // Create footer
-    const footerContent: (string | HTMLElement)[] = [
-      "Powered by ",
-      createElement("a", { href: "https://feedbackflow.cc", target: "_blank" }, [
-        "FeedbackFlow",
-      ]),
-    ];
-
-    // Add privacy policy link if configured
-    if (this.config.privacyPolicyUrl) {
-      footerContent.push(
-        " · ",
-        createElement(
-          "a",
-          { href: this.config.privacyPolicyUrl, target: "_blank" },
-          ["Privacy Policy"]
-        )
-      );
-    }
-
-    const footer = createElement("div", { className: "ff-modal-footer" }, [
-      createElement("div", { className: "ff-powered-by" }, footerContent),
-    ]);
-
-    // Assemble modal
-    modal.appendChild(header);
-    modal.appendChild(content);
-    modal.appendChild(footer);
-    this.modalOverlay.appendChild(modal);
-    this.root?.appendChild(this.modalOverlay);
-  }
-
-  /**
-   * Create close button
-   */
-  private createCloseButton(): HTMLElement {
-    const button = createElement(
-      "button",
-      {
-        className: "ff-close-button",
-        "aria-label": "Close feedback widget",
-        type: "button",
-      },
-      [createElementFromHTML(icons.close)]
-    );
-
-    return button;
-  }
-
-  /**
-   * Create capture options (screenshot and record)
-   */
-  private createCaptureOptions(): HTMLElement {
-    const container = createElement("div", { className: "ff-capture-options" });
-    const isMobile = isMobileDevice();
-    const canRecord = isScreenRecordingSupported() && !isMobile;
-
-    // Screenshot option - adjust text for mobile
-    const screenshotDescription = isMobile
-      ? "Take a photo or select from gallery"
-      : "Capture and annotate your screen";
-
-    const screenshotOption = createElement(
-      "button",
-      {
-        className: "ff-capture-option",
-        "data-capture-type": "screenshot",
-        type: "button",
-      },
-      [
-        createElement("div", { className: "ff-capture-icon ff-screenshot" }, [
-          createElementFromHTML(icons.camera),
-        ]),
-        createElement("div", { className: "ff-capture-text" }, [
-          createElement("p", { className: "ff-capture-title" }, [
-            isMobile ? "Add a Photo" : "Take a Screenshot",
-          ]),
-          createElement("p", { className: "ff-capture-description" }, [
-            screenshotDescription,
-          ]),
-        ]),
-      ]
-    );
-
-    // Record option - show as disabled on mobile
-    const recordOptionClasses = canRecord
-      ? "ff-capture-option"
-      : "ff-capture-option ff-capture-option-disabled";
-
-    const recordDescription = canRecord
-      ? "Record with voice narration (up to 2 min)"
-      : "Desktop only";
-
-    const recordOption = createElement(
-      "button",
-      {
-        className: recordOptionClasses,
-        "data-capture-type": "record",
-        type: "button",
-      },
-      [
-        createElement("div", { className: "ff-capture-icon ff-record" }, [
-          createElementFromHTML(icons.video),
-        ]),
-        createElement("div", { className: "ff-capture-text" }, [
-          createElement("p", { className: "ff-capture-title" }, [
-            "Record Your Screen",
-          ]),
-          createElement("p", { className: "ff-capture-description" }, [
-            recordDescription,
-          ]),
-        ]),
-      ]
-    );
-
-    container.appendChild(screenshotOption);
-    container.appendChild(recordOption);
-
-    return container;
-  }
-
-  /**
    * Set up event listeners
    */
   private setupEventListeners(): void {
-    // Trigger button click
-    this.triggerButton?.addEventListener("click", () => {
-      this.open();
-    });
+    // Set up component event listeners
+    this.triggerButton.setupEventListeners();
+    this.cornerIndicators.setupEventListeners();
+    this.modal.setupEventListeners();
+    this.hoverDetection?.setup();
 
-    // Close button click
-    this.modalOverlay
-      ?.querySelector(".ff-close-button")
-      ?.addEventListener("click", () => {
-        this.close();
-      });
-
-    // Overlay click (close on backdrop click)
-    this.modalOverlay?.addEventListener("click", (e) => {
-      if (e.target === this.modalOverlay) {
-        this.close();
-      }
-    });
-
-    // Escape key to close
+    // Escape key to close modal
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && this.state.isOpen) {
         this.close();
       }
     });
-
-    // Capture option clicks
-    this.modalOverlay
-      ?.querySelectorAll(".ff-capture-option")
-      .forEach((option) => {
-        option.addEventListener("click", () => {
-          const captureType = option.getAttribute("data-capture-type") as
-            | "screenshot"
-            | "record"
-            | null;
-          if (captureType) {
-            this.startCapture(captureType);
-          }
-        });
-      });
 
     // Listen for switch-to-screenshot event (from recording UI when not supported)
     window.addEventListener("ff:switch-to-screenshot", () => {
@@ -295,11 +146,11 @@ export class FeedbackFlowWidget {
     if (this.state.isOpen) return;
 
     this.state.isOpen = true;
-    this.modalOverlay?.classList.add("ff-visible");
-    this.triggerButton?.setAttribute("aria-expanded", "true");
+    this.modal.show();
+    this.triggerButton.getTriggerButton()?.setAttribute("aria-expanded", "true");
 
     // Focus trap - focus first focusable element
-    const firstFocusable = this.modalOverlay?.querySelector(
+    const firstFocusable = this.modal.getElement()?.querySelector(
       "button, [href], input, select, textarea"
     ) as HTMLElement;
     firstFocusable?.focus();
@@ -312,11 +163,25 @@ export class FeedbackFlowWidget {
     if (!this.state.isOpen) return;
 
     this.state.isOpen = false;
-    this.modalOverlay?.classList.remove("ff-visible");
-    this.triggerButton?.setAttribute("aria-expanded", "false");
+    this.modal.hide();
+    this.triggerButton.getTriggerButton()?.setAttribute("aria-expanded", "false");
 
     // Return focus to trigger button
-    this.triggerButton?.focus();
+    this.triggerButton.getTriggerButton()?.focus();
+  }
+
+  /**
+   * Minimize the widget
+   */
+  private minimize(): void {
+    this.stateManager?.minimize();
+  }
+
+  /**
+   * Restore the widget
+   */
+  private restore(): void {
+    this.stateManager?.restore();
   }
 
   /**
@@ -577,6 +442,8 @@ export class FeedbackFlowWidget {
     this.recordUI = null;
     this.submitUI?.destroy();
     this.submitUI = null;
+    this.hoverDetection?.destroy();
+    this.hoverDetection = null;
     this.root?.remove();
     document.getElementById("ff-widget-styles")?.remove();
     document.getElementById("ff-screenshot-styles")?.remove();

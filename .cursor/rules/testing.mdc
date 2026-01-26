@@ -1,34 +1,6 @@
-# Testing Guidelines
-
-## Test Stack
-
-- **Unit tests**: Vitest (`__tests__/` directory)
-- **E2E tests**: Playwright (`e2e/` directory)
-- **Coverage target**: 80%+
-
-## Running Tests
-
-```bash
-npm run test              # Vitest unit tests
-npm run test:watch        # Vitest watch mode
-npm run test:coverage     # Coverage report
-npm run test:e2e          # Playwright E2E
-npm run test:e2e:ui       # Playwright UI mode
-npm run test:e2e:headed   # Playwright headed mode
-```
-
-## Unit Test Structure
-
-```typescript
-// __tests__/lib/ai/index.test.ts
-import { describe, it, expect, vi } from "vitest";
-import { analyzeFeeback } from "@/lib/ai";
-
-describe("analyzeFeeback", () => {
-  it("should categorize bug reports correctly", async () => {
-    const mockFeedback = {
-      title: "Button not working",
-      description: "Click does nothing",
+---
+alwaysApply: false
+---
       type: "bug",
     };
     

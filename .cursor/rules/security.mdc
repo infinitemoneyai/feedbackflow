@@ -1,3 +1,7 @@
+---
+alwaysApply: false
+---
+
 # Security Considerations
 
 ## API Key Handling

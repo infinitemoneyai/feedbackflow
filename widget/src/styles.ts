@@ -19,10 +19,34 @@ function getPositionStyles(position: WidgetPosition): string {
 }
 
 /**
+ * Generate hover peek styles based on widget position
+ */
+function getHoverPeekStyles(position: WidgetPosition): string {
+  const isBottom = position.includes('bottom');
+  const isRight = position.includes('right');
+  
+  // Default hidden state - button slides slightly off screen
+  const hiddenTransform = isBottom 
+    ? 'translateY(60px)' 
+    : 'translateY(-60px)';
+  
+  return `
+    .ff-button-container {
+      transform: ${hiddenTransform};
+    }
+
+    .ff-button-container.ff-hover-peek {
+      transform: translateY(0);
+    }
+  `;
+}
+
+/**
  * Generate the widget CSS styles
  */
 export function generateStyles(config: WidgetConfig): string {
   const positionStyles = getPositionStyles(config.position);
+  const hoverPeekStyles = getHoverPeekStyles(config.position);
 
   return `
     /* FeedbackFlow Widget Styles */
@@ -39,11 +63,29 @@ export function generateStyles(config: WidgetConfig): string {
       box-sizing: inherit;
     }
 
-    /* Floating Button */
-    .ff-trigger-button {
+    /* Button Container */
+    .ff-button-container {
       position: fixed;
       ${positionStyles}
       z-index: 2147483646;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: opacity 0.2s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .ff-button-container.ff-minimized {
+      opacity: 0;
+      transform: scale(0.8);
+      pointer-events: none;
+    }
+
+    /* Hover peek effect - slides up when mouse is near */
+    ${hoverPeekStyles}
+
+    /* Floating Button */
+    .ff-trigger-button {
+      position: relative;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -69,10 +111,90 @@ export function generateStyles(config: WidgetConfig): string {
       box-shadow: 1px 1px 0px 0px rgba(0, 0, 0, 0.2);
     }
 
-    .ff-trigger-button svg {
+    .ff-trigger-button > svg {
       width: 18px;
       height: 18px;
       flex-shrink: 0;
+    }
+
+    /* Minimize Button (inside trigger button) */
+    .ff-minimize-button {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      padding: 0;
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      border: 2px solid ${config.primaryColor};
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      z-index: 1;
+    }
+
+    .ff-minimize-button:hover {
+      background-color: rgba(0, 0, 0, 1);
+      transform: scale(1.1);
+    }
+
+    .ff-minimize-button svg {
+      width: 10px;
+      height: 10px;
+    }
+
+    /* Corner Indicators */
+    .ff-corner-indicator {
+      position: fixed;
+      width: 40px;
+      height: 40px;
+      background-color: transparent;
+      cursor: pointer;
+      z-index: 2147483645;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, background-color 0.15s ease;
+    }
+
+    .ff-corner-indicator.ff-visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .ff-corner-indicator:hover {
+      background-color: rgba(243, 201, 82, 0.1);
+    }
+
+    .ff-corner-indicator:active {
+      background-color: rgba(243, 201, 82, 0.2);
+    }
+
+    .ff-corner-indicator.ff-corner-top-left {
+      top: 0;
+      left: 0;
+      border-bottom-right-radius: 8px;
+    }
+
+    .ff-corner-indicator.ff-corner-top-right {
+      top: 0;
+      right: 0;
+      border-bottom-left-radius: 8px;
+    }
+
+    .ff-corner-indicator.ff-corner-bottom-left {
+      bottom: 0;
+      left: 0;
+      border-top-right-radius: 8px;
+    }
+
+    .ff-corner-indicator.ff-corner-bottom-right {
+      bottom: 0;
+      right: 0;
+      border-top-left-radius: 8px;
     }
 
     /* Modal Overlay */
@@ -275,9 +397,26 @@ export function generateStyles(config: WidgetConfig): string {
 
     /* Mobile-specific styles */
     @media (max-width: 480px) {
+      .ff-button-container {
+        flex-direction: column;
+        gap: 2px;
+      }
+
       .ff-trigger-button {
         padding: 10px 16px;
         font-size: 13px;
+      }
+
+      .ff-minimize-button {
+        width: 18px;
+        height: 18px;
+        top: -5px;
+        right: -5px;
+      }
+
+      .ff-minimize-button svg {
+        width: 9px;
+        height: 9px;
       }
 
       .ff-modal {
