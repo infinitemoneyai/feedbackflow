@@ -327,7 +327,7 @@ Built with amazing open-source tools:
   <p>Made with ❤️ by the FeedbackFlow team</p>
   <p>
     <a href="https://github.com/infinitemoneyai/feedbackflow">GitHub</a> ·
-    <a href="https://yourdomain.com">Website</a> ·
-    <a href="https://twitter.com/feedbackflow">Twitter</a>
+    <a href="https://feedbackflow.cc">Website</a> ·
+    <a href="https://twitter.com/infinitemoneyai">Twitter</a>
   </p>
 </div>
