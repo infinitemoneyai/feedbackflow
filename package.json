@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.36.8",
+    "@iconify-icons/solar": "^1.2.3",
     "@iconify/react": "^6.0.2",
     "@linear/sdk": "^70.0.0",
     "@notionhq/client": "^5.7.0",
