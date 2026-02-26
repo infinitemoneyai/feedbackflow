@@ -62,15 +62,6 @@ export default function OnboardingPage() {
     }
   }, [onboardingState, hasAcceptedTerms, startOnboarding]);
 
-  useEffect(() => {
-    // Redirect to dashboard if onboarding complete or on step 4+
-    if (onboardingState?.isComplete) {
-      router.push("/dashboard");
-    } else if (onboardingState?.step && onboardingState.step >= 4) {
-      router.push("/dashboard");
-    }
-  }, [onboardingState, router]);
-
   // Show loading while auth is loading or user is syncing
   if (!isLoaded || (user && !isUserSynced)) {
     return (
@@ -81,10 +72,31 @@ export default function OnboardingPage() {
   }
 
   // Show loading while onboarding state is loading
-  if (!onboardingState || hasAcceptedTerms === undefined) {
+  if (onboardingState === undefined || hasAcceptedTerms === undefined) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="animate-pulse font-mono text-sm text-stone-500">Loading...</div>
+      </div>
+    );
+  }
+
+  // If user record not found in Convex, redirect to sign-in
+  if (onboardingState === null) {
+    router.push("/sign-in");
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="animate-pulse font-mono text-sm text-stone-500">Redirecting...</div>
+      </div>
+    );
+  }
+
+  // Redirect already-onboarded users to dashboard immediately
+  // This prevents step components from rendering for completed users
+  if (onboardingState.isComplete || (onboardingState.step && onboardingState.step >= 4)) {
+    router.push("/dashboard");
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="animate-pulse font-mono text-sm text-stone-500">Redirecting...</div>
       </div>
     );
   }
