@@ -8,7 +8,7 @@ interface ReviewStatusBarProps {
 export function ReviewStatusBar({
   connectionMethod,
   feedbackCount,
-}: ReviewStatusBarProps): JSX.Element {
+}: ReviewStatusBarProps): React.JSX.Element {
   const statusText = {
     iframe: "Loaded via iframe",
     proxy: "Loaded via proxy",

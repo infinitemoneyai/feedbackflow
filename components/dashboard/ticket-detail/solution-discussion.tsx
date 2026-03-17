@@ -3,6 +3,7 @@
 import { Icon } from "@/components/ui/icon";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useEffect } from "react";
 
 interface ConversationMessage {
   _id: string;
@@ -29,17 +30,44 @@ export function SolutionDiscussion({
   isSolutionExpanded,
   onToggle,
 }: SolutionDiscussionProps) {
+  const hasContent = conversationHistory && conversationHistory.length > 0;
+  
+  // Auto-collapse when empty, auto-expand when content arrives
+  useEffect(() => {
+    if (!hasContent && !isAiThinking) {
+      onToggle(false);
+    } else if (hasContent || isAiThinking) {
+      onToggle(true);
+    }
+  }, [hasContent, isAiThinking, onToggle]);
+
   return (
     <details
       open={isSolutionExpanded}
       onToggle={(e) => onToggle((e.target as HTMLDetailsElement).open)}
-      className="group rounded border-2 border-retro-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]"
+      className="group rounded border-2 border-retro-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] transition-all duration-300 ease-in-out"
     >
-      <summary className="flex cursor-pointer items-center justify-between p-4 transition-colors hover:bg-stone-50">
+      <summary className={`flex cursor-pointer items-center justify-between transition-all duration-200 ${
+        hasContent || isAiThinking 
+          ? 'p-4 hover:bg-stone-50' 
+          : 'p-2 hover:bg-stone-50/50'
+      }`}>
         <div className="flex items-center gap-2">
-          <Icon name="solar:chat-round-dots-linear" className="text-retro-blue" size={18} />
-          <span className="font-mono text-sm font-bold uppercase tracking-wider text-retro-blue">
-            Solution Discussion
+          <Icon 
+            name="solar:chat-round-dots-linear" 
+            className={`transition-all duration-200 ${
+              hasContent || isAiThinking 
+                ? 'text-retro-blue' 
+                : 'text-stone-400'
+            }`}
+            size={hasContent || isAiThinking ? 18 : 16} 
+          />
+          <span className={`font-mono uppercase tracking-wider transition-all duration-200 ${
+            hasContent || isAiThinking
+              ? 'text-sm font-bold text-retro-blue'
+              : 'text-xs font-medium text-stone-500'
+          }`}>
+            {hasContent || isAiThinking ? 'Solution Discussion' : 'Solution Discussion (Empty)'}
           </span>
           {conversationHistory && conversationHistory.length > 0 && (
             <span className="ml-2 rounded-full bg-retro-blue/10 px-2 py-0.5 text-xs font-medium text-retro-blue">
@@ -49,12 +77,12 @@ export function SolutionDiscussion({
         </div>
         <Icon
           name="solar:alt-arrow-down-linear"
-          size={18}
-          className="text-stone-400 transition-transform group-open:rotate-180"
+          size={hasContent || isAiThinking ? 18 : 14}
+          className="text-stone-400 transition-transform duration-200 group-open:rotate-180"
         />
       </summary>
 
-      <div className="space-y-3 border-t-2 border-stone-200 p-4">
+      <div className="space-y-3 border-t-2 border-stone-200 p-4 animate-in fade-in slide-in-from-top-2 duration-300">
         {!aiConfig?.isConfigured ? (
           <div className="rounded border-2 border-retro-yellow/30 bg-retro-yellow/10 p-4 text-center">
             <Icon

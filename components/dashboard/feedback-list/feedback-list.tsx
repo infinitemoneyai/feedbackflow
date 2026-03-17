@@ -97,7 +97,7 @@ export function FeedbackList() {
           priority: filters.priority ?? undefined,
           sortBy: filters.sortBy,
           sortOrder: filters.sortOrder,
-          view: currentView,
+          view: currentView as "inbox" | "backlog" | "resolved",
           showArchived,
         }
       : "skip"
@@ -463,7 +463,7 @@ export function FeedbackList() {
           onBulkExport={handleBulkExport}
           isBulkExporting={isBulkExporting}
           bulkExportResult={bulkExportResult}
-          currentView={currentView}
+          currentView={currentView as "inbox" | "backlog" | "resolved"}
           hasLinear={hasLinear}
           hasNotion={hasNotion}
         />
@@ -473,7 +473,7 @@ export function FeedbackList() {
           filters={filters}
           onFiltersChange={setFilters}
           onClearFilters={clearFilters}
-          currentView={currentView}
+          currentView={currentView as "inbox" | "backlog" | "resolved"}
           showArchived={showArchived}
           onToggleArchived={() => setShowArchived(!showArchived)}
           hasActiveFilters={hasActiveFilters}
@@ -493,7 +493,7 @@ export function FeedbackList() {
       {/* Feedback list */}
       {displayedFeedback.length === 0 ? (
         <EmptyState
-          currentView={currentView}
+          currentView={currentView as "inbox" | "backlog" | "resolved"}
           searchQuery={effectiveSearchQuery}
           hasAnyFeedback={hasAnyFeedback}
         />

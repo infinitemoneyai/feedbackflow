@@ -27,7 +27,7 @@ export function ReviewToolbar({
   onShare,
   canGoBack,
   canGoForward,
-}: ReviewToolbarProps): JSX.Element {
+}: ReviewToolbarProps): React.JSX.Element {
   const [urlInput, setUrlInput] = useState(currentUrl);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>): void => {

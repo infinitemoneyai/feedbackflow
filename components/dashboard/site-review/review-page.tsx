@@ -8,7 +8,7 @@ import { ReviewViewer } from "./review-viewer";
 import { ShareReviewModal } from "./share-review-modal";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function ReviewPage(): JSX.Element {
+export function ReviewPage(): React.JSX.Element {
   const { selectedProjectId, selectedTeamId } = useDashboard();
   const [showShareModal, setShowShareModal] = useState(false);
 

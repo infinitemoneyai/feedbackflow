@@ -32,7 +32,7 @@ export default function AnalyticsPage() {
   const [selectedTeamId, setSelectedTeamId] = useState<Id<"teams"> | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<Id<"projects"> | null>(null);
   const [selectedFeedbackId, setSelectedFeedbackId] = useState<Id<"feedback"> | null>(null);
-  const [currentView, setCurrentView] = useState<"inbox" | "backlog" | "resolved">("inbox");
+  const [currentView, setCurrentView] = useState<"inbox" | "backlog" | "resolved" | "review">("inbox");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);

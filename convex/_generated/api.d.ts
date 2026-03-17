@@ -44,6 +44,8 @@ import type * as notifications from "../notifications.js";
 import type * as onboarding from "../onboarding.js";
 import type * as projects from "../projects.js";
 import type * as restApiKeys from "../restApiKeys.js";
+import type * as reviewLinks from "../reviewLinks.js";
+import type * as reviewers from "../reviewers.js";
 import type * as storageConfig from "../storageConfig.js";
 import type * as submitterPortal from "../submitterPortal.js";
 import type * as teams from "../teams.js";
@@ -95,6 +97,8 @@ declare const fullApi: ApiFromModules<{
   onboarding: typeof onboarding;
   projects: typeof projects;
   restApiKeys: typeof restApiKeys;
+  reviewLinks: typeof reviewLinks;
+  reviewers: typeof reviewers;
   storageConfig: typeof storageConfig;
   submitterPortal: typeof submitterPortal;
   teams: typeof teams;

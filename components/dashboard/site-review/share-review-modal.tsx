@@ -27,7 +27,7 @@ export function ShareReviewModal({
   siteUrl,
   open,
   onOpenChange,
-}: ShareReviewModalProps): JSX.Element {
+}: ShareReviewModalProps): React.JSX.Element {
   const [password, setPassword] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);

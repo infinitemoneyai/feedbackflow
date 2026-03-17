@@ -155,8 +155,8 @@ export function selectImageFile(): Promise<File> {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/*";
-    // On mobile, this allows camera capture or gallery selection
-    input.setAttribute("capture", "environment");
+    // Do NOT set capture attribute - on iOS it forces camera only.
+    // Without it, iOS shows the native picker with camera, photo library, and files.
 
     input.onchange = () => {
       const file = input.files?.[0];

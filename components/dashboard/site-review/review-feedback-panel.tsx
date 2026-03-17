@@ -24,7 +24,7 @@ export function ReviewFeedbackPanel({
   currentUrl,
   onSubmit,
   onClose,
-}: ReviewFeedbackPanelProps): JSX.Element {
+}: ReviewFeedbackPanelProps): React.JSX.Element {
   const [type, setType] = useState<"bug" | "feature">("bug");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -97,7 +97,7 @@ export function ReviewFeedbackPanel({
           <label className="text-sm text-muted-foreground mb-1 block">Description</label>
           <Textarea
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
             placeholder="More details..."
             rows={4}
           />
