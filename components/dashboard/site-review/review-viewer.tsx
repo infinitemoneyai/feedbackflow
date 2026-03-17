@@ -51,53 +51,43 @@ export function ReviewViewer({
       (f) => f.metadata?.url === currentUrl
     ).length ?? 0;
 
-  const loadUrl = useCallback((url: string, useProxy = false) => {
+  // Always try proxy first — most sites block direct iframe embedding via
+  // X-Frame-Options or CSP frame-ancestors. The browser fires onLoad even when
+  // content is blocked, making direct-iframe detection unreliable.
+  const loadUrl = useCallback((url: string, direct = false) => {
     setConnectionMethod("loading");
 
     if (loadTimeoutRef.current) {
       clearTimeout(loadTimeoutRef.current);
     }
 
-    const iframeSrc = useProxy
-      ? `/api/proxy?url=${encodeURIComponent(url)}`
-      : url;
+    const iframeSrc = direct
+      ? url
+      : `/api/proxy?url=${encodeURIComponent(url)}`;
 
     if (iframeRef.current) {
       iframeRef.current.src = iframeSrc;
     }
 
-    // Timeout: if iframe hasn't loaded in 5s, try proxy
-    if (!useProxy) {
-      loadTimeoutRef.current = setTimeout(() => {
-        loadUrl(url, true);
-      }, 5000);
-    } else {
-      // Proxy timeout — show failure
-      loadTimeoutRef.current = setTimeout(() => {
-        setConnectionMethod("failed");
-      }, 10000);
-    }
+    // Timeout — if proxy fails after 10s, show fallback
+    loadTimeoutRef.current = setTimeout(() => {
+      setConnectionMethod("failed");
+    }, 10000);
   }, []);
 
   const handleIframeLoad = useCallback(() => {
     if (loadTimeoutRef.current) {
       clearTimeout(loadTimeoutRef.current);
     }
-    const src = iframeRef.current?.src ?? "";
-    setConnectionMethod(src.startsWith("/api/proxy") ? "proxy" : "iframe");
+    setConnectionMethod("proxy");
   }, []);
 
   const handleIframeError = useCallback(() => {
     if (loadTimeoutRef.current) {
       clearTimeout(loadTimeoutRef.current);
     }
-    const src = iframeRef.current?.src ?? "";
-    if (!src.startsWith("/api/proxy")) {
-      loadUrl(currentUrl, true);
-    } else {
-      setConnectionMethod("failed");
-    }
-  }, [currentUrl, loadUrl]);
+    setConnectionMethod("failed");
+  }, []);
 
   useEffect(() => {
     loadUrl(initialUrl);
@@ -234,7 +224,7 @@ export function ReviewViewer({
           <iframe
             ref={iframeRef}
             className="flex-1 border-0"
-            sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
+            sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
             onLoad={handleIframeLoad}
             onError={handleIframeError}
           />
