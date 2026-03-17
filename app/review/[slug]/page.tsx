@@ -22,7 +22,7 @@ export default function ExternalReviewPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
-}): JSX.Element {
+}): React.JSX.Element {
   const { slug } = use(params);
   const [session, setSession] = useState<ReviewSession | null>(null);
   const [email, setEmail] = useState("");

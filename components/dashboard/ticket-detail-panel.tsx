@@ -507,18 +507,18 @@ export function TicketDetailPanel() {
     setToast,
   ]);
 
-  // If no feedback selected, show empty state
+  // If no feedback selected, show collapsed minimal state
   if (!selectedFeedbackId) {
     return (
-      <aside className="relative z-10 hidden w-[480px] flex-shrink-0 flex-col border-l-2 border-retro-black bg-retro-paper lg:flex">
-        <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2 border-stone-200 bg-stone-50">
-            <Icon name="solar:bug-linear" className="h-8 w-8 text-stone-400" />
+      <aside className="relative z-10 hidden w-12 flex-shrink-0 flex-col border-l-2 border-retro-black bg-retro-paper transition-all duration-300 ease-in-out lg:flex">
+        <div className="flex h-full flex-col items-center justify-center gap-3 py-6">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full border border-stone-300 bg-stone-100">
+            <Icon name="solar:bug-linear" className="h-4 w-4 text-stone-400" />
           </div>
-          <h3 className="mb-2 font-medium text-retro-black">No ticket selected</h3>
-          <p className="text-sm text-stone-500">
-            Select a feedback item from the list to view details and take actions
-          </p>
+          <div className="h-px w-6 bg-stone-300" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-full border border-stone-300 bg-stone-100">
+            <Icon name="solar:document-text-linear" className="h-4 w-4 text-stone-400" />
+          </div>
         </div>
       </aside>
     );
@@ -560,7 +560,7 @@ export function TicketDetailPanel() {
   }
 
   return (
-    <aside className="fixed inset-0 z-50 flex w-full flex-col border-l-2 border-retro-black bg-retro-paper lg:relative lg:z-10 lg:flex lg:w-[480px] lg:flex-shrink-0">
+    <aside className="fixed inset-0 z-50 flex w-full flex-col border-l-2 border-retro-black bg-retro-paper transition-all duration-300 ease-in-out lg:relative lg:z-10 lg:flex lg:w-[480px] lg:flex-shrink-0">
       {/* Toast */}
       {toast && <Toast kind={toast.kind} message={toast.message} />}
 
@@ -592,7 +592,7 @@ export function TicketDetailPanel() {
 
       {/* Content Scroll Area */}
       <TicketContentArea
-        currentView={currentView}
+        currentView={currentView as "inbox" | "backlog" | "resolved"}
         feedback={feedback}
         ticketDraft={ticketDraft}
         solutionSuggestions={solutionSuggestions}

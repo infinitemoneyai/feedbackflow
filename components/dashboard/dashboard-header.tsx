@@ -40,10 +40,11 @@ export function DashboardHeader() {
     selectedProjectId ? { projectId: selectedProjectId } : "skip"
   );
 
-  const viewTitles = {
+  const viewTitles: Record<string, string> = {
     inbox: "Inbox",
     backlog: "Backlog",
     resolved: "Resolved",
+    review: "Review Site",
   };
 
   const viewDescriptions = {
@@ -77,7 +78,7 @@ export function DashboardHeader() {
           projectId: selectedProjectId,
           sortBy: "createdAt",
           sortOrder: "desc",
-          view: currentView,
+          view: currentView === "review" ? "inbox" : currentView,
         }
       : "skip"
   );

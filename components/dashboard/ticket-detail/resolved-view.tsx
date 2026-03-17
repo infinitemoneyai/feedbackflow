@@ -4,6 +4,7 @@ import { Icon } from "@/components/ui/icon";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Id } from "@/convex/_generated/dataModel";
+import { useState } from "react";
 
 interface TicketDraft {
   title: string;
@@ -43,6 +44,12 @@ export function ResolvedView({
   solutionSuggestions,
   exports,
 }: ResolvedViewProps) {
+  const hasSolution = ticketDraft || solutionSuggestions;
+  const hasRouting = exports && exports.length > 0;
+  
+  const [isSolutionExpanded, setIsSolutionExpanded] = useState(!!hasSolution);
+  const [isRoutingExpanded, setIsRoutingExpanded] = useState(!!hasRouting);
+
   const formatDateTime = (timestamp: number) => {
     try {
       return new Intl.DateTimeFormat(undefined, {
@@ -60,25 +67,50 @@ export function ResolvedView({
   return (
     <>
       {/* Solution (read-only) */}
-      <div className="rounded border-2 border-retro-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]">
-        <div className="flex items-center justify-between border-b-2 border-stone-200 p-4">
+      <details
+        open={isSolutionExpanded}
+        onToggle={(e) => setIsSolutionExpanded((e.target as HTMLDetailsElement).open)}
+        className="group rounded border-2 border-retro-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] transition-all duration-300 ease-in-out"
+      >
+        <summary className={`flex cursor-pointer items-center justify-between transition-all duration-200 ${
+          hasSolution ? 'p-4 hover:bg-stone-50' : 'p-2 hover:bg-stone-50/50'
+        }`}>
           <div className="flex items-center gap-2">
-            <Icon name="solar:check-circle-linear" className="text-retro-blue" size={18} />
-            <span className="font-mono text-sm font-bold uppercase tracking-wider text-stone-700">
-              Solution
+            <Icon 
+              name="solar:check-circle-linear" 
+              className={`transition-all duration-200 ${
+                hasSolution ? 'text-retro-blue' : 'text-stone-400'
+              }`}
+              size={hasSolution ? 18 : 16} 
+            />
+            <span className={`font-mono uppercase tracking-wider transition-all duration-200 ${
+              hasSolution
+                ? 'text-sm font-bold text-stone-700'
+                : 'text-xs font-medium text-stone-500'
+            }`}>
+              {hasSolution ? 'Solution' : 'Solution (Empty)'}
             </span>
           </div>
-          <div className="text-xs text-stone-500">
-            {feedback.status === "resolved"
-              ? feedback.resolvedAt
-                ? `Resolved ${formatDateTime(feedback.resolvedAt)}`
-                : "Resolved"
-              : exports && exports.length > 0
-                ? `Exported ${formatDateTime(Math.max(...exports.map((e) => e.createdAt)))}`
-                : "Exported"}
+          <div className="flex items-center gap-2">
+            {hasSolution && (
+              <div className="text-xs text-stone-500">
+                {feedback.status === "resolved"
+                  ? feedback.resolvedAt
+                    ? `Resolved ${formatDateTime(feedback.resolvedAt)}`
+                    : "Resolved"
+                  : exports && exports.length > 0
+                    ? `Exported ${formatDateTime(Math.max(...exports.map((e) => e.createdAt)))}`
+                    : "Exported"}
+              </div>
+            )}
+            <Icon
+              name="solar:alt-arrow-down-linear"
+              size={hasSolution ? 18 : 14}
+              className="text-stone-400 transition-transform duration-200 group-open:rotate-180"
+            />
           </div>
-        </div>
-        <div className="space-y-4 p-4">
+        </summary>
+        <div className="space-y-4 border-t-2 border-stone-200 p-4 animate-in fade-in slide-in-from-top-2 duration-300">
           {ticketDraft ? (
             <>
               <div className="text-sm font-semibold text-stone-800">{ticketDraft.title}</div>
@@ -128,29 +160,59 @@ export function ResolvedView({
               )}
             </>
           ) : (
-            <div className="rounded border-2 border-stone-200 bg-stone-50 p-3 text-sm text-stone-600">
-              No solution captured for this ticket yet.
+            <div className="py-6 text-center">
+              <div className="mb-3 flex justify-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-stone-200 bg-stone-50">
+                  <Icon name="solar:document-text-linear" className="text-stone-400" size={24} />
+                </div>
+              </div>
+              <p className="text-sm text-stone-500">
+                No solution captured for this ticket yet.
+              </p>
             </div>
           )}
         </div>
-      </div>
+      </details>
 
       {/* Routing timeline */}
-      <div className="rounded border-2 border-retro-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]">
-        <div className="flex items-center justify-between border-b-2 border-stone-200 p-4">
+      <details
+        open={isRoutingExpanded}
+        onToggle={(e) => setIsRoutingExpanded((e.target as HTMLDetailsElement).open)}
+        className="group rounded border-2 border-retro-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] transition-all duration-300 ease-in-out"
+      >
+        <summary className={`flex cursor-pointer items-center justify-between transition-all duration-200 ${
+          hasRouting ? 'p-4 hover:bg-stone-50' : 'p-2 hover:bg-stone-50/50'
+        }`}>
           <div className="flex items-center gap-2">
-            <Icon name="solar:route-linear" className="text-stone-600" size={18} />
-            <span className="font-mono text-sm font-bold uppercase tracking-wider text-stone-700">
-              Routing timeline
+            <Icon 
+              name="solar:route-linear" 
+              className={`transition-all duration-200 ${
+                hasRouting ? 'text-stone-600' : 'text-stone-400'
+              }`}
+              size={hasRouting ? 18 : 16} 
+            />
+            <span className={`font-mono uppercase tracking-wider transition-all duration-200 ${
+              hasRouting
+                ? 'text-sm font-bold text-stone-700'
+                : 'text-xs font-medium text-stone-500'
+            }`}>
+              {hasRouting ? 'Routing timeline' : 'Routing timeline (Empty)'}
             </span>
           </div>
-          <div className="text-xs text-stone-500">
-            {(exports?.length ?? 0) > 0
-              ? `${exports?.length} event${exports?.length === 1 ? "" : "s"}`
-              : "No routing"}
+          <div className="flex items-center gap-2">
+            {hasRouting && (
+              <div className="text-xs text-stone-500">
+                {exports.length} event{exports.length === 1 ? "" : "s"}
+              </div>
+            )}
+            <Icon
+              name="solar:alt-arrow-down-linear"
+              size={hasRouting ? 18 : 14}
+              className="text-stone-400 transition-transform duration-200 group-open:rotate-180"
+            />
           </div>
-        </div>
-        <div className="p-4">
+        </summary>
+        <div className="border-t-2 border-stone-200 p-4 animate-in fade-in slide-in-from-top-2 duration-300">
           {exports && exports.length > 0 ? (
             <ul className="space-y-2">
               {[...exports]
@@ -223,12 +285,19 @@ export function ResolvedView({
               )}
             </ul>
           ) : (
-            <div className="rounded border-2 border-stone-200 bg-stone-50 p-3 text-sm text-stone-600">
-              No routing history found for this ticket.
+            <div className="py-6 text-center">
+              <div className="mb-3 flex justify-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-stone-200 bg-stone-50">
+                  <Icon name="solar:route-linear" className="text-stone-400" size={24} />
+                </div>
+              </div>
+              <p className="text-sm text-stone-500">
+                No routing history found for this ticket.
+              </p>
             </div>
           )}
         </div>
-      </div>
+      </details>
     </>
   );
 }

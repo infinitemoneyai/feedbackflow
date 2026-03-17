@@ -28,7 +28,7 @@ export function ReviewViewer({
   reviewLinkId,
   reviewerEmail,
   sessionToken,
-}: ReviewViewerProps): JSX.Element {
+}: ReviewViewerProps): React.JSX.Element {
   const [currentUrl, setCurrentUrl] = useState(initialUrl);
   const [history, setHistory] = useState<string[]>([initialUrl]);
   const [historyIndex, setHistoryIndex] = useState(0);
@@ -40,16 +40,15 @@ export function ReviewViewer({
     null
   );
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const loadTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const loadTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Count feedback for current URL
   const feedbackList = useQuery(api.feedback.listFeedback, {
     projectId,
-    view: "inbox",
   });
   const feedbackCount =
     feedbackList?.filter(
-      (f: { url?: string }) => f.url === currentUrl
+      (f) => f.metadata?.url === currentUrl
     ).length ?? 0;
 
   const loadUrl = useCallback((url: string, useProxy = false) => {
