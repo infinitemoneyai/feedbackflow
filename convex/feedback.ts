@@ -169,6 +169,145 @@ export const submitFromWidget = mutation({
 });
 
 /**
+ * Submit feedback from site review (public, no auth required)
+ * Called when a reviewer submits feedback through the review interface.
+ */
+export const submitFromReview = mutation({
+  args: {
+    projectId: v.id("projects"),
+    teamId: v.id("teams"),
+    type: v.union(v.literal("bug"), v.literal("feature")),
+    title: v.string(),
+    description: v.optional(v.string()),
+    screenshotStorageId: v.optional(v.id("_storage")),
+    url: v.optional(v.string()),
+    browserInfo: v.optional(v.string()),
+    osInfo: v.optional(v.string()),
+    screenWidth: v.optional(v.number()),
+    screenHeight: v.optional(v.number()),
+    reviewLinkId: v.id("reviewLinks"),
+    reviewerEmail: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Validate the project exists
+    const project = await ctx.db.get(args.projectId);
+    if (!project) {
+      throw new Error("Project not found");
+    }
+
+    // Check team usage limits
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+
+    const existingUsage = await ctx.db
+      .query("usageTracking")
+      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+      .filter((q) =>
+        q.and(q.eq(q.field("year"), year), q.eq(q.field("month"), month))
+      )
+      .first();
+
+    // Check plan limits
+    const subscription = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+      .first();
+
+    const plan = subscription?.plan ?? "free";
+    const FREE_LIMIT = 25;
+
+    if (plan === "free") {
+      const currentCount = existingUsage?.feedbackCount ?? 0;
+      if (currentCount >= FREE_LIMIT) {
+        throw new Error(
+          "This team has reached its monthly feedback limit. Please ask the team to upgrade their plan."
+        );
+      }
+    }
+
+    // Get the next ticket number
+    const ticketNumber = await getNextTicketNumber(ctx, args.projectId);
+
+    // Get screenshot URL if storage ID is provided
+    let screenshotUrl: string | undefined;
+    if (args.screenshotStorageId) {
+      const url = await ctx.storage.getUrl(args.screenshotStorageId);
+      if (url) {
+        screenshotUrl = url;
+      }
+    }
+
+    // Create the feedback record
+    const feedbackId = await ctx.db.insert("feedback", {
+      widgetId: undefined,
+      projectId: args.projectId,
+      teamId: args.teamId,
+      reviewLinkId: args.reviewLinkId,
+      reviewerEmail: args.reviewerEmail,
+      source: "review",
+      ticketNumber,
+      type: args.type,
+      title: args.title,
+      description: args.description,
+      screenshotUrl: screenshotUrl ?? undefined,
+      screenshotStorageId: args.screenshotStorageId,
+      status: "new",
+      priority: project.settings?.defaultPriority ?? "medium",
+      tags: [],
+      metadata: {
+        browser: args.browserInfo,
+        os: args.osInfo,
+        url: args.url,
+        screenWidth: args.screenWidth,
+        screenHeight: args.screenHeight,
+        timestamp: Date.now(),
+      },
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+
+    // Create activity log entry
+    await ctx.db.insert("activityLog", {
+      feedbackId,
+      action: "created",
+      details: {
+        extra: `Submitted via site review by ${args.reviewerEmail}`,
+      },
+      createdAt: Date.now(),
+    });
+
+    // Update usage tracking for the team
+    if (existingUsage) {
+      await ctx.db.patch(existingUsage._id, {
+        feedbackCount: existingUsage.feedbackCount + 1,
+        updatedAt: Date.now(),
+      });
+    } else {
+      await ctx.db.insert("usageTracking", {
+        teamId: args.teamId,
+        year,
+        month,
+        feedbackCount: 1,
+        aiCallCount: 0,
+        storageUsedBytes: 0,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    }
+
+    // Generate feedback reference
+    const feedbackRef = `FF-${ticketNumber.toString().padStart(4, "0")}`;
+
+    return {
+      feedbackId,
+      ticketNumber,
+      feedbackRef,
+    };
+  },
+});
+
+/**
  * Get widget by key (public query for validation)
  */
 export const getWidgetByKey = query({
