@@ -112,6 +112,7 @@ export const submitFromWidget = mutation({
       submitterEmail: args.submitterEmail,
       submitterName: args.submitterName,
       metadata: args.metadata,
+      source: "widget" as const,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
