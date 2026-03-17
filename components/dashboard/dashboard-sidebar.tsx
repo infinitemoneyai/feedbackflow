@@ -5,7 +5,7 @@ import { useQuery } from "convex/react";
 import { useUser, UserButton } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Plus, Settings, FolderKanban, BarChart3 } from "lucide-react";
+import { Plus, Settings, FolderKanban, BarChart3, Globe } from "lucide-react";
 import { Icon } from "@/components/ui/icon";
 import { api } from "@/convex/_generated/api";
 import { useDashboard } from "./dashboard-layout";
@@ -277,6 +277,24 @@ export function DashboardSidebar() {
                 </Link>
               );
             })}
+
+            {/* Review Site */}
+            <Link
+              href="/dashboard"
+              onClick={() => {
+                setCurrentView("review");
+                setSidebarOpen(false);
+              }}
+              className={cn(
+                "flex w-full items-center gap-3 rounded px-3 py-1.5 text-sm font-medium transition-colors",
+                pathname === "/dashboard" && currentView === "review"
+                  ? "border border-retro-lavender bg-retro-lavender/30 text-retro-black"
+                  : "text-stone-500 hover:bg-stone-100 hover:text-retro-black"
+              )}
+            >
+              <Globe className="h-[18px] w-[18px]" />
+              Review Site
+            </Link>
 
             {/* Analytics link */}
             <Link
