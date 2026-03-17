@@ -19,8 +19,8 @@ interface DashboardContextType {
   setSelectedProjectId: (id: Id<"projects"> | null) => void;
   selectedFeedbackId: Id<"feedback"> | null;
   setSelectedFeedbackId: (id: Id<"feedback"> | null) => void;
-  currentView: "inbox" | "backlog" | "resolved";
-  setCurrentView: (view: "inbox" | "backlog" | "resolved") => void;
+  currentView: "inbox" | "backlog" | "resolved" | "review";
+  setCurrentView: (view: "inbox" | "backlog" | "resolved" | "review") => void;
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
   searchQuery: string;
@@ -56,7 +56,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [selectedTeamId, setSelectedTeamId] = useState<Id<"teams"> | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<Id<"projects"> | null>(null);
   const [selectedFeedbackId, setSelectedFeedbackId] = useState<Id<"feedback"> | null>(null);
-  const [currentView, setCurrentView] = useState<"inbox" | "backlog" | "resolved">("inbox");
+  const [currentView, setCurrentView] = useState<"inbox" | "backlog" | "resolved" | "review">("inbox");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<"bug" | "feature" | null>(null);
