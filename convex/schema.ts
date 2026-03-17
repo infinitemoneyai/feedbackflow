@@ -159,9 +159,12 @@ export default defineSchema({
    * Main feedback table
    */
   feedback: defineTable({
-    widgetId: v.id("widgets"),
+    widgetId: v.optional(v.id("widgets")),
     projectId: v.id("projects"),
     teamId: v.id("teams"),
+    reviewLinkId: v.optional(v.id("reviewLinks")),
+    reviewerEmail: v.optional(v.string()),
+    source: v.optional(v.union(v.literal("widget"), v.literal("review"))),
 
     // Ticket numbering
     ticketNumber: v.optional(v.number()), // Sequential per project: 1, 2, 3...
@@ -802,4 +805,38 @@ export default defineSchema({
     content: v.string(),
     createdAt: v.number(),
   }).index("by_feedback", ["feedbackId"]),
+
+  // ==========================================================================
+  // Site Review
+  // ==========================================================================
+
+  /**
+   * Review links for external site review access
+   */
+  reviewLinks: defineTable({
+    projectId: v.id("projects"),
+    teamId: v.id("teams"),
+    slug: v.string(),
+    siteUrl: v.string(),
+    passwordHash: v.optional(v.string()),
+    createdBy: v.id("users"),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+    expiresAt: v.optional(v.number()),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_project", ["projectId"]),
+
+  /**
+   * Reviewers who accessed review links
+   */
+  reviewers: defineTable({
+    reviewLinkId: v.id("reviewLinks"),
+    email: v.string(),
+    sessionToken: v.string(),
+    firstAccessedAt: v.number(),
+    lastAccessedAt: v.number(),
+  })
+    .index("by_session_token", ["sessionToken"])
+    .index("by_review_link", ["reviewLinkId"]),
 });
