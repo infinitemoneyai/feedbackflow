@@ -186,8 +186,8 @@ export const submitFromReview = mutation({
     osInfo: v.optional(v.string()),
     screenWidth: v.optional(v.number()),
     screenHeight: v.optional(v.number()),
-    reviewLinkId: v.id("reviewLinks"),
-    reviewerEmail: v.string(),
+    reviewLinkId: v.optional(v.id("reviewLinks")),
+    reviewerEmail: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     // Validate the project exists
@@ -273,7 +273,9 @@ export const submitFromReview = mutation({
       feedbackId,
       action: "created",
       details: {
-        extra: `Submitted via site review by ${args.reviewerEmail}`,
+        extra: args.reviewerEmail
+          ? `Submitted via site review by ${args.reviewerEmail}`
+          : "Submitted via site review",
       },
       createdAt: Date.now(),
     });
