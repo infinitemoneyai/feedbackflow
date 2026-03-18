@@ -158,17 +158,40 @@ export function ReviewViewer({
       video.srcObject = stream;
       await video.play();
 
-      const canvas = document.createElement("canvas");
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext("2d");
-      ctx?.drawImage(video, 0, 0);
+      // Capture full screen first
+      const fullCanvas = document.createElement("canvas");
+      fullCanvas.width = video.videoWidth;
+      fullCanvas.height = video.videoHeight;
+      const fullCtx = fullCanvas.getContext("2d");
+      fullCtx?.drawImage(video, 0, 0);
 
       stream.getTracks().forEach((t) => t.stop());
 
-      const dataUrl = canvas.toDataURL("image/png");
-      setRawScreenshotDataUrl(dataUrl);
-      setShowAnnotateOverlay(true);
+      // Crop to just the iframe area
+      const iframe = iframeRef.current;
+      if (iframe && fullCtx) {
+        const rect = iframe.getBoundingClientRect();
+        const dpr = video.videoWidth / window.innerWidth;
+        const sx = rect.left * dpr;
+        const sy = rect.top * dpr;
+        const sw = rect.width * dpr;
+        const sh = rect.height * dpr;
+
+        const croppedCanvas = document.createElement("canvas");
+        croppedCanvas.width = sw;
+        croppedCanvas.height = sh;
+        const croppedCtx = croppedCanvas.getContext("2d");
+        croppedCtx?.drawImage(fullCanvas, sx, sy, sw, sh, 0, 0, sw, sh);
+
+        const dataUrl = croppedCanvas.toDataURL("image/png");
+        setRawScreenshotDataUrl(dataUrl);
+        setShowAnnotateOverlay(true);
+      } else {
+        // Fallback to full capture if iframe ref unavailable
+        const dataUrl = fullCanvas.toDataURL("image/png");
+        setRawScreenshotDataUrl(dataUrl);
+        setShowAnnotateOverlay(true);
+      }
     } catch (error) {
       console.error("Screenshot capture failed:", error);
     }

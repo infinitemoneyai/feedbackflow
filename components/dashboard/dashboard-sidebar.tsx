@@ -41,6 +41,12 @@ export function DashboardSidebar() {
     selectedTeamId ? { teamId: selectedTeamId } : "skip"
   );
 
+  // Get view counts for sidebar badges
+  const viewCounts = useQuery(
+    api.feedback.getViewCounts,
+    selectedProjectId ? { projectId: selectedProjectId } : "skip"
+  );
+
   // Get subscription to check if user is on free plan
   const subscription = useQuery(
     api.billing.getSubscription,
@@ -287,7 +293,19 @@ export function DashboardSidebar() {
                   )}
                 >
                   <Icon name={iconName} size={18} />
-                  {item.label}
+                  <span className="flex-1">{item.label}</span>
+                  {viewCounts && viewCounts[item.id] > 0 && (
+                    <span
+                      className={cn(
+                        "rounded border px-1.5 py-0.5 font-mono text-xs leading-none",
+                        isActive
+                          ? "border-retro-lavender/50 text-retro-black"
+                          : "border-stone-300 text-stone-400"
+                      )}
+                    >
+                      {viewCounts[item.id]}
+                    </span>
+                  )}
                 </Link>
               );
             })}
