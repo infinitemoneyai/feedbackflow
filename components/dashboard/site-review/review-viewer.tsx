@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { ReviewToolbar } from "./review-toolbar";
 import { ReviewFeedbackPanel } from "./review-feedback-panel";
+import { ReviewAnnotateOverlay } from "./review-annotate-overlay";
 import { ReviewStatusBar } from "./review-status-bar";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
@@ -35,7 +36,9 @@ export function ReviewViewer({
   const [connectionMethod, setConnectionMethod] = useState<
     "iframe" | "proxy" | "loading" | "failed"
   >("loading");
+  const [showAnnotateOverlay, setShowAnnotateOverlay] = useState(false);
   const [showFeedbackPanel, setShowFeedbackPanel] = useState(false);
+  const [rawScreenshotDataUrl, setRawScreenshotDataUrl] = useState<string | null>(null);
   const [screenshotDataUrl, setScreenshotDataUrl] = useState<string | null>(
     null
   );
@@ -96,6 +99,22 @@ export function ReviewViewer({
     };
   }, [initialUrl, loadUrl]);
 
+  // Listen for navigation messages from the injected proxy script
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent): void => {
+      if (
+        event.data &&
+        event.data.type === "feedbackflow-navigate" &&
+        typeof event.data.url === "string"
+      ) {
+        navigate(event.data.url);
+      }
+    };
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [history, historyIndex]);
+
   const navigate = (url: string): void => {
     setCurrentUrl(url);
     const newHistory = [...history.slice(0, historyIndex + 1), url];
@@ -148,8 +167,8 @@ export function ReviewViewer({
       stream.getTracks().forEach((t) => t.stop());
 
       const dataUrl = canvas.toDataURL("image/png");
-      setScreenshotDataUrl(dataUrl);
-      setShowFeedbackPanel(true);
+      setRawScreenshotDataUrl(dataUrl);
+      setShowAnnotateOverlay(true);
     } catch (error) {
       console.error("Screenshot capture failed:", error);
     }
@@ -227,6 +246,28 @@ export function ReviewViewer({
             sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
             onLoad={handleIframeLoad}
             onError={handleIframeError}
+          />
+        )}
+
+        {showAnnotateOverlay && rawScreenshotDataUrl && (
+          <ReviewAnnotateOverlay
+            screenshotDataUrl={rawScreenshotDataUrl}
+            onComplete={(annotatedDataUrl) => {
+              setScreenshotDataUrl(annotatedDataUrl);
+              setShowAnnotateOverlay(false);
+              setRawScreenshotDataUrl(null);
+              setShowFeedbackPanel(true);
+            }}
+            onSkip={() => {
+              setScreenshotDataUrl(rawScreenshotDataUrl);
+              setShowAnnotateOverlay(false);
+              setRawScreenshotDataUrl(null);
+              setShowFeedbackPanel(true);
+            }}
+            onCancel={() => {
+              setShowAnnotateOverlay(false);
+              setRawScreenshotDataUrl(null);
+            }}
           />
         )}
 

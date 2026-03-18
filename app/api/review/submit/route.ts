@@ -82,9 +82,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       osInfo,
       screenWidth: screenWidth ? Number(screenWidth) : undefined,
       screenHeight: screenHeight ? Number(screenHeight) : undefined,
-      reviewLinkId: reviewLinkId || "",
-      reviewerEmail: reviewerEmail || "",
-    } as any);
+      reviewLinkId: reviewLinkId || undefined,
+      reviewerEmail: reviewerEmail || undefined,
+    });
 
     // Fire-and-forget: trigger AI analysis, automations, and notifications
     // (mirrors app/api/widget/submit/route.ts)

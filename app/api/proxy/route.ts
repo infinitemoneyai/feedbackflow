@@ -64,11 +64,49 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     const body = await response.text();
 
-    // Rewrite relative URLs to absolute
+    // Rewrite relative URLs to absolute for resources (src, action)
     const baseUrl = new URL(targetUrl);
-    const rewrittenBody = body
-      .replace(/(href|src|action)="\/(?!\/)/g, `$1="${baseUrl.origin}/`)
-      .replace(/(href|src|action)='\/(?!\/)/g, `$1='${baseUrl.origin}/`);
+    let rewrittenBody = body
+      .replace(/(src|action)="\/(?!\/)/g, `$1="${baseUrl.origin}/`)
+      .replace(/(src|action)='\/(?!\/)/g, `$1='${baseUrl.origin}/`);
+
+    // Inject <base> tag so relative URLs resolve against the target origin
+    // (handles dynamic content, CSS imports, etc.)
+    const baseTag = `<base href="${baseUrl.origin}/">`;
+    if (rewrittenBody.includes("<head>")) {
+      rewrittenBody = rewrittenBody.replace("<head>", `<head>${baseTag}`);
+    } else if (rewrittenBody.includes("<html")) {
+      rewrittenBody = rewrittenBody.replace(
+        /(<html[^>]*>)/i,
+        `$1<head>${baseTag}</head>`
+      );
+    }
+
+    // Inject script to intercept link clicks and notify the parent frame
+    const navScript = `<script data-feedbackflow-proxy>
+(function(){
+  document.addEventListener('click', function(e) {
+    var link = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+    if (!link) return;
+    var href = link.getAttribute('href');
+    if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+    if (link.getAttribute('target') === '_blank') return;
+    var url;
+    try { url = new URL(href, document.baseURI).href; } catch(err) { return; }
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      e.preventDefault();
+      e.stopPropagation();
+      window.parent.postMessage({ type: 'feedbackflow-navigate', url: url }, '*');
+    }
+  }, true);
+})();
+</script>`;
+
+    if (rewrittenBody.includes("</body>")) {
+      rewrittenBody = rewrittenBody.replace("</body>", `${navScript}</body>`);
+    } else {
+      rewrittenBody += navScript;
+    }
 
     const proxyResponse = new NextResponse(rewrittenBody, {
       status: 200,

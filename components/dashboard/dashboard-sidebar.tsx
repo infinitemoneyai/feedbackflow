@@ -138,7 +138,7 @@ export function DashboardSidebar() {
                 <p className="text-xs text-stone-500">No projects yet</p>
               </div>
             ) : (
-              projects.map((project: { _id: Id<"projects">; name: string; feedbackCount: number; newFeedbackCount: number }) => (
+              projects.map((project: { _id: Id<"projects">; name: string; feedbackCount: number; newFeedbackCount: number; siteUrl?: string }) => (
                 <div key={project._id} className="relative">
                   <div
                     role="button"
@@ -205,6 +205,20 @@ export function DashboardSidebar() {
                         onClick={() => setOpenMenuProjectId(null)}
                       />
                       <div className="absolute right-0 top-full z-20 mt-1 w-48 rounded border-2 border-retro-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]">
+                        {project.siteUrl && (
+                          <button
+                            onClick={() => {
+                              setSelectedProjectId(project._id);
+                              setCurrentView("review");
+                              setOpenMenuProjectId(null);
+                              setSidebarOpen(false);
+                            }}
+                            className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors hover:bg-stone-50"
+                          >
+                            <Globe className="h-4 w-4" />
+                            Review Site
+                          </button>
+                        )}
                         <button
                           onClick={() => {
                             setEditingProjectId(project._id);
@@ -278,23 +292,6 @@ export function DashboardSidebar() {
               );
             })}
 
-            {/* Review Site */}
-            <Link
-              href="/dashboard"
-              onClick={() => {
-                setCurrentView("review");
-                setSidebarOpen(false);
-              }}
-              className={cn(
-                "flex w-full items-center gap-3 rounded px-3 py-1.5 text-sm font-medium transition-colors",
-                pathname === "/dashboard" && currentView === "review"
-                  ? "border border-retro-lavender bg-retro-lavender/30 text-retro-black"
-                  : "text-stone-500 hover:bg-stone-100 hover:text-retro-black"
-              )}
-            >
-              <Globe className="h-[18px] w-[18px]" />
-              Review Site
-            </Link>
 
             {/* Analytics link */}
             <Link

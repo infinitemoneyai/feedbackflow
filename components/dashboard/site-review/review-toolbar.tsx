@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, KeyboardEvent } from "react";
+import { useState, useEffect, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, ArrowRight, RotateCw, Camera, Share2 } from "lucide-react";
@@ -29,6 +29,11 @@ export function ReviewToolbar({
   canGoForward,
 }: ReviewToolbarProps): React.JSX.Element {
   const [urlInput, setUrlInput] = useState(currentUrl);
+
+  // Sync input when currentUrl changes (e.g., from in-iframe navigation)
+  useEffect(() => {
+    setUrlInput(currentUrl);
+  }, [currentUrl]);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>): void => {
     if (e.key === "Enter") {
