@@ -445,6 +445,38 @@ export const updateFeedbackStatus = mutation({
 });
 
 /**
+ * Get feedback counts per view (inbox, backlog, resolved) for sidebar badges
+ */
+export const getViewCounts = query({
+  args: {
+    projectId: v.id("projects"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return { inbox: 0, backlog: 0, resolved: 0 };
+
+    const feedbackList = await ctx.db
+      .query("feedback")
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .collect();
+
+    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+
+    return {
+      inbox: feedbackList.filter(
+        (f) => f.status === "new" || f.status === "triaging"
+      ).length,
+      backlog: feedbackList.filter((f) => f.status === "drafted").length,
+      resolved: feedbackList.filter(
+        (f) =>
+          (f.status === "exported" || f.status === "resolved") &&
+          (f.resolvedAt || f.updatedAt) > thirtyDaysAgo
+      ).length,
+    };
+  },
+});
+
+/**
  * List feedback for a project with filters and sorting
  */
 export const listFeedback = query({
