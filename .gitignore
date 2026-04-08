@@ -60,7 +60,7 @@ next-env.d.ts
 *.swp
 *.swo
 *~
-.cursor/debug.log
+.cursor/
 
 # OS
 .DS_Store
@@ -107,3 +107,9 @@ VERCEL_ENV_VARS.md
 
 # Claude/AI agent skills (internal development tooling)
 .claude/
+
+# Superpowers brainstorm/session artifacts (never public)
+.superpowers/
+
+# Internal docs — plans, specs, design notes (never public)
+docs/
