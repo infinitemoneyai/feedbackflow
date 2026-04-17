@@ -136,6 +136,7 @@ export const generateTicketDraft = action({
   args: {
     feedbackId: v.id("feedback"),
     teamId: v.id("teams"),
+    model: v.optional(v.string()),
     currentDraft: v.optional(
       v.object({
         title: v.string(),
@@ -184,7 +185,7 @@ export const generateTicketDraft = action({
       teamId: args.teamId,
       userId: user._id,
       provider: aiConfig.preferredProvider,
-      model: aiConfig.preferredModel,
+      model: args.model || aiConfig.preferredModel,
       apiKey: apiKeyData.key,
       currentDraft: args.currentDraft,
     });

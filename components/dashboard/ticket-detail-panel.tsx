@@ -8,6 +8,7 @@ import { api } from "@/convex/_generated/api";
 import { useDashboard } from "./dashboard-layout";
 import { Id } from "@/convex/_generated/dataModel";
 import { DraftTicketModal } from "./draft-ticket-modal";
+import { OPENAI_MODELS, ANTHROPIC_MODELS } from "@/lib/ai-models";
 import {
   TicketHeader,
   TicketContentArea,
@@ -20,21 +21,6 @@ import {
 } from "./ticket-detail";
 
 type FeedbackStatus = "new" | "triaging" | "drafted" | "exported" | "resolved";
-
-const OPENAI_MODELS = [
-  { id: "gpt-5.2", name: "GPT-5.2 (Best for coding/agents)" },
-  { id: "gpt-4.1", name: "GPT-4.1 (Smartest non-reasoning)" },
-  { id: "gpt-4o", name: "GPT-4o" },
-  { id: "gpt-4o-mini", name: "GPT-4o Mini" },
-];
-
-const ANTHROPIC_MODELS = [
-  { id: "claude-sonnet-4-5-20250929", name: "Claude Sonnet 4.5 (Best for agents/coding)" },
-  { id: "claude-opus-4-5-20251101", name: "Claude Opus 4.5 (Max intelligence)" },
-  { id: "claude-haiku-4-5-20251001", name: "Claude Haiku 4.5 (Fast & economical)" },
-  { id: "claude-3-5-sonnet-20241022", name: "Claude 3.5 Sonnet" },
-  { id: "claude-3-5-haiku-20241022", name: "Claude 3.5 Haiku" },
-];
 
 export function TicketDetailPanel() {
   const { selectedFeedbackId, setSelectedFeedbackId, currentView } = useDashboard();
@@ -654,6 +640,7 @@ export function TicketDetailPanel() {
             type: feedback.type,
           }}
           solutionNotes={messageInput}
+          model={selectedModel ?? undefined}
         />
       )}
     </aside>

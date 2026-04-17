@@ -19,6 +19,7 @@ interface DraftTicketModalProps {
     type: string;
   };
   solutionNotes?: string;
+  model?: string;
 }
 
 export function DraftTicketModal({
@@ -29,6 +30,7 @@ export function DraftTicketModal({
   onSuccess,
   initialFeedback,
   solutionNotes,
+  model,
 }: DraftTicketModalProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [ticketDraft, setTicketDraft] = useState<{
@@ -83,6 +85,7 @@ export function DraftTicketModal({
       const result = await generateTicketDraft({
         feedbackId,
         teamId,
+        model,
         currentDraft: {
           title: ticketDraft.title,
           description: ticketDraft.description,

@@ -9,7 +9,8 @@
     "noEmit": true,
     "paths": {
       "@/*": ["../*"]
-    }
+    },
+    "typeRoots": ["../node_modules/@types"]
   },
   "include": ["./**/*.ts", "./**/*.tsx", "../node_modules/.bin/convex-env.d.ts"],
   "exclude": ["./node_modules", "./_generated"]
