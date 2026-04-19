@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { OPENAI_MODELS, ANTHROPIC_MODELS } from "@/lib/ai-models";
+import { useAvailableModels } from "@/lib/use-available-models";
 
 interface AiConfigSectionProps {
   teamId: Id<"teams">;
@@ -32,6 +32,9 @@ export function AiConfigSection({ teamId }: AiConfigSectionProps) {
 
   const openaiKey = apiKeys?.find((k: { provider: string }) => k.provider === "openai");
   const anthropicKey = apiKeys?.find((k: { provider: string }) => k.provider === "anthropic");
+
+  const openaiModels = useAvailableModels(teamId, "openai", !!openaiKey?.isValid);
+  const anthropicModels = useAvailableModels(teamId, "anthropic", !!anthropicKey?.isValid);
 
   return (
     <div className="space-y-6">
@@ -61,7 +64,7 @@ export function AiConfigSection({ teamId }: AiConfigSectionProps) {
         title="OpenAI"
         description="Use GPT-4 models for AI features"
         keyData={openaiKey}
-        models={OPENAI_MODELS}
+        models={openaiModels}
         keyPlaceholder="sk-..."
         keyPrefix="sk-"
         onSave={saveApiKeyMutation}
@@ -76,7 +79,7 @@ export function AiConfigSection({ teamId }: AiConfigSectionProps) {
         title="Anthropic"
         description="Use Claude models for AI features"
         keyData={anthropicKey}
-        models={ANTHROPIC_MODELS}
+        models={anthropicModels}
         keyPlaceholder="sk-ant-..."
         keyPrefix="sk-ant-"
         onSave={saveApiKeyMutation}
@@ -122,7 +125,7 @@ interface ApiKeyCardProps {
     isValid: boolean;
     lastValidatedAt?: number;
   };
-  models: Array<{ id: string; name: string; description: string }>;
+  models: Array<{ id: string; name: string; description?: string }>;
   keyPlaceholder: string;
   keyPrefix: string;
   onSave: (args: {

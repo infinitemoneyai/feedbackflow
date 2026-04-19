@@ -1,7 +1,7 @@
 export interface AiModel {
   id: string;
   name: string;
-  description: string;
+  description?: string;
 }
 
 export const OPENAI_MODELS: AiModel[] = [

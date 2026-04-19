@@ -8,7 +8,7 @@ import { api } from "@/convex/_generated/api";
 import { useDashboard } from "./dashboard-layout";
 import { Id } from "@/convex/_generated/dataModel";
 import { DraftTicketModal } from "./draft-ticket-modal";
-import { OPENAI_MODELS, ANTHROPIC_MODELS } from "@/lib/ai-models";
+import { useAvailableModels } from "@/lib/use-available-models";
 import {
   TicketHeader,
   TicketContentArea,
@@ -80,29 +80,38 @@ export function TicketDetailPanel() {
     feedback ? { teamId: feedback.teamId } : "skip"
   );
 
-  // Set default model when AI config loads
+  // Fetch live model lists from each configured provider
+  const openaiModels = useAvailableModels(
+    feedback?.teamId,
+    "openai",
+    !!apiKeyStatus?.hasOpenAI && !!apiKeyStatus?.openAIValid
+  );
+  const anthropicModels = useAvailableModels(
+    feedback?.teamId,
+    "anthropic",
+    !!apiKeyStatus?.hasAnthropic && !!apiKeyStatus?.anthropicValid
+  );
+
+  // Build the combined available-models list
+  const availableModels: Array<{ id: string; name: string; provider: string }> = [];
+  if (apiKeyStatus?.hasOpenAI && apiKeyStatus?.openAIValid) {
+    availableModels.push(...openaiModels.map((m) => ({ id: m.id, name: m.name, provider: "OpenAI" })));
+  }
+  if (apiKeyStatus?.hasAnthropic && apiKeyStatus?.anthropicValid) {
+    availableModels.push(...anthropicModels.map((m) => ({ id: m.id, name: m.name, provider: "Anthropic" })));
+  }
+
+  // Seed selected model; reset if the saved one isn't in the live list
   useEffect(() => {
-    if (aiConfig && !selectedModel) {
-      setSelectedModel(aiConfig.preferredModel);
+    if (!aiConfig || availableModels.length === 0) return;
+    const validIds = new Set(availableModels.map((m) => m.id));
+    const saved = aiConfig.preferredModel;
+    if (!selectedModel) {
+      setSelectedModel(saved && validIds.has(saved) ? saved : availableModels[0].id);
+    } else if (!validIds.has(selectedModel)) {
+      setSelectedModel(availableModels[0].id);
     }
-  }, [aiConfig, selectedModel]);
-
-  // Get available models based on which providers have keys
-  const getAvailableModels = () => {
-    const models: Array<{ id: string; name: string; provider: string }> = [];
-
-    if (apiKeyStatus?.hasOpenAI && apiKeyStatus?.openAIValid) {
-      models.push(...OPENAI_MODELS.map((m) => ({ ...m, provider: "OpenAI" })));
-    }
-
-    if (apiKeyStatus?.hasAnthropic && apiKeyStatus?.anthropicValid) {
-      models.push(...ANTHROPIC_MODELS.map((m) => ({ ...m, provider: "Anthropic" })));
-    }
-
-    return models;
-  };
-
-  const availableModels = getAvailableModels();
+  }, [aiConfig, selectedModel, availableModels]);
 
   // Check which integrations are connected
   const linearIntegration = useQuery(

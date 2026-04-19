@@ -214,6 +214,75 @@ export const processConversationMessage = internalAction({
   },
 });
 
+// =============================================================================
+// Model Listing
+// =============================================================================
+
+interface ModelListResult {
+  success: boolean;
+  models: Array<{ id: string; name: string; description?: string }>;
+  error?: string;
+}
+
+function formatOpenAiName(id: string): string {
+  return id
+    .replace(/^gpt-/, "GPT-")
+    .replace(/-(mini|nano|turbo|preview|instruct)\b/gi, (_, w) => ` ${w[0].toUpperCase()}${w.slice(1).toLowerCase()}`);
+}
+
+export const listAvailableModels = action({
+  args: {
+    teamId: v.id("teams"),
+    provider: v.union(v.literal("openai"), v.literal("anthropic")),
+  },
+  handler: async (ctx, args): Promise<ModelListResult> => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return { success: false, models: [], error: "Unauthenticated" };
+
+    const apiKeyData = await ctx.runQuery(api.apiKeys.getDecryptedApiKey, {
+      teamId: args.teamId,
+      provider: args.provider,
+    });
+    if (!apiKeyData?.key) return { success: false, models: [], error: "API key not found" };
+
+    try {
+      if (args.provider === "anthropic") {
+        const res = await fetch("https://api.anthropic.com/v1/models?limit=100", {
+          headers: {
+            "x-api-key": apiKeyData.key,
+            "anthropic-version": "2023-06-01",
+          },
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          return { success: false, models: [], error: err.error?.message || `Anthropic ${res.status}` };
+        }
+        const data = await res.json();
+        const models = (data.data as Array<{ id: string; display_name?: string }>)
+          .map((m) => ({ id: m.id, name: m.display_name || m.id }))
+          .sort((a, b) => b.id.localeCompare(a.id));
+        return { success: true, models };
+      }
+
+      const res = await fetch("https://api.openai.com/v1/models", {
+        headers: { Authorization: `Bearer ${apiKeyData.key}` },
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        return { success: false, models: [], error: err.error?.message || `OpenAI ${res.status}` };
+      }
+      const data = await res.json();
+      const models = (data.data as Array<{ id: string }>)
+        .filter((m) => /^gpt-/i.test(m.id) && !/instruct|0301|0314|0613/i.test(m.id))
+        .map((m) => ({ id: m.id, name: formatOpenAiName(m.id) }))
+        .sort((a, b) => b.id.localeCompare(a.id));
+      return { success: true, models };
+    } catch (e) {
+      return { success: false, models: [], error: e instanceof Error ? e.message : "Fetch failed" };
+    }
+  },
+});
+
 /**
  * Public action to send a conversation message
  */
