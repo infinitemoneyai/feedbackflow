@@ -74,6 +74,13 @@ export function DashboardSidebar() {
   const isAdmin = selectedTeam?.role === "admin";
   const isFreeAccount = subscription?.plan === "free" || !subscription?.plan;
 
+  const selectedProject = projects?.find((p) => p._id === selectedProjectId) ?? null;
+  const showProjectSearch = (projects?.length ?? 0) > 5;
+  const normalizedSearch = projectSearch.trim().toLowerCase();
+  const filteredProjects = projects?.filter((p) =>
+    normalizedSearch === "" ? true : p.name.toLowerCase().includes(normalizedSearch)
+  ) ?? [];
+
   const navItems = [
     {
       id: "inbox" as const,
