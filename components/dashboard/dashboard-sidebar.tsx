@@ -5,7 +5,7 @@ import { useQuery } from "convex/react";
 import { useUser, UserButton } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Settings, FolderKanban, BarChart3, Globe, ChevronDown } from "lucide-react";
+import { Settings, FolderKanban, BarChart3, Globe, ChevronDown, MoreVertical } from "lucide-react";
 import { Icon } from "@/components/ui/icon";
 import { api } from "@/convex/_generated/api";
 import { useDashboard } from "./dashboard-layout";
@@ -32,10 +32,9 @@ export function DashboardSidebar() {
     setEditingProjectId,
   } = useDashboard();
 
-  const [openMenuProjectId, setOpenMenuProjectId] = useState<Id<"projects"> | null>(null);
-  const [menuAnchor, setMenuAnchor] = useState<{ top: number; right: number } | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
+  const [isProjectActionsOpen, setIsProjectActionsOpen] = useState(false);
   const [projectSearch, setProjectSearch] = useState("");
 
   // Get projects for selected team
@@ -71,20 +70,19 @@ export function DashboardSidebar() {
     }
   }, [projects, selectedProjectId, setSelectedProjectId]);
 
-  // Close projects dropdown on Escape
+  // Close open popovers on Escape
   useEffect(() => {
-    if (!isProjectDropdownOpen) return;
+    if (!isProjectDropdownOpen && !isProjectActionsOpen) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setIsProjectDropdownOpen(false);
         setProjectSearch("");
-        setOpenMenuProjectId(null);
-        setMenuAnchor(null);
+        setIsProjectActionsOpen(false);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [isProjectDropdownOpen]);
+  }, [isProjectDropdownOpen, isProjectActionsOpen]);
 
   const selectedTeam = teams?.find((t) => t?._id === selectedTeamId) ?? null;
   const isAdmin = selectedTeam?.role === "admin";
@@ -96,7 +94,6 @@ export function DashboardSidebar() {
   const filteredProjects = projects?.filter((p) =>
     normalizedSearch === "" ? true : p.name.toLowerCase().includes(normalizedSearch)
   ) ?? [];
-  const menuProject = projects?.find((p) => p._id === openMenuProjectId) ?? null;
 
   const navItems = [
     {
@@ -170,14 +167,17 @@ export function DashboardSidebar() {
                 <p className="text-xs text-stone-500">No projects yet</p>
               </div>
             ) : (
-              <div className="relative">
+              <div className="relative flex items-center gap-1">
                 {/* Trigger: styled like today's selected project row */}
                 <button
                   type="button"
-                  onClick={() => setIsProjectDropdownOpen((v) => !v)}
+                  onClick={() => {
+                    setIsProjectActionsOpen(false);
+                    setIsProjectDropdownOpen((v) => !v);
+                  }}
                   aria-haspopup="listbox"
                   aria-expanded={isProjectDropdownOpen}
-                  className="flex w-full items-center gap-2 border-2 border-retro-black bg-white px-3 py-2 text-left text-sm font-medium shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
+                  className="relative z-20 flex min-w-0 flex-1 items-center gap-2 border-2 border-retro-black bg-white px-3 py-2 text-left text-sm font-medium shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
                 >
                   <div
                     className={cn(
@@ -203,7 +203,25 @@ export function DashboardSidebar() {
                   />
                 </button>
 
-                {/* Panel */}
+                {/* Actions button (outside trigger) */}
+                {selectedProject && (
+                  <button
+                    type="button"
+                    aria-label="Project actions"
+                    aria-haspopup="menu"
+                    aria-expanded={isProjectActionsOpen}
+                    onClick={() => {
+                      setIsProjectDropdownOpen(false);
+                      setProjectSearch("");
+                      setIsProjectActionsOpen((v) => !v);
+                    }}
+                    className="relative z-20 flex-shrink-0 border-2 border-retro-black bg-white p-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-colors hover:bg-stone-100"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </button>
+                )}
+
+                {/* Projects dropdown panel */}
                 {isProjectDropdownOpen && (
                   <>
                     <div
@@ -211,8 +229,6 @@ export function DashboardSidebar() {
                       onClick={() => {
                         setIsProjectDropdownOpen(false);
                         setProjectSearch("");
-                        setOpenMenuProjectId(null);
-                        setMenuAnchor(null);
                       }}
                     />
                     <div className="absolute left-0 right-0 top-full z-20 mt-1 rounded border-2 border-retro-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]">
@@ -237,130 +253,97 @@ export function DashboardSidebar() {
                           filteredProjects.map((project) => {
                             const isSelected = selectedProjectId === project._id;
                             return (
-                              <div key={project._id} className="relative">
-                                <div
-                                  role="button"
-                                  tabIndex={0}
-                                  onClick={() => {
+                              <div
+                                key={project._id}
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => {
+                                  setSelectedProjectId(project._id);
+                                  setIsProjectDropdownOpen(false);
+                                  setProjectSearch("");
+                                  setSidebarOpen(false);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" || e.key === " ") {
+                                    e.preventDefault();
                                     setSelectedProjectId(project._id);
                                     setIsProjectDropdownOpen(false);
                                     setProjectSearch("");
-                                    setOpenMenuProjectId(null);
-                                    setMenuAnchor(null);
                                     setSidebarOpen(false);
-                                  }}
-                                  onKeyDown={(e) => {
-                                    if (e.key === "Enter" || e.key === " ") {
-                                      e.preventDefault();
-                                      setSelectedProjectId(project._id);
-                                      setIsProjectDropdownOpen(false);
-                                      setProjectSearch("");
-                                      setOpenMenuProjectId(null);
-                                      setMenuAnchor(null);
-                                      setSidebarOpen(false);
-                                    }
-                                  }}
+                                  }
+                                }}
+                                className={cn(
+                                  "flex w-full cursor-pointer items-center gap-2 rounded px-3 py-2 text-left text-sm transition-colors",
+                                  isSelected
+                                    ? "bg-stone-100 font-medium text-retro-black"
+                                    : "text-stone-600 hover:bg-stone-50 hover:text-retro-black"
+                                )}
+                              >
+                                <div
                                   className={cn(
-                                    "group flex w-full cursor-pointer items-center gap-2 rounded px-3 py-2 text-left text-sm transition-colors",
-                                    isSelected
-                                      ? "bg-stone-100 font-medium text-retro-black"
-                                      : "text-stone-600 hover:bg-stone-50 hover:text-retro-black"
+                                    "h-2 w-2 flex-shrink-0 rounded-full",
+                                    project.newFeedbackCount > 0
+                                      ? "animate-pulse bg-retro-blue"
+                                      : "bg-stone-300"
                                   )}
-                                >
-                                  <div
+                                />
+                                {project.feedbackCount > 0 && (
+                                  <span
                                     className={cn(
-                                      "h-2 w-2 flex-shrink-0 rounded-full",
-                                      project.newFeedbackCount > 0
-                                        ? "animate-pulse bg-retro-blue"
-                                        : "bg-stone-300"
+                                      "flex-shrink-0 rounded border px-1.5 py-0.5 font-mono text-xs leading-none",
+                                      isSelected
+                                        ? "border-retro-black text-retro-black"
+                                        : "border-stone-300 text-stone-400"
                                     )}
-                                  />
-                                  {project.feedbackCount > 0 && (
-                                    <span
-                                      className={cn(
-                                        "flex-shrink-0 rounded border px-1.5 py-0.5 font-mono text-xs leading-none",
-                                        isSelected
-                                          ? "border-retro-black text-retro-black"
-                                          : "border-stone-300 text-stone-400"
-                                      )}
-                                    >
-                                      {project.feedbackCount}
-                                    </span>
-                                  )}
-                                  <span className="min-w-0 flex-1 truncate">{project.name}</span>
-                                  {isSelected && (
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (openMenuProjectId === project._id) {
-                                          setOpenMenuProjectId(null);
-                                          setMenuAnchor(null);
-                                        } else {
-                                          const rect = e.currentTarget.getBoundingClientRect();
-                                          setMenuAnchor({
-                                            top: rect.bottom + 4,
-                                            right: window.innerWidth - rect.right,
-                                          });
-                                          setOpenMenuProjectId(project._id);
-                                        }
-                                      }}
-                                      className="flex-shrink-0 rounded p-1 transition-colors hover:bg-stone-200"
-                                    >
-                                      <Icon name="solar:menu-dots-bold" size={16} />
-                                    </button>
-                                  )}
-                                </div>
+                                  >
+                                    {project.feedbackCount}
+                                  </span>
+                                )}
+                                <span className="min-w-0 flex-1 truncate">{project.name}</span>
                               </div>
                             );
                           })
                         )}
                       </div>
                     </div>
-                    {menuProject && menuAnchor && (
-                      <div
-                        style={{
-                          position: "fixed",
-                          top: menuAnchor.top,
-                          right: menuAnchor.right,
-                        }}
-                        className="z-30 w-48 rounded border-2 border-retro-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]"
-                      >
-                        {menuProject.siteUrl && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedProjectId(menuProject._id);
-                              setCurrentView("review");
-                              setOpenMenuProjectId(null);
-                              setMenuAnchor(null);
-                              setIsProjectDropdownOpen(false);
-                              setProjectSearch("");
-                              setSidebarOpen(false);
-                            }}
-                            className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors hover:bg-stone-50"
-                          >
-                            <Globe className="h-4 w-4" />
-                            Review Site
-                          </button>
-                        )}
+                  </>
+                )}
+
+                {/* Project actions menu */}
+                {isProjectActionsOpen && selectedProject && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setIsProjectActionsOpen(false)}
+                    />
+                    <div className="absolute right-0 top-full z-20 mt-1 w-48 rounded border-2 border-retro-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]">
+                      {selectedProject.siteUrl && (
                         <button
                           type="button"
                           onClick={() => {
-                            setEditingProjectId(menuProject._id);
-                            setIsEditProjectModalOpen(true);
-                            setOpenMenuProjectId(null);
-                            setMenuAnchor(null);
-                            setIsProjectDropdownOpen(false);
-                            setProjectSearch("");
+                            setCurrentView("review");
+                            setIsProjectActionsOpen(false);
+                            setSidebarOpen(false);
                           }}
                           className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors hover:bg-stone-50"
                         >
-                          <Icon name="solar:eye-linear" size={16} />
-                          {isAdmin ? "Edit Project" : "View Details"}
+                          <Globe className="h-4 w-4" />
+                          Review Site
                         </button>
-                      </div>
-                    )}
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingProjectId(selectedProject._id);
+                          setIsEditProjectModalOpen(true);
+                          setIsProjectActionsOpen(false);
+                        }}
+                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors hover:bg-stone-50"
+                      >
+                        <Icon name="solar:eye-linear" size={16} />
+                        {isAdmin ? "Edit Project" : "View Details"}
+                      </button>
+                    </div>
                   </>
                 )}
               </div>
