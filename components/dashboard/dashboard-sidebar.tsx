@@ -70,6 +70,20 @@ export function DashboardSidebar() {
     }
   }, [projects, selectedProjectId, setSelectedProjectId]);
 
+  // Close projects dropdown on Escape
+  useEffect(() => {
+    if (!isProjectDropdownOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsProjectDropdownOpen(false);
+        setProjectSearch("");
+        setOpenMenuProjectId(null);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isProjectDropdownOpen]);
+
   const selectedTeam = teams?.find((t) => t?._id === selectedTeamId) ?? null;
   const isAdmin = selectedTeam?.role === "admin";
   const isFreeAccount = subscription?.plan === "free" || !subscription?.plan;
