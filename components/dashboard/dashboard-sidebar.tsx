@@ -5,7 +5,7 @@ import { useQuery } from "convex/react";
 import { useUser, UserButton } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Plus, Settings, FolderKanban, BarChart3, Globe } from "lucide-react";
+import { Plus, Settings, FolderKanban, BarChart3, Globe, ChevronDown } from "lucide-react";
 import { Icon } from "@/components/ui/icon";
 import { api } from "@/convex/_generated/api";
 import { useDashboard } from "./dashboard-layout";
@@ -34,6 +34,8 @@ export function DashboardSidebar() {
 
   const [openMenuProjectId, setOpenMenuProjectId] = useState<Id<"projects"> | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
+  const [projectSearch, setProjectSearch] = useState("");
 
   // Get projects for selected team
   const projects = useQuery(
