@@ -5,7 +5,7 @@ import { useQuery } from "convex/react";
 import { useUser, UserButton } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Plus, Settings, FolderKanban, BarChart3, Globe, ChevronDown } from "lucide-react";
+import { Settings, FolderKanban, BarChart3, Globe, ChevronDown } from "lucide-react";
 import { Icon } from "@/components/ui/icon";
 import { api } from "@/convex/_generated/api";
 import { useDashboard } from "./dashboard-layout";
@@ -153,119 +153,183 @@ export function DashboardSidebar() {
                 <p className="text-xs text-stone-500">No projects yet</p>
               </div>
             ) : (
-              projects.map((project: { _id: Id<"projects">; name: string; feedbackCount: number; newFeedbackCount: number; siteUrl?: string }) => (
-                <div key={project._id} className="relative">
+              <div className="relative">
+                {/* Trigger: styled like today's selected project row */}
+                <button
+                  type="button"
+                  onClick={() => setIsProjectDropdownOpen((v) => !v)}
+                  aria-haspopup="listbox"
+                  aria-expanded={isProjectDropdownOpen}
+                  className="flex w-full items-center gap-2 border-2 border-retro-black bg-white px-3 py-2 text-left text-sm font-medium shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
+                >
                   <div
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => {
-                      setSelectedProjectId(project._id);
-                      setSidebarOpen(false);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        setSelectedProjectId(project._id);
-                        setSidebarOpen(false);
-                      }
-                    }}
                     className={cn(
-                      "group relative flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-all",
-                      selectedProjectId === project._id
-                        ? "border-2 border-retro-black bg-white font-medium shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                        : "border-2 border-transparent text-stone-500 hover:border-stone-200 hover:bg-white hover:text-retro-black hover:shadow-sm"
+                      "h-2 w-2 flex-shrink-0 rounded-full",
+                      selectedProject && selectedProject.newFeedbackCount > 0
+                        ? "animate-pulse bg-retro-blue"
+                        : "bg-stone-300"
                     )}
-                  >
-                    <div
-                      className={cn(
-                        "h-2 w-2 flex-shrink-0 rounded-full",
-                        project.newFeedbackCount > 0
-                          ? "animate-pulse bg-retro-blue"
-                          : "bg-stone-300"
-                      )}
-                    />
-                    {project.feedbackCount > 0 && (
-                      <span
-                        className={cn(
-                          "flex-shrink-0 rounded border px-1.5 py-0.5 font-mono text-xs leading-none",
-                          selectedProjectId === project._id
-                            ? "border-retro-black text-retro-black"
-                            : "border-stone-300 text-stone-400"
-                        )}
-                      >
-                        {project.feedbackCount}
-                      </span>
-                    )}
-                    <span className="min-w-0 flex-1 truncate">{project.name}</span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setOpenMenuProjectId(openMenuProjectId === project._id ? null : project._id);
-                      }}
-                      className={cn(
-                        "flex-shrink-0 rounded p-1 transition-colors hover:bg-stone-200",
-                        "opacity-0 group-hover:opacity-100",
-                        selectedProjectId === project._id && "opacity-100"
-                      )}
-                    >
-                      <Icon name="solar:menu-dots-bold" size={16} />
-                    </button>
-                  </div>
-
-                  {/* Dropdown menu */}
-                  {openMenuProjectId === project._id && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-10"
-                        onClick={() => setOpenMenuProjectId(null)}
-                      />
-                      <div className="absolute right-0 top-full z-20 mt-1 w-48 rounded border-2 border-retro-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]">
-                        {project.siteUrl && (
-                          <button
-                            onClick={() => {
-                              setSelectedProjectId(project._id);
-                              setCurrentView("review");
-                              setOpenMenuProjectId(null);
-                              setSidebarOpen(false);
-                            }}
-                            className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors hover:bg-stone-50"
-                          >
-                            <Globe className="h-4 w-4" />
-                            Review Site
-                          </button>
-                        )}
-                        <button
-                          onClick={() => {
-                            setEditingProjectId(project._id);
-                            setIsEditProjectModalOpen(true);
-                            setOpenMenuProjectId(null);
-                          }}
-                          className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors hover:bg-stone-50"
-                        >
-                          <Icon name="solar:eye-linear" size={16} />
-                          {isAdmin ? "Edit Project" : "View Details"}
-                        </button>
-                      </div>
-                    </>
+                  />
+                  {selectedProject && selectedProject.feedbackCount > 0 && (
+                    <span className="flex-shrink-0 rounded border border-retro-black px-1.5 py-0.5 font-mono text-xs leading-none text-retro-black">
+                      {selectedProject.feedbackCount}
+                    </span>
                   )}
-                </div>
-              ))
-            )}
+                  <span className="min-w-0 flex-1 truncate">
+                    {selectedProject?.name ?? "Select a project"}
+                  </span>
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 flex-shrink-0 transition-transform",
+                      isProjectDropdownOpen && "rotate-180"
+                    )}
+                  />
+                </button>
 
-            {/* Add Project Button */}
-            <button
-              onClick={() => {
-                if (isFreeAccount) {
-                  setShowUpgradeModal(true);
-                } else {
-                  setIsCreateProjectModalOpen(true);
-                }
-              }}
-              className="mt-2 flex w-full items-center justify-center gap-2 border-2 border-dashed border-stone-300 px-3 py-2 text-sm text-stone-400 transition-colors hover:border-retro-black hover:bg-stone-100 hover:text-retro-black"
-            >
-              <Icon name="solar:add-square-linear" size={16} />
-              <span>Add Project</span>
-            </button>
+                {/* Panel */}
+                {isProjectDropdownOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => {
+                        setIsProjectDropdownOpen(false);
+                        setProjectSearch("");
+                        setOpenMenuProjectId(null);
+                      }}
+                    />
+                    <div className="absolute left-0 right-0 top-full z-20 mt-1 rounded border-2 border-retro-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]">
+                      {showProjectSearch && (
+                        <div className="border-b-2 border-retro-black p-2">
+                          <input
+                            type="text"
+                            autoFocus
+                            value={projectSearch}
+                            onChange={(e) => setProjectSearch(e.target.value)}
+                            placeholder="Search projects..."
+                            className="w-full rounded border border-stone-300 bg-white px-2 py-1 text-sm focus:border-retro-black focus:outline-none"
+                          />
+                        </div>
+                      )}
+                      <div className="max-h-80 overflow-y-auto p-1">
+                        {filteredProjects.length === 0 ? (
+                          <div className="px-3 py-4 text-center font-mono text-xs text-stone-400">
+                            No matches
+                          </div>
+                        ) : (
+                          filteredProjects.map((project) => {
+                            const isSelected = selectedProjectId === project._id;
+                            return (
+                              <div key={project._id} className="relative">
+                                <div
+                                  role="button"
+                                  tabIndex={0}
+                                  onClick={() => {
+                                    setSelectedProjectId(project._id);
+                                    setIsProjectDropdownOpen(false);
+                                    setProjectSearch("");
+                                    setOpenMenuProjectId(null);
+                                    setSidebarOpen(false);
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter" || e.key === " ") {
+                                      e.preventDefault();
+                                      setSelectedProjectId(project._id);
+                                      setIsProjectDropdownOpen(false);
+                                      setProjectSearch("");
+                                      setOpenMenuProjectId(null);
+                                      setSidebarOpen(false);
+                                    }
+                                  }}
+                                  className={cn(
+                                    "group flex w-full cursor-pointer items-center gap-2 rounded px-3 py-2 text-left text-sm transition-colors",
+                                    isSelected
+                                      ? "bg-stone-100 font-medium text-retro-black"
+                                      : "text-stone-600 hover:bg-stone-50 hover:text-retro-black"
+                                  )}
+                                >
+                                  <div
+                                    className={cn(
+                                      "h-2 w-2 flex-shrink-0 rounded-full",
+                                      project.newFeedbackCount > 0
+                                        ? "animate-pulse bg-retro-blue"
+                                        : "bg-stone-300"
+                                    )}
+                                  />
+                                  {project.feedbackCount > 0 && (
+                                    <span
+                                      className={cn(
+                                        "flex-shrink-0 rounded border px-1.5 py-0.5 font-mono text-xs leading-none",
+                                        isSelected
+                                          ? "border-retro-black text-retro-black"
+                                          : "border-stone-300 text-stone-400"
+                                      )}
+                                    >
+                                      {project.feedbackCount}
+                                    </span>
+                                  )}
+                                  <span className="min-w-0 flex-1 truncate">{project.name}</span>
+                                  {isSelected && (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setOpenMenuProjectId(
+                                          openMenuProjectId === project._id ? null : project._id
+                                        );
+                                      }}
+                                      className="flex-shrink-0 rounded p-1 transition-colors hover:bg-stone-200"
+                                    >
+                                      <Icon name="solar:menu-dots-bold" size={16} />
+                                    </button>
+                                  )}
+                                </div>
+
+                                {/* Nested three-dots menu */}
+                                {openMenuProjectId === project._id && (
+                                  <div className="absolute right-2 top-full z-30 mt-1 w-48 rounded border-2 border-retro-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]">
+                                    {project.siteUrl && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setSelectedProjectId(project._id);
+                                          setCurrentView("review");
+                                          setOpenMenuProjectId(null);
+                                          setIsProjectDropdownOpen(false);
+                                          setProjectSearch("");
+                                          setSidebarOpen(false);
+                                        }}
+                                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors hover:bg-stone-50"
+                                      >
+                                        <Globe className="h-4 w-4" />
+                                        Review Site
+                                      </button>
+                                    )}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setEditingProjectId(project._id);
+                                        setIsEditProjectModalOpen(true);
+                                        setOpenMenuProjectId(null);
+                                        setIsProjectDropdownOpen(false);
+                                        setProjectSearch("");
+                                      }}
+                                      className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors hover:bg-stone-50"
+                                    >
+                                      <Icon name="solar:eye-linear" size={16} />
+                                      {isAdmin ? "Edit Project" : "View Details"}
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
