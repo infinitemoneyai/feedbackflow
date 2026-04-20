@@ -33,6 +33,7 @@ export function DashboardSidebar() {
   } = useDashboard();
 
   const [openMenuProjectId, setOpenMenuProjectId] = useState<Id<"projects"> | null>(null);
+  const [menuAnchor, setMenuAnchor] = useState<{ top: number; right: number } | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
   const [projectSearch, setProjectSearch] = useState("");
@@ -78,6 +79,7 @@ export function DashboardSidebar() {
         setIsProjectDropdownOpen(false);
         setProjectSearch("");
         setOpenMenuProjectId(null);
+        setMenuAnchor(null);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -94,6 +96,7 @@ export function DashboardSidebar() {
   const filteredProjects = projects?.filter((p) =>
     normalizedSearch === "" ? true : p.name.toLowerCase().includes(normalizedSearch)
   ) ?? [];
+  const menuProject = projects?.find((p) => p._id === openMenuProjectId) ?? null;
 
   const navItems = [
     {
@@ -209,6 +212,7 @@ export function DashboardSidebar() {
                         setIsProjectDropdownOpen(false);
                         setProjectSearch("");
                         setOpenMenuProjectId(null);
+                        setMenuAnchor(null);
                       }}
                     />
                     <div className="absolute left-0 right-0 top-full z-20 mt-1 rounded border-2 border-retro-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]">
@@ -242,6 +246,7 @@ export function DashboardSidebar() {
                                     setIsProjectDropdownOpen(false);
                                     setProjectSearch("");
                                     setOpenMenuProjectId(null);
+                                    setMenuAnchor(null);
                                     setSidebarOpen(false);
                                   }}
                                   onKeyDown={(e) => {
@@ -251,6 +256,7 @@ export function DashboardSidebar() {
                                       setIsProjectDropdownOpen(false);
                                       setProjectSearch("");
                                       setOpenMenuProjectId(null);
+                                      setMenuAnchor(null);
                                       setSidebarOpen(false);
                                     }
                                   }}
@@ -287,9 +293,17 @@ export function DashboardSidebar() {
                                       type="button"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        setOpenMenuProjectId(
-                                          openMenuProjectId === project._id ? null : project._id
-                                        );
+                                        if (openMenuProjectId === project._id) {
+                                          setOpenMenuProjectId(null);
+                                          setMenuAnchor(null);
+                                        } else {
+                                          const rect = e.currentTarget.getBoundingClientRect();
+                                          setMenuAnchor({
+                                            top: rect.bottom + 4,
+                                            right: window.innerWidth - rect.right,
+                                          });
+                                          setOpenMenuProjectId(project._id);
+                                        }
                                       }}
                                       className="flex-shrink-0 rounded p-1 transition-colors hover:bg-stone-200"
                                     >
@@ -297,49 +311,56 @@ export function DashboardSidebar() {
                                     </button>
                                   )}
                                 </div>
-
-                                {/* Nested three-dots menu */}
-                                {openMenuProjectId === project._id && (
-                                  <div className="absolute right-2 top-full z-30 mt-1 w-48 rounded border-2 border-retro-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]">
-                                    {project.siteUrl && (
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setSelectedProjectId(project._id);
-                                          setCurrentView("review");
-                                          setOpenMenuProjectId(null);
-                                          setIsProjectDropdownOpen(false);
-                                          setProjectSearch("");
-                                          setSidebarOpen(false);
-                                        }}
-                                        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors hover:bg-stone-50"
-                                      >
-                                        <Globe className="h-4 w-4" />
-                                        Review Site
-                                      </button>
-                                    )}
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setEditingProjectId(project._id);
-                                        setIsEditProjectModalOpen(true);
-                                        setOpenMenuProjectId(null);
-                                        setIsProjectDropdownOpen(false);
-                                        setProjectSearch("");
-                                      }}
-                                      className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors hover:bg-stone-50"
-                                    >
-                                      <Icon name="solar:eye-linear" size={16} />
-                                      {isAdmin ? "Edit Project" : "View Details"}
-                                    </button>
-                                  </div>
-                                )}
                               </div>
                             );
                           })
                         )}
                       </div>
                     </div>
+                    {menuProject && menuAnchor && (
+                      <div
+                        style={{
+                          position: "fixed",
+                          top: menuAnchor.top,
+                          right: menuAnchor.right,
+                        }}
+                        className="z-30 w-48 rounded border-2 border-retro-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]"
+                      >
+                        {menuProject.siteUrl && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedProjectId(menuProject._id);
+                              setCurrentView("review");
+                              setOpenMenuProjectId(null);
+                              setMenuAnchor(null);
+                              setIsProjectDropdownOpen(false);
+                              setProjectSearch("");
+                              setSidebarOpen(false);
+                            }}
+                            className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors hover:bg-stone-50"
+                          >
+                            <Globe className="h-4 w-4" />
+                            Review Site
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingProjectId(menuProject._id);
+                            setIsEditProjectModalOpen(true);
+                            setOpenMenuProjectId(null);
+                            setMenuAnchor(null);
+                            setIsProjectDropdownOpen(false);
+                            setProjectSearch("");
+                          }}
+                          className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors hover:bg-stone-50"
+                        >
+                          <Icon name="solar:eye-linear" size={16} />
+                          {isAdmin ? "Edit Project" : "View Details"}
+                        </button>
+                      </div>
+                    )}
                   </>
                 )}
               </div>
