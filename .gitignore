@@ -107,6 +107,8 @@ VERCEL_ENV_VARS.md
 
 # Claude/AI agent skills (internal development tooling)
 .claude/
+skills/
+.agents/
 
 # Superpowers brainstorm/session artifacts (never public)
 .superpowers/
