@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { getTeamMembership, requireTeamMember } from "./authz";
 
 /**
  * Get the next ticket number for a project
@@ -392,35 +393,12 @@ export const updateFeedbackStatus = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     const feedback = await ctx.db.get(args.feedbackId);
     if (!feedback) {
       throw new Error("Feedback not found");
     }
 
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), feedback.teamId))
-      .first();
-
-    if (!membership) {
-      throw new Error("Not a member of this team");
-    }
+    const { user } = await requireTeamMember(ctx, feedback.teamId);
 
     // Update the status
     await ctx.db.patch(args.feedbackId, {
@@ -452,8 +430,12 @@ export const getViewCounts = query({
     projectId: v.id("projects"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return { inbox: 0, backlog: 0, resolved: 0 };
+    const project = await ctx.db.get(args.projectId);
+    if (!project) return { inbox: 0, backlog: 0, resolved: 0 };
+
+    // Membership-gated (was identity-only — an authorization gap)
+    const member = await getTeamMembership(ctx, project.teamId);
+    if (!member) return { inbox: 0, backlog: 0, resolved: 0 };
 
     const feedbackList = await ctx.db
       .query("feedback")
@@ -510,33 +492,13 @@ export const listFeedback = query({
     showArchived: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return [];
-    }
-
     const project = await ctx.db.get(args.projectId);
     if (!project) {
       return [];
     }
 
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), project.teamId))
-      .first();
-
-    if (!membership) {
+    const member = await getTeamMembership(ctx, project.teamId);
+    if (!member) {
       return [];
     }
 
@@ -648,33 +610,13 @@ export const searchFeedback = query({
     showArchived: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return [];
-    }
-
     const project = await ctx.db.get(args.projectId);
     if (!project) {
       return [];
     }
 
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), project.teamId))
-      .first();
-
-    if (!membership) {
+    const member = await getTeamMembership(ctx, project.teamId);
+    if (!member) {
       return [];
     }
 
@@ -855,33 +797,13 @@ export const getFeedback = query({
     feedbackId: v.id("feedback"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return null;
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return null;
-    }
-
     const feedback = await ctx.db.get(args.feedbackId);
     if (!feedback) {
       return null;
     }
 
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), feedback.teamId))
-      .first();
-
-    if (!membership) {
+    const member = await getTeamMembership(ctx, feedback.teamId);
+    if (!member) {
       return null;
     }
 
@@ -932,35 +854,12 @@ export const updateFeedback = mutation({
     assigneeId: v.optional(v.id("users")),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     const feedback = await ctx.db.get(args.feedbackId);
     if (!feedback) {
       throw new Error("Feedback not found");
     }
 
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), feedback.teamId))
-      .first();
-
-    if (!membership) {
-      throw new Error("You are not a member of this team");
-    }
+    const { user } = await requireTeamMember(ctx, feedback.teamId);
 
     // Build update object and track changes for activity log
     const updates: Record<string, unknown> = {
@@ -1086,35 +985,12 @@ export const addComment = mutation({
     content: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     const feedback = await ctx.db.get(args.feedbackId);
     if (!feedback) {
       throw new Error("Feedback not found");
     }
 
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), feedback.teamId))
-      .first();
-
-    if (!membership) {
-      throw new Error("You are not a member of this team");
-    }
+    const { user } = await requireTeamMember(ctx, feedback.teamId);
 
     // Create the comment
     const commentId = await ctx.db.insert("comments", {
@@ -1176,33 +1052,13 @@ export const getComments = query({
     feedbackId: v.id("feedback"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return [];
-    }
-
     const feedback = await ctx.db.get(args.feedbackId);
     if (!feedback) {
       return [];
     }
 
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), feedback.teamId))
-      .first();
-
-    if (!membership) {
+    const member = await getTeamMembership(ctx, feedback.teamId);
+    if (!member) {
       return [];
     }
 
@@ -1245,33 +1101,13 @@ export const getActivityLog = query({
     feedbackId: v.id("feedback"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return [];
-    }
-
     const feedback = await ctx.db.get(args.feedbackId);
     if (!feedback) {
       return [];
     }
 
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), feedback.teamId))
-      .first();
-
-    if (!membership) {
+    const member = await getTeamMembership(ctx, feedback.teamId);
+    if (!member) {
       return [];
     }
 
@@ -1317,33 +1153,13 @@ export const getCommentsAndActivity = query({
     feedbackId: v.id("feedback"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return [];
-    }
-
     const feedback = await ctx.db.get(args.feedbackId);
     if (!feedback) {
       return [];
     }
 
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), feedback.teamId))
-      .first();
-
-    if (!membership) {
+    const member = await getTeamMembership(ctx, feedback.teamId);
+    if (!member) {
       return [];
     }
 
@@ -1437,28 +1253,8 @@ export const getTeamMembersForAssignment = query({
     teamId: v.id("teams"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return [];
-    }
-
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), args.teamId))
-      .first();
-
-    if (!membership) {
+    const member = await getTeamMembership(ctx, args.teamId);
+    if (!member) {
       return [];
     }
 
@@ -1496,35 +1292,12 @@ export const addToJsonExportQueue = mutation({
     feedbackId: v.id("feedback"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     const feedback = await ctx.db.get(args.feedbackId);
     if (!feedback) {
       throw new Error("Feedback not found");
     }
 
-    // Check membership
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), feedback.teamId))
-      .first();
-
-    if (!membership) {
-      throw new Error("You are not a member of this team");
-    }
+    const { user } = await requireTeamMember(ctx, feedback.teamId);
 
     // Check if already in queue
     const existingExport = await ctx.db
@@ -1558,28 +1331,8 @@ export const getJsonExportQueue = query({
     teamId: v.id("teams"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return null;
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return null;
-    }
-
-    // Check membership
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), args.teamId))
-      .first();
-
-    if (!membership) {
+    const member = await getTeamMembership(ctx, args.teamId);
+    if (!member) {
       return null;
     }
 
@@ -1617,30 +1370,7 @@ export const clearJsonExportQueue = mutation({
     teamId: v.id("teams"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    // Check membership
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), args.teamId))
-      .first();
-
-    if (!membership) {
-      throw new Error("You are not a member of this team");
-    }
+    await requireTeamMember(ctx, args.teamId);
 
     // Get all JSON exports for this team
     const jsonExports = await ctx.db
@@ -1668,36 +1398,13 @@ export const deleteFeedback = mutation({
     feedbackId: v.id("feedback"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     // Get the feedback
     const feedback = await ctx.db.get(args.feedbackId);
     if (!feedback) {
       throw new Error("Feedback not found");
     }
 
-    // Check membership
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), feedback.teamId))
-      .first();
-
-    if (!membership) {
-      throw new Error("You are not a member of this team");
-    }
+    await requireTeamMember(ctx, feedback.teamId);
 
     // Delete related data
     // 1. Delete AI analysis
