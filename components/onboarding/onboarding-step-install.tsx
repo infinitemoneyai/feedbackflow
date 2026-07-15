@@ -6,6 +6,11 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
+import {
+  buildHtmlSnippet,
+  buildNextjsSnippet,
+  buildReactSnippet,
+} from "@/lib/widget-snippet";
 
 interface OnboardingStepInstallProps {
   widgetKey: string;
@@ -28,53 +33,10 @@ export function OnboardingStepInstall({ widgetKey, projectId }: OnboardingStepIn
     ? `${window.location.origin}/api/widget/submit`
     : '';
 
-  const scriptSnippet = `<script
-  src="${widgetUrl}"
-  data-widget-key="${widgetKey}"
-  data-api-url="${apiUrl}"
-  async
-></script>`;
-
-  const nextjsSnippet = `// In your layout.tsx
-import Script from 'next/script'
-
-export default function RootLayout({ children }) {
-  return (
-    <html>
-      <body>
-        {children}
-        <Script
-          src="${widgetUrl}"
-          data-widget-key="${widgetKey}"
-          data-api-url="${apiUrl}"
-          strategy="lazyOnload"
-        />
-      </body>
-    </html>
-  )
-}`;
-
-  const reactSnippet = `// In your App component
-import { useEffect } from 'react';
-
-function App() {
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = '${widgetUrl}';
-    script.dataset.widgetKey = '${widgetKey}';
-    script.dataset.apiUrl = '${apiUrl}';
-    script.async = true;
-    document.body.appendChild(script);
-    
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
-  
-  return (
-    // Your app content
-  );
-}`;
+  const snippetInput = { widgetKey, widgetUrl, apiUrl };
+  const scriptSnippet = buildHtmlSnippet(snippetInput);
+  const nextjsSnippet = buildNextjsSnippet(snippetInput);
+  const reactSnippet = buildReactSnippet(snippetInput);
 
   const handleCopy = async (text: string, id: string) => {
     await navigator.clipboard.writeText(text);
