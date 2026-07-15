@@ -738,7 +738,7 @@ export default function App({ Component, pageProps }: AppProps) {
                     </td>
                     <td className="py-3 pr-4 text-stone-500">string</td>
                     <td className="py-3 pr-4">
-                      <code className="rounded bg-stone-100 px-1 font-mono text-xs">Send Feedback</code>
+                      <code className="rounded bg-stone-100 px-1 font-mono text-xs">Feedback</code>
                     </td>
                     <td className="py-3 text-stone-600">
                       Text displayed on the floating button
