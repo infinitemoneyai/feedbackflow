@@ -11,7 +11,7 @@ import { describe, it, expect } from "vitest";
 import { convexTest } from "convex-test";
 import type { Id } from "@/convex/_generated/dataModel";
 import schema from "@/convex/schema";
-import { requireTeamMember } from "@/convex/authz";
+import { getTeamMembership, requireTeamMember } from "@/convex/authz";
 
 const modules = import.meta.glob("../../convex/**/*.ts");
 
@@ -156,5 +156,46 @@ describe("requireTeamMember", () => {
     });
 
     expect(result.membership.role).toBe("admin");
+  });
+});
+
+describe("getTeamMembership (query soft-fail companion)", () => {
+  function run(
+    t: ReturnType<typeof convexTest>,
+    clerkId: string | null,
+    teamId: Id<"teams">
+  ) {
+    return t.run(async (ctx) => {
+      const authCtx = {
+        ...ctx,
+        auth: {
+          getUserIdentity: async () =>
+            clerkId ? { subject: clerkId, issuer: "test" } : null,
+        },
+      };
+      return getTeamMembership(
+        authCtx as unknown as Parameters<typeof getTeamMembership>[0],
+        teamId
+      );
+    });
+  }
+
+  it("returns null instead of throwing for unauthenticated / unsynced / non-member", async () => {
+    const t = convexTest(schema, modules);
+    const { teamId, otherTeamId } = await seed(t);
+
+    expect(await run(t, null, teamId)).toBeNull();
+    expect(await run(t, "user_clerk_unsynced", teamId)).toBeNull();
+    expect(await run(t, CLERK_ID, otherTeamId)).toBeNull();
+  });
+
+  it("returns the user and membership for a member", async () => {
+    const t = convexTest(schema, modules);
+    const { teamId, userId } = await seed(t);
+
+    const result = await run(t, CLERK_ID, teamId);
+
+    expect(result?.user._id).toBe(userId);
+    expect(result?.membership.role).toBe("member");
   });
 });
