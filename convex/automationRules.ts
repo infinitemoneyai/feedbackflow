@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query, internalMutation, internalQuery } from "./_generated/server";
+import { getTeamMembership, requireTeamMember } from "./authz";
 // Id type is used via v.id() validators
 
 /**
@@ -61,34 +62,14 @@ export const createRule = mutation({
     actionConfig: actionConfigValidator,
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     // Get project to find team
     const project = await ctx.db.get(args.projectId);
     if (!project) {
       throw new Error("Project not found");
     }
 
-    // Check if user is an admin of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), project.teamId))
-      .first();
-
-    if (!membership || membership.role !== "admin") {
+    const { membership } = await requireTeamMember(ctx, project.teamId);
+    if (membership.role !== "admin") {
       throw new Error("Only admins can create automation rules");
     }
 
@@ -124,20 +105,6 @@ export const updateRule = mutation({
     actionConfig: v.optional(actionConfigValidator),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     // Get rule
     const rule = await ctx.db.get(args.ruleId);
     if (!rule) {
@@ -150,14 +117,8 @@ export const updateRule = mutation({
       throw new Error("Project not found");
     }
 
-    // Check if user is an admin of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), project.teamId))
-      .first();
-
-    if (!membership || membership.role !== "admin") {
+    const { membership } = await requireTeamMember(ctx, project.teamId);
+    if (membership.role !== "admin") {
       throw new Error("Only admins can update automation rules");
     }
 
@@ -186,20 +147,6 @@ export const deleteRule = mutation({
     ruleId: v.id("automationRules"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     // Get rule
     const rule = await ctx.db.get(args.ruleId);
     if (!rule) {
@@ -212,14 +159,8 @@ export const deleteRule = mutation({
       throw new Error("Project not found");
     }
 
-    // Check if user is an admin of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), project.teamId))
-      .first();
-
-    if (!membership || membership.role !== "admin") {
+    const { membership } = await requireTeamMember(ctx, project.teamId);
+    if (membership.role !== "admin") {
       throw new Error("Only admins can delete automation rules");
     }
 
@@ -237,34 +178,14 @@ export const getRulesForProject = query({
     projectId: v.id("projects"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return [];
-    }
-
     // Get project to find team
     const project = await ctx.db.get(args.projectId);
     if (!project) {
       return [];
     }
 
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), project.teamId))
-      .first();
-
-    if (!membership) {
+    const member = await getTeamMembership(ctx, project.teamId);
+    if (!member) {
       return [];
     }
 
@@ -370,34 +291,14 @@ export const getWebhooksForProject = query({
     projectId: v.id("projects"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return [];
-    }
-
     // Get project to find team
     const project = await ctx.db.get(args.projectId);
     if (!project) {
       return [];
     }
 
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), project.teamId))
-      .first();
-
-    if (!membership) {
+    const member = await getTeamMembership(ctx, project.teamId);
+    if (!member) {
       return [];
     }
 
@@ -422,34 +323,14 @@ export const getTeamMembersForProject = query({
     projectId: v.id("projects"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return [];
-    }
-
     // Get project to find team
     const project = await ctx.db.get(args.projectId);
     if (!project) {
       return [];
     }
 
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), project.teamId))
-      .first();
-
-    if (!membership) {
+    const member = await getTeamMembership(ctx, project.teamId);
+    if (!member) {
       return [];
     }
 

@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { getAuthUser, requireUser } from "./authz";
 
 /**
  * Create or update a user from Clerk
@@ -57,17 +58,7 @@ export const upsertUser = mutation({
 export const getCurrentUser = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return null;
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    return user;
+    return await getAuthUser(ctx);
   },
 });
 
@@ -116,19 +107,7 @@ export const updateProfile = mutation({
     avatar: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await requireUser(ctx);
 
     await ctx.db.patch(user._id, {
       ...(args.name !== undefined && { name: args.name }),
@@ -149,19 +128,7 @@ export const acceptLegalTerms = mutation({
     privacyVersion: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await requireUser(ctx);
 
     const now = Date.now();
     await ctx.db.patch(user._id, {
@@ -184,16 +151,7 @@ export const hasAcceptedLegalTerms = query({
     requiredPrivacyVersion: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return false;
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
+    const user = await getAuthUser(ctx);
     if (!user) {
       return false;
     }
@@ -212,19 +170,7 @@ export const hasAcceptedLegalTerms = query({
 export const deleteUser = mutation({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await requireUser(ctx);
 
     // Delete the user
     await ctx.db.delete(user._id);

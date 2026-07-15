@@ -5,23 +5,13 @@
 
 import { QueryCtx, MutationCtx } from "../../_generated/server";
 import { Id } from "../../_generated/dataModel";
-import { requireTeamMember } from "../../authz";
+import { getAuthUser, requireTeamMember } from "../../authz";
 
 /**
  * Get authenticated user from context
  */
 export async function getAuthenticatedUser(ctx: QueryCtx | MutationCtx) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    return null;
-  }
-
-  const user = await ctx.db
-    .query("users")
-    .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-    .first();
-
-  return user;
+  return getAuthUser(ctx);
 }
 
 /**
@@ -32,25 +22,12 @@ export async function verifyFeedbackAccess(
   ctx: QueryCtx | MutationCtx,
   feedbackId: Id<"feedback">
 ) {
-  const user = await getAuthenticatedUser(ctx);
-  if (!user) {
-    throw new Error("Unauthenticated");
-  }
-
   const feedback = await ctx.db.get(feedbackId);
   if (!feedback) {
     throw new Error("Feedback not found");
   }
 
-  const membership = await ctx.db
-    .query("teamMembers")
-    .withIndex("by_user", (q) => q.eq("userId", user._id))
-    .filter((q) => q.eq(q.field("teamId"), feedback.teamId))
-    .first();
-
-  if (!membership) {
-    throw new Error("Not a member of this team");
-  }
+  const { user, membership } = await requireTeamMember(ctx, feedback.teamId);
 
   return { user, feedback, membership };
 }
