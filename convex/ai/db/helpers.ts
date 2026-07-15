@@ -5,6 +5,7 @@
 
 import { QueryCtx, MutationCtx } from "../../_generated/server";
 import { Id } from "../../_generated/dataModel";
+import { requireTeamMember } from "../../authz";
 
 /**
  * Get authenticated user from context
@@ -62,22 +63,7 @@ export async function verifyTeamAccess(
   ctx: QueryCtx | MutationCtx,
   teamId: Id<"teams">
 ) {
-  const user = await getAuthenticatedUser(ctx);
-  if (!user) {
-    throw new Error("Unauthenticated");
-  }
-
-  const membership = await ctx.db
-    .query("teamMembers")
-    .withIndex("by_user", (q) => q.eq("userId", user._id))
-    .filter((q) => q.eq(q.field("teamId"), teamId))
-    .first();
-
-  if (!membership) {
-    throw new Error("Not a member of this team");
-  }
-
-  return { user, membership };
+  return requireTeamMember(ctx, teamId);
 }
 
 /**
