@@ -20,6 +20,10 @@ import {
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import {
+  DEFAULT_WIDGET_CONFIG,
+  type WidgetPosition,
+} from "@/convex/widgetConfigShape";
 
 interface WidgetCustomizationSectionProps {
   widgetId: Id<"widgets">;
@@ -28,20 +32,12 @@ interface WidgetCustomizationSectionProps {
   hideHeader?: boolean;
 }
 
-type Position = "bottom-right" | "bottom-left" | "top-right" | "top-left";
-
-const POSITIONS: { value: Position; label: string }[] = [
+const POSITIONS: { value: WidgetPosition; label: string }[] = [
   { value: "bottom-right", label: "Bottom Right" },
   { value: "bottom-left", label: "Bottom Left" },
   { value: "top-right", label: "Top Right" },
   { value: "top-left", label: "Top Left" },
 ];
-
-const DEFAULT_COLORS = {
-  primaryColor: "#1a1a1a",
-  backgroundColor: "#ffffff",
-  textColor: "#1a1a1a",
-};
 
 export function WidgetCustomizationSection({
   widgetId,
@@ -57,11 +53,11 @@ export function WidgetCustomizationSection({
   const removeLogoMutation = useMutation(api.widgetConfig.removeLogo);
 
   // Local state for form fields
-  const [position, setPosition] = useState<Position>("bottom-right");
-  const [buttonText, setButtonText] = useState("Send Feedback");
-  const [primaryColor, setPrimaryColor] = useState(DEFAULT_COLORS.primaryColor);
-  const [backgroundColor, setBackgroundColor] = useState(DEFAULT_COLORS.backgroundColor);
-  const [textColor, setTextColor] = useState(DEFAULT_COLORS.textColor);
+  const [position, setPosition] = useState<WidgetPosition>(DEFAULT_WIDGET_CONFIG.position);
+  const [buttonText, setButtonText] = useState(DEFAULT_WIDGET_CONFIG.buttonText);
+  const [primaryColor, setPrimaryColor] = useState(DEFAULT_WIDGET_CONFIG.primaryColor);
+  const [backgroundColor, setBackgroundColor] = useState(DEFAULT_WIDGET_CONFIG.backgroundColor);
+  const [textColor, setTextColor] = useState(DEFAULT_WIDGET_CONFIG.textColor);
   const [logoUrl, setLogoUrl] = useState<string | undefined>(undefined);
 
   const [isSaving, setIsSaving] = useState(false);
@@ -148,11 +144,11 @@ function App() {
   // Sync local state with fetched config
   useEffect(() => {
     if (config) {
-      setPosition(config.position || "bottom-right");
-      setButtonText(config.buttonText || "Send Feedback");
-      setPrimaryColor(config.primaryColor || DEFAULT_COLORS.primaryColor);
-      setBackgroundColor(config.backgroundColor || DEFAULT_COLORS.backgroundColor);
-      setTextColor(config.textColor || DEFAULT_COLORS.textColor);
+      setPosition(config.position || DEFAULT_WIDGET_CONFIG.position);
+      setButtonText(config.buttonText || DEFAULT_WIDGET_CONFIG.buttonText);
+      setPrimaryColor(config.primaryColor || DEFAULT_WIDGET_CONFIG.primaryColor);
+      setBackgroundColor(config.backgroundColor || DEFAULT_WIDGET_CONFIG.backgroundColor);
+      setTextColor(config.textColor || DEFAULT_WIDGET_CONFIG.textColor);
       setLogoUrl(config.logoUrl);
     }
   }, [config]);
@@ -166,7 +162,7 @@ function App() {
       await saveConfigMutation({
         widgetId,
         position,
-        buttonText: buttonText || "Send Feedback",
+        buttonText: buttonText || DEFAULT_WIDGET_CONFIG.buttonText,
         primaryColor,
         backgroundColor,
         textColor,
@@ -201,11 +197,11 @@ function App() {
     try {
       await resetConfigMutation({ widgetId });
       // Reset local state
-      setPosition("bottom-right");
-      setButtonText("Send Feedback");
-      setPrimaryColor(DEFAULT_COLORS.primaryColor);
-      setBackgroundColor(DEFAULT_COLORS.backgroundColor);
-      setTextColor(DEFAULT_COLORS.textColor);
+      setPosition(DEFAULT_WIDGET_CONFIG.position);
+      setButtonText(DEFAULT_WIDGET_CONFIG.buttonText);
+      setPrimaryColor(DEFAULT_WIDGET_CONFIG.primaryColor);
+      setBackgroundColor(DEFAULT_WIDGET_CONFIG.backgroundColor);
+      setTextColor(DEFAULT_WIDGET_CONFIG.textColor);
       setLogoUrl(undefined);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to reset configuration");
@@ -340,7 +336,7 @@ function App() {
               type="text"
               value={buttonText}
               onChange={(e) => setButtonText(e.target.value)}
-              placeholder="Send Feedback"
+              placeholder={DEFAULT_WIDGET_CONFIG.buttonText}
               maxLength={30}
               className="w-full rounded border-2 border-stone-200 bg-stone-50 px-4 py-2.5 text-sm transition-colors focus:border-retro-black focus:bg-white focus:outline-none"
             />
@@ -680,7 +676,7 @@ function App() {
 }
 
 interface WidgetPreviewProps {
-  position: Position;
+  position: WidgetPosition;
   buttonText: string;
   primaryColor: string;
   backgroundColor: string;
@@ -699,7 +695,7 @@ function WidgetPreview({
   const [showModal, setShowModal] = useState(false);
 
   // Determine position styles for the button
-  const positionStyles: Record<Position, string> = {
+  const positionStyles: Record<WidgetPosition, string> = {
     "bottom-right": "bottom-4 right-4",
     "bottom-left": "bottom-4 left-4",
     "top-right": "top-4 right-4",
@@ -733,7 +729,7 @@ function WidgetPreview({
         ) : (
           <MessageSquare className="h-4 w-4" />
         )}
-        <span>{buttonText || "Send Feedback"}</span>
+        <span>{buttonText || DEFAULT_WIDGET_CONFIG.buttonText}</span>
       </button>
 
       {/* Widget Modal */}
@@ -753,7 +749,7 @@ function WidgetPreview({
                   <img src={logoUrl} alt="" className="h-6 w-6 rounded-full object-cover" />
                 )}
                 <span className="font-medium" style={{ color: backgroundColor }}>
-                  {buttonText || "Send Feedback"}
+                  {buttonText || DEFAULT_WIDGET_CONFIG.buttonText}
                 </span>
               </div>
               <button

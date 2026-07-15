@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { widgetConfigFields } from "./widgetConfigShape";
 
 // ============================================================================
 // FeedbackFlow Database Schema
@@ -136,17 +137,7 @@ export default defineSchema({
    */
   widgetConfig: defineTable({
     widgetId: v.id("widgets"),
-    position: v.union(
-      v.literal("bottom-right"),
-      v.literal("bottom-left"),
-      v.literal("top-right"),
-      v.literal("top-left")
-    ),
-    buttonText: v.optional(v.string()),
-    primaryColor: v.optional(v.string()),
-    backgroundColor: v.optional(v.string()),
-    textColor: v.optional(v.string()),
-    logoUrl: v.optional(v.string()),
+    ...widgetConfigFields,
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_widget", ["widgetId"]),
