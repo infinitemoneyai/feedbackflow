@@ -53,6 +53,7 @@ import type * as users from "../users.js";
 import type * as webhookActions from "../webhookActions.js";
 import type * as webhooks from "../webhooks.js";
 import type * as widgetConfig from "../widgetConfig.js";
+import type * as widgetConfigShape from "../widgetConfigShape.js";
 
 import type {
   ApiFromModules,
@@ -106,6 +107,7 @@ declare const fullApi: ApiFromModules<{
   webhookActions: typeof webhookActions;
   webhooks: typeof webhooks;
   widgetConfig: typeof widgetConfig;
+  widgetConfigShape: typeof widgetConfigShape;
 }>;
 
 /**
