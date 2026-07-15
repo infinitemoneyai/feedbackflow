@@ -24,6 +24,11 @@ import {
   DEFAULT_WIDGET_CONFIG,
   type WidgetPosition,
 } from "@/convex/widgetConfigShape";
+import {
+  buildHtmlSnippet,
+  buildNextjsSnippet,
+  buildReactSnippet,
+} from "@/lib/widget-snippet";
 
 interface WidgetCustomizationSectionProps {
   widgetId: Id<"widgets">;
@@ -77,62 +82,12 @@ export function WidgetCustomizationSection({
     ? `${window.location.origin}/api/widget/submit`
     : '';
 
-  const installationCode = widgetKey
-    ? `<script
-  src="${widgetUrl}"
-  data-widget-key="${widgetKey}"
-  data-position="${position}"
-  data-api-url="${apiUrl}"
-  async
-></script>`
-    : "";
-
-  const nextjsSnippet = widgetKey
-    ? `// In your layout.tsx
-import Script from 'next/script'
-
-export default function RootLayout({ children }) {
-  return (
-    <html>
-      <body>
-        {children}
-        <Script
-          src="${widgetUrl}"
-          data-widget-key="${widgetKey}"
-          data-position="${position}"
-          data-api-url="${apiUrl}"
-          strategy="lazyOnload"
-        />
-      </body>
-    </html>
-  )
-}`
-    : "";
-
-  const reactSnippet = widgetKey
-    ? `// In your App component
-import { useEffect } from 'react';
-
-function App() {
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = '${widgetUrl}';
-    script.dataset.widgetKey = '${widgetKey}';
-    script.dataset.position = '${position}';
-    script.dataset.apiUrl = '${apiUrl}';
-    script.async = true;
-    document.body.appendChild(script);
-    
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
-  
-  return (
-    // Your app content
-  );
-}`
-    : "";
+  const snippetInput = widgetKey
+    ? { widgetKey, widgetUrl, apiUrl }
+    : null;
+  const installationCode = snippetInput ? buildHtmlSnippet(snippetInput) : "";
+  const nextjsSnippet = snippetInput ? buildNextjsSnippet(snippetInput) : "";
+  const reactSnippet = snippetInput ? buildReactSnippet(snippetInput) : "";
 
   const handleCopyCode = useCallback(async (text: string, id: string) => {
     if (!text) return;

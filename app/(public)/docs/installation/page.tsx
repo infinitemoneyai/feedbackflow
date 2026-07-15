@@ -175,7 +175,7 @@ export default function InstallationDocsPage() {
 <script
   src="https://cdn.feedbackflow.cc/widget.js"
   data-widget-key="YOUR_WIDGET_KEY"
-  data-position="bottom-right"
+  data-api-url="https://feedbackflow.cc/api/widget/submit"
   async
 ></script>`}
                       snippetId="html-basic"
@@ -188,7 +188,7 @@ export default function InstallationDocsPage() {
 <script
   src="https://feedbackflow.cc/widget.js"
   data-widget-key="YOUR_WIDGET_KEY"
-  data-position="bottom-right"
+  data-api-url="https://feedbackflow.cc/api/widget/submit"
   async
 ></script>`}
                   />
@@ -213,7 +213,7 @@ export default function InstallationDocsPage() {
   <script
     src="https://feedbackflow.cc/widget.js"
     data-widget-key="wk_abc123def456"
-    data-position="bottom-right"
+    data-api-url="https://feedbackflow.cc/api/widget/submit"
     async
   ></script>
 </body>
@@ -514,7 +514,7 @@ export default function RootLayout({
         <Script
           src="https://feedbackflow.cc/widget.js"
           data-widget-key="wk_your_widget_key"
-          data-position="bottom-right"
+          data-api-url="https://feedbackflow.cc/api/widget/submit"
           strategy="lazyOnload"
         />
       </body>
@@ -543,7 +543,7 @@ export default function RootLayout({
         <Script
           src="https://feedbackflow.cc/widget.js"
           data-widget-key="wk_your_widget_key"
-          data-position="bottom-right"
+          data-api-url="https://feedbackflow.cc/api/widget/submit"
           strategy="lazyOnload"
         />
       </body>
@@ -629,12 +629,14 @@ export default function App({ Component, pageProps }: AppProps) {
             <div className="flex items-start gap-3 mb-6">
               <Icon name="solar:settings-bold" size={20} className="mt-1 text-retro-peach" />
               <p className="text-stone-600">
-                Configure the widget using data attributes on the script tag.
-                All options can also be set in the{" "}
+                Configure the widget in the{" "}
                 <Link href="/settings" className="text-retro-blue hover:underline">
                   Settings dashboard
                 </Link>
-                .
+                {" "}— installed widgets fetch your saved settings at load, so
+                changes go live without touching the snippet. The data
+                attributes below act only as a fallback while that fetch is
+                pending or unavailable.
               </p>
             </div>
 
@@ -763,7 +765,7 @@ export default function App({ Component, pageProps }: AppProps) {
             </div>
 
             <div className="mt-6">
-              <h4 className="mb-2 font-medium text-stone-700">Example with all options</h4>
+              <h4 className="mb-2 font-medium text-stone-700">Example with fallback overrides</h4>
               <CodeBlock
                 code={`<script
   src="https://feedbackflow.cc/widget.js"
