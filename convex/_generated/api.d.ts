@@ -33,6 +33,7 @@ import type * as ai_utils from "../ai/utils.js";
 import type * as aiActions from "../aiActions.js";
 import type * as analytics from "../analytics.js";
 import type * as apiKeys from "../apiKeys.js";
+import type * as authz from "../authz.js";
 import type * as automationActions from "../automationActions.js";
 import type * as automationRules from "../automationRules.js";
 import type * as billing from "../billing.js";
@@ -87,6 +88,7 @@ declare const fullApi: ApiFromModules<{
   aiActions: typeof aiActions;
   analytics: typeof analytics;
   apiKeys: typeof apiKeys;
+  authz: typeof authz;
   automationActions: typeof automationActions;
   automationRules: typeof automationRules;
   billing: typeof billing;

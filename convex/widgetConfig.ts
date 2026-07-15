@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { getTeamMembership, requireTeamMember } from "./authz";
 import {
   DEFAULT_WIDGET_CONFIG,
   widgetConfigFields,
@@ -11,20 +12,6 @@ import {
 export const getWidgetConfig = query({
   args: { widgetId: v.id("widgets") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return null;
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return null;
-    }
-
     const widget = await ctx.db.get(args.widgetId);
     if (!widget) {
       return null;
@@ -35,14 +22,8 @@ export const getWidgetConfig = query({
       return null;
     }
 
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), project.teamId))
-      .first();
-
-    if (!membership) {
+    const member = await getTeamMembership(ctx, project.teamId);
+    if (!member) {
       return null;
     }
 
@@ -119,20 +100,6 @@ export const saveWidgetConfig = mutation({
     ...widgetConfigFields,
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     const widget = await ctx.db.get(args.widgetId);
     if (!widget) {
       throw new Error("Widget not found");
@@ -143,16 +110,7 @@ export const saveWidgetConfig = mutation({
       throw new Error("Project not found");
     }
 
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), project.teamId))
-      .first();
-
-    if (!membership) {
-      throw new Error("You are not a member of this team");
-    }
+    await requireTeamMember(ctx, project.teamId);
 
     // Check if config exists
     const existingConfig = await ctx.db
@@ -200,20 +158,6 @@ export const saveWidgetConfig = mutation({
 export const resetWidgetConfig = mutation({
   args: { widgetId: v.id("widgets") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     const widget = await ctx.db.get(args.widgetId);
     if (!widget) {
       throw new Error("Widget not found");
@@ -224,16 +168,7 @@ export const resetWidgetConfig = mutation({
       throw new Error("Project not found");
     }
 
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), project.teamId))
-      .first();
-
-    if (!membership) {
-      throw new Error("You are not a member of this team");
-    }
+    await requireTeamMember(ctx, project.teamId);
 
     // Check if config exists
     const existingConfig = await ctx.db
@@ -273,20 +208,6 @@ export const uploadLogo = mutation({
     storageId: v.id("_storage"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     const widget = await ctx.db.get(args.widgetId);
     if (!widget) {
       throw new Error("Widget not found");
@@ -297,16 +218,7 @@ export const uploadLogo = mutation({
       throw new Error("Project not found");
     }
 
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), project.teamId))
-      .first();
-
-    if (!membership) {
-      throw new Error("You are not a member of this team");
-    }
+    await requireTeamMember(ctx, project.teamId);
 
     // Get the URL for the uploaded file
     const logoUrl = await ctx.storage.getUrl(args.storageId);
@@ -347,20 +259,6 @@ export const uploadLogo = mutation({
 export const generateLogoUploadUrl = mutation({
   args: { widgetId: v.id("widgets") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     const widget = await ctx.db.get(args.widgetId);
     if (!widget) {
       throw new Error("Widget not found");
@@ -371,16 +269,7 @@ export const generateLogoUploadUrl = mutation({
       throw new Error("Project not found");
     }
 
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), project.teamId))
-      .first();
-
-    if (!membership) {
-      throw new Error("You are not a member of this team");
-    }
+    await requireTeamMember(ctx, project.teamId);
 
     return await ctx.storage.generateUploadUrl();
   },
@@ -392,20 +281,6 @@ export const generateLogoUploadUrl = mutation({
 export const removeLogo = mutation({
   args: { widgetId: v.id("widgets") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     const widget = await ctx.db.get(args.widgetId);
     if (!widget) {
       throw new Error("Widget not found");
@@ -416,16 +291,7 @@ export const removeLogo = mutation({
       throw new Error("Project not found");
     }
 
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), project.teamId))
-      .first();
-
-    if (!membership) {
-      throw new Error("You are not a member of this team");
-    }
+    await requireTeamMember(ctx, project.teamId);
 
     const existingConfig = await ctx.db
       .query("widgetConfig")

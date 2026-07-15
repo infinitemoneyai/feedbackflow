@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { getTeamMembership, requireTeamMember } from "./authz";
 
 /**
  * Generate a secure random token for magic links
@@ -245,35 +246,13 @@ export const addPublicNote = mutation({
     content: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     const feedback = await ctx.db.get(args.feedbackId);
     if (!feedback) {
       throw new Error("Feedback not found");
     }
 
     // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), feedback.teamId))
-      .first();
-
-    if (!membership) {
-      throw new Error("You are not a member of this team");
-    }
+    const { user } = await requireTeamMember(ctx, feedback.teamId);
 
     if (!args.content.trim()) {
       throw new Error("Content cannot be empty");
@@ -299,33 +278,14 @@ export const getPublicNotes = query({
     feedbackId: v.id("feedback"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return [];
-    }
-
     const feedback = await ctx.db.get(args.feedbackId);
     if (!feedback) {
       return [];
     }
 
     // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), feedback.teamId))
-      .first();
-
-    if (!membership) {
+    const member = await getTeamMembership(ctx, feedback.teamId);
+    if (!member) {
       return [];
     }
 
@@ -366,33 +326,14 @@ export const getSubmitterUpdates = query({
     feedbackId: v.id("feedback"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return [];
-    }
-
     const feedback = await ctx.db.get(args.feedbackId);
     if (!feedback) {
       return [];
     }
 
     // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), feedback.teamId))
-      .first();
-
-    if (!membership) {
+    const member = await getTeamMembership(ctx, feedback.teamId);
+    if (!member) {
       return [];
     }
 
@@ -413,20 +354,6 @@ export const deletePublicNote = mutation({
     noteId: v.id("publicNotes"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     const note = await ctx.db.get(args.noteId);
     if (!note) {
       throw new Error("Note not found");
@@ -438,15 +365,7 @@ export const deletePublicNote = mutation({
     }
 
     // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), feedback.teamId))
-      .first();
-
-    if (!membership) {
-      throw new Error("You are not a member of this team");
-    }
+    const { user, membership } = await requireTeamMember(ctx, feedback.teamId);
 
     // Only the author or an admin can delete
     if (note.userId !== user._id && membership.role !== "admin") {
@@ -519,33 +438,14 @@ export const hasSubmitterEmail = query({
     feedbackId: v.id("feedback"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return false;
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return false;
-    }
-
     const feedback = await ctx.db.get(args.feedbackId);
     if (!feedback) {
       return false;
     }
 
     // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), feedback.teamId))
-      .first();
-
-    if (!membership) {
+    const member = await getTeamMembership(ctx, feedback.teamId);
+    if (!member) {
       return false;
     }
 

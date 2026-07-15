@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { getTeamMembership, requireTeamMember } from "./authz";
 
 /**
  * Default export templates for each provider
@@ -199,20 +200,6 @@ export const getExportTemplates = query({
     projectId: v.id("projects"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return [];
-    }
-
     // Get project to verify team membership
     const project = await ctx.db.get(args.projectId);
     if (!project) {
@@ -220,13 +207,8 @@ export const getExportTemplates = query({
     }
 
     // Check team membership
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), project.teamId))
-      .first();
-
-    if (!membership) {
+    const member = await getTeamMembership(ctx, project.teamId);
+    if (!member) {
       return [];
     }
 
@@ -249,20 +231,6 @@ export const getExportTemplate = query({
     provider: v.union(v.literal("linear"), v.literal("notion"), v.literal("json")),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return null;
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return null;
-    }
-
     // Get project to verify team membership
     const project = await ctx.db.get(args.projectId);
     if (!project) {
@@ -270,13 +238,8 @@ export const getExportTemplate = query({
     }
 
     // Check team membership
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), project.teamId))
-      .first();
-
-    if (!membership) {
+    const member = await getTeamMembership(ctx, project.teamId);
+    if (!member) {
       return null;
     }
 
@@ -318,20 +281,6 @@ export const saveExportTemplate = mutation({
     template: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     // Get project to verify team membership
     const project = await ctx.db.get(args.projectId);
     if (!project) {
@@ -339,13 +288,8 @@ export const saveExportTemplate = mutation({
     }
 
     // Check team membership (must be admin)
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), project.teamId))
-      .first();
-
-    if (!membership || membership.role !== "admin") {
+    const { membership } = await requireTeamMember(ctx, project.teamId);
+    if (membership.role !== "admin") {
       throw new Error("Only admins can modify export templates");
     }
 
@@ -392,20 +336,6 @@ export const resetExportTemplate = mutation({
     provider: v.union(v.literal("linear"), v.literal("notion"), v.literal("json")),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     // Get project to verify team membership
     const project = await ctx.db.get(args.projectId);
     if (!project) {
@@ -413,13 +343,8 @@ export const resetExportTemplate = mutation({
     }
 
     // Check team membership (must be admin)
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), project.teamId))
-      .first();
-
-    if (!membership || membership.role !== "admin") {
+    const { membership } = await requireTeamMember(ctx, project.teamId);
+    if (membership.role !== "admin") {
       throw new Error("Only admins can modify export templates");
     }
 
@@ -446,20 +371,6 @@ export const deleteExportTemplate = mutation({
     templateId: v.id("exportTemplates"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     // Get template
     const template = await ctx.db.get(args.templateId);
     if (!template) {
@@ -473,13 +384,8 @@ export const deleteExportTemplate = mutation({
     }
 
     // Check team membership (must be admin)
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), project.teamId))
-      .first();
-
-    if (!membership || membership.role !== "admin") {
+    const { membership } = await requireTeamMember(ctx, project.teamId);
+    if (membership.role !== "admin") {
       throw new Error("Only admins can delete export templates");
     }
 
