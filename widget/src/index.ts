@@ -12,10 +12,43 @@
 
 import { FeedbackFlowWidget } from "./widget";
 import type { WidgetConfig, WidgetPosition } from "./types";
+import { loadWidgetConfig } from "./config-loader";
 import { debug } from "./debug";
 
 // Store widget instance globally for access
 let widgetInstance: FeedbackFlowWidget | null = null;
+let initializing = false;
+
+/**
+ * Resolve Widget Config (fetched config is authoritative per ADR-0001;
+ * the supplied config is the fallback), then mount the widget.
+ */
+async function createWidget(
+  config: Partial<WidgetConfig> & { widgetKey: string }
+): Promise<void> {
+  if (widgetInstance || initializing) {
+    debug.warn("Widget already initialized");
+    return;
+  }
+
+  initializing = true;
+  try {
+    const resolved = await loadWidgetConfig({
+      widgetKey: config.widgetKey,
+      dataAttrConfig: config,
+    });
+    if (widgetInstance) {
+      debug.warn("Widget already initialized");
+      return;
+    }
+    widgetInstance = new FeedbackFlowWidget(resolved);
+    debug.log("Widget initialized");
+  } catch (error) {
+    debug.error("Failed to initialize widget", error);
+  } finally {
+    initializing = false;
+  }
+}
 
 /**
  * Parse configuration from script data attributes
@@ -83,25 +116,12 @@ function parseConfigFromScript(): Partial<WidgetConfig> | null {
  * Initialize the widget
  */
 function initWidget(): void {
-  // Don't initialize twice
-  if (widgetInstance) {
-    debug.warn("Widget already initialized");
-    return;
-  }
-
   const config = parseConfigFromScript();
   if (!config || !config.widgetKey) {
     return;
   }
 
-  try {
-    widgetInstance = new FeedbackFlowWidget(
-      config as Partial<WidgetConfig> & { widgetKey: string }
-    );
-    debug.log("Widget initialized");
-  } catch (error) {
-    debug.error("Failed to initialize widget", error);
-  }
+  void createWidget(config as Partial<WidgetConfig> & { widgetKey: string });
 }
 
 /**
@@ -109,19 +129,11 @@ function initWidget(): void {
  */
 const FeedbackFlow = {
   /**
-   * Initialize with custom config (alternative to data attributes)
+   * Initialize with custom config (alternative to data attributes).
+   * Resolves once the widget is mounted (or initialization was skipped).
    */
-  init(config: Partial<WidgetConfig> & { widgetKey: string }): void {
-    if (widgetInstance) {
-      debug.warn("Widget already initialized");
-      return;
-    }
-
-    try {
-      widgetInstance = new FeedbackFlowWidget(config);
-    } catch (error) {
-      debug.error("Failed to initialize widget", error);
-    }
+  init(config: Partial<WidgetConfig> & { widgetKey: string }): Promise<void> {
+    return createWidget(config);
   },
 
   /**
