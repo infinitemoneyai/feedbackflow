@@ -22,6 +22,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import {
   DEFAULT_WIDGET_CONFIG,
+  type WidgetDisplayMode,
   type WidgetPosition,
 } from "@/convex/widgetConfigShape";
 import {
@@ -41,6 +42,24 @@ interface WidgetCustomizationSectionProps {
   projectName?: string;
   hideHeader?: boolean;
 }
+
+const DISPLAY_MODES: {
+  value: WidgetDisplayMode;
+  label: string;
+  description: string;
+}[] = [
+  {
+    value: "always-visible",
+    label: "Always Visible",
+    description: "The launcher stays fully visible in its corner",
+  },
+  {
+    value: "auto-hide",
+    label: "Auto-Hide",
+    description:
+      "Rests off-screen and slides in when the cursor nears its corner; plays an entrance reveal on the first page view of a session",
+  },
+];
 
 const POSITIONS: { value: WidgetPosition; label: string }[] = [
   { value: "bottom-right", label: "Bottom Right" },
@@ -64,6 +83,9 @@ export function WidgetCustomizationSection({
 
   // Local state for form fields
   const [position, setPosition] = useState<WidgetPosition>(DEFAULT_WIDGET_CONFIG.position);
+  const [displayMode, setDisplayMode] = useState<WidgetDisplayMode>(
+    DEFAULT_WIDGET_CONFIG.displayMode
+  );
   const [buttonText, setButtonText] = useState(DEFAULT_WIDGET_CONFIG.buttonText);
   const [primaryColor, setPrimaryColor] = useState(DEFAULT_WIDGET_CONFIG.primaryColor);
   const [backgroundColor, setBackgroundColor] = useState(DEFAULT_WIDGET_CONFIG.backgroundColor);
@@ -110,6 +132,7 @@ export function WidgetCustomizationSection({
   useEffect(() => {
     if (config) {
       setPosition(config.position || DEFAULT_WIDGET_CONFIG.position);
+      setDisplayMode(config.displayMode || DEFAULT_WIDGET_CONFIG.displayMode);
       setButtonText(config.buttonText || DEFAULT_WIDGET_CONFIG.buttonText);
       setPrimaryColor(config.primaryColor || DEFAULT_WIDGET_CONFIG.primaryColor);
       setBackgroundColor(config.backgroundColor || DEFAULT_WIDGET_CONFIG.backgroundColor);
@@ -123,6 +146,7 @@ export function WidgetCustomizationSection({
     await performSave({
       widgetId,
       position,
+      displayMode,
       buttonText: buttonText || DEFAULT_WIDGET_CONFIG.buttonText,
       primaryColor,
       backgroundColor,
@@ -132,6 +156,7 @@ export function WidgetCustomizationSection({
   }, [
     widgetId,
     position,
+    displayMode,
     buttonText,
     primaryColor,
     backgroundColor,
@@ -152,6 +177,7 @@ export function WidgetCustomizationSection({
       await resetConfigMutation({ widgetId });
       // Reset local state
       setPosition(DEFAULT_WIDGET_CONFIG.position);
+      setDisplayMode(DEFAULT_WIDGET_CONFIG.displayMode);
       setButtonText(DEFAULT_WIDGET_CONFIG.buttonText);
       setPrimaryColor(DEFAULT_WIDGET_CONFIG.primaryColor);
       setBackgroundColor(DEFAULT_WIDGET_CONFIG.backgroundColor);
@@ -272,6 +298,32 @@ export function WidgetCustomizationSection({
                   }`}
                 >
                   {pos.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Display Mode */}
+          <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
+            <h3 className="mb-4 font-semibold text-retro-black">Display Mode</h3>
+            <div className="space-y-3">
+              {DISPLAY_MODES.map((mode) => (
+                <button
+                  key={mode.value}
+                  onClick={() => setDisplayMode(mode.value)}
+                  aria-pressed={displayMode === mode.value}
+                  className={`w-full rounded border-2 px-4 py-3 text-left transition-all ${
+                    displayMode === mode.value
+                      ? "border-retro-black bg-retro-yellow/20 shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]"
+                      : "border-stone-200 bg-white hover:border-stone-300"
+                  }`}
+                >
+                  <span className="block text-sm font-medium text-retro-black">
+                    {mode.label}
+                  </span>
+                  <span className="mt-1 block text-xs text-stone-500">
+                    {mode.description}
+                  </span>
                 </button>
               ))}
             </div>
@@ -468,6 +520,7 @@ export function WidgetCustomizationSection({
             <h3 className="mb-4 font-semibold text-retro-black">Live Preview</h3>
             <WidgetPreview
               position={position}
+              displayMode={displayMode}
               buttonText={buttonText}
               primaryColor={primaryColor}
               backgroundColor={backgroundColor}
@@ -627,6 +680,7 @@ export function WidgetCustomizationSection({
 
 interface WidgetPreviewProps {
   position: WidgetPosition;
+  displayMode: WidgetDisplayMode;
   buttonText: string;
   primaryColor: string;
   backgroundColor: string;
@@ -636,6 +690,7 @@ interface WidgetPreviewProps {
 
 function WidgetPreview({
   position,
+  displayMode,
   buttonText,
   primaryColor,
   backgroundColor,
@@ -668,10 +723,24 @@ function WidgetPreview({
         </div>
       </div>
 
-      {/* Widget Button */}
+      {/* Widget Button — Auto-Hide previews as resting mostly off-screen */}
+      {displayMode === "auto-hide" && (
+        <div
+          className={`absolute ${
+            position.includes("bottom") ? "bottom-16" : "top-16"
+          } ${position.includes("right") ? "right-4" : "left-4"} rounded bg-stone-800/80 px-2 py-1 text-[10px] text-white`}
+        >
+          Auto-Hide: slides in when the cursor nears the corner
+        </div>
+      )}
       <button
         onClick={() => setShowModal(true)}
-        className={`absolute ${positionStyles[position]} flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium shadow-lg transition-transform hover:scale-105`}
+        data-display-mode={displayMode}
+        className={`absolute ${positionStyles[position]} flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium shadow-lg transition-all hover:scale-105 ${
+          displayMode === "auto-hide"
+            ? `${position.includes("bottom") ? "translate-y-9" : "-translate-y-9"} opacity-80 hover:translate-y-0 hover:opacity-100`
+            : ""
+        }`}
         style={{ backgroundColor: primaryColor, color: backgroundColor }}
       >
         {logoUrl ? (
