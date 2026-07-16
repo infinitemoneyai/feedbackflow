@@ -1,14 +1,11 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { useQuery, useMutation, useAction } from "convex/react";
 import { X } from "lucide-react";
 import { Icon } from "@/components/ui/icon";
-import { api } from "@/convex/_generated/api";
 import { useDashboard } from "./dashboard-layout";
-import { Id } from "@/convex/_generated/dataModel";
 import { DraftTicketModal } from "./draft-ticket-modal";
-import { useAvailableModels } from "@/lib/use-available-models";
+import { useTicketDetail } from "@/lib/hooks/use-ticket-detail";
 import {
   TicketHeader,
   TicketContentArea,
@@ -20,8 +17,6 @@ import {
   DeleteConfirmModal,
 } from "./ticket-detail";
 
-type FeedbackStatus = "new" | "triaging" | "drafted" | "exported" | "resolved";
-
 export function TicketDetailPanel() {
   const { selectedFeedbackId, setSelectedFeedbackId, currentView } = useDashboard();
   const [messageInput, setMessageInput] = useState("");
@@ -29,7 +24,6 @@ export function TicketDetailPanel() {
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [isDraftModalOpen, setIsDraftModalOpen] = useState(false);
   const [inputMode, setInputMode] = useState<"write" | "chat">("write");
-  const [selectedModel, setSelectedModel] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [toast, setToast] = useState<{ kind: "success" | "error"; message: string } | null>(null);
   const [shareModal, setShareModal] = useState<{ open: boolean; url: string }>({
@@ -44,105 +38,28 @@ export function TicketDetailPanel() {
   >(null);
   const [isRouting, setIsRouting] = useState(false);
 
-  // Fetch the selected feedback
-  const feedback = useQuery(
-    api.feedback.getFeedback,
-    selectedFeedbackId ? { feedbackId: selectedFeedbackId } : "skip"
-  );
-
-  // Fetch the project to get the code
-  const project = useQuery(
-    api.projects.getProject,
-    feedback ? { projectId: feedback.projectId } : "skip"
-  );
-
-  // Fetch conversation history
-  const conversationHistory = useQuery(
-    api.ai.getConversationHistory,
-    selectedFeedbackId ? { feedbackId: selectedFeedbackId } : "skip"
-  );
-
-  // Mutations and actions
-  const sendConversationMessage = useAction(api.aiActions.sendConversationMessage);
-  const updateFeedbackStatus = useMutation(api.feedback.updateFeedbackStatus);
-  const deleteFeedback = useMutation(api.feedback.deleteFeedback);
-  const createExport = useMutation(api.integrations.createExport);
-
-  // Check AI configuration
-  const aiConfig = useQuery(
-    api.ai.getTeamAiConfig,
-    feedback ? { teamId: feedback.teamId } : "skip"
-  );
-
-  // Check which API keys are configured
-  const apiKeyStatus = useQuery(
-    api.apiKeys.getAiConfig,
-    feedback ? { teamId: feedback.teamId } : "skip"
-  );
-
-  // Fetch live model lists from each configured provider
-  const openaiModels = useAvailableModels(
-    feedback?.teamId,
-    "openai",
-    !!apiKeyStatus?.hasOpenAI && !!apiKeyStatus?.openAIValid
-  );
-  const anthropicModels = useAvailableModels(
-    feedback?.teamId,
-    "anthropic",
-    !!apiKeyStatus?.hasAnthropic && !!apiKeyStatus?.anthropicValid
-  );
-
-  // Build the combined available-models list
-  const availableModels: Array<{ id: string; name: string; provider: string }> = [];
-  if (apiKeyStatus?.hasOpenAI && apiKeyStatus?.openAIValid) {
-    availableModels.push(...openaiModels.map((m) => ({ id: m.id, name: m.name, provider: "OpenAI" })));
-  }
-  if (apiKeyStatus?.hasAnthropic && apiKeyStatus?.anthropicValid) {
-    availableModels.push(...anthropicModels.map((m) => ({ id: m.id, name: m.name, provider: "Anthropic" })));
-  }
-
-  // Seed selected model; reset if the saved one isn't in the live list
-  useEffect(() => {
-    if (!aiConfig || availableModels.length === 0) return;
-    const validIds = new Set(availableModels.map((m) => m.id));
-    const saved = aiConfig.preferredModel;
-    if (!selectedModel) {
-      setSelectedModel(saved && validIds.has(saved) ? saved : availableModels[0].id);
-    } else if (!validIds.has(selectedModel)) {
-      setSelectedModel(availableModels[0].id);
-    }
-  }, [aiConfig, selectedModel, availableModels]);
-
-  // Check which integrations are connected
-  const linearIntegration = useQuery(
-    api.integrations.getLinearIntegration,
-    feedback ? { teamId: feedback.teamId } : "skip"
-  );
-  const notionIntegration = useQuery(
-    api.integrations.getNotionIntegration,
-    feedback ? { teamId: feedback.teamId } : "skip"
-  );
-
-  // Check if already exported
-  const exports = useQuery(
-    api.integrations.getExportsByFeedback,
-    selectedFeedbackId ? { feedbackId: selectedFeedbackId } : "skip"
-  );
-
-  // Fetch ticket draft for routing
-  const ticketDraft = useQuery(
-    api.ai.getTicketDraft,
-    selectedFeedbackId ? { feedbackId: selectedFeedbackId } : "skip"
-  );
-
-  // Fetch solution suggestions (used in resolved view)
-  const solutionSuggestions = useQuery(
-    api.ai.getSolutionSuggestions,
-    selectedFeedbackId ? { feedbackId: selectedFeedbackId } : "skip"
-  );
-
-  const hasLinear = linearIntegration?.hasApiKey && linearIntegration?.isActive;
-  const hasNotion = notionIntegration?.hasApiKey && notionIntegration?.isActive;
+  // All data (queries, availability flags, model list, actions) via the seam
+  const {
+    feedback,
+    project,
+    conversationHistory,
+    ticketDraft,
+    solutionSuggestions,
+    exports,
+    aiConfig,
+    apiKeyStatus,
+    linearIntegration,
+    notionIntegration,
+    hasLinear,
+    hasNotion,
+    availableModels,
+    selectedModel,
+    setSelectedModel,
+    sendConversationMessage,
+    updateFeedbackStatus,
+    deleteFeedback,
+    createExport,
+  } = useTicketDetail(selectedFeedbackId);
 
   // Turn off thinking state when AI responds or after timeout
   useEffect(() => {
@@ -610,8 +527,8 @@ export function TicketDetailPanel() {
         <BacklogFooter
           selectedRoutingDestination={selectedRoutingDestination}
           isRouting={isRouting}
-          hasLinear={!!hasLinear}
-          hasNotion={!!hasNotion}
+          hasLinear={hasLinear}
+          hasNotion={hasNotion}
           onSelectDestination={setSelectedRoutingDestination}
           onRoute={handleRouteTicket}
           onDownloadPrd={handleDownloadPrd}

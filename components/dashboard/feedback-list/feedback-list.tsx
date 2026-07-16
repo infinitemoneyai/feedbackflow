@@ -1,19 +1,13 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery } from "convex/react";
 import { Bug } from "lucide-react";
 import { api } from "@/convex/_generated/api";
-import { useDashboard } from "../dashboard-layout";
 import { Id } from "@/convex/_generated/dataModel";
-import {
-  feedbackToPrdExport,
-  formatPrdExportJson,
-  downloadJson,
-  type FeedbackForExport,
-  type TicketDraftForExport,
-} from "@/lib/exports/json";
-import { FeedbackFilters, FeedbackItem, BulkExportResult } from "./types";
+import { useBulkExport, type BulkExportProvider } from "@/lib/hooks/use-bulk-export";
+import { useDashboard } from "../dashboard-layout";
+import { FeedbackFilters, FeedbackItem } from "./types";
 import { FeedbackFiltersBar } from "./feedback-filters";
 import { BulkActions } from "./bulk-actions";
 import { FeedbackCard } from "./feedback-card";
@@ -41,13 +35,6 @@ export function FeedbackList() {
     }));
   }, [filterType]);
 
-  const [isBulkExporting, setIsBulkExporting] = useState(false);
-  const [bulkExportResult, setBulkExportResult] = useState<BulkExportResult | null>(null);
-
-  // Mutation to create export records
-  const createExport = useMutation(api.integrations.createExport);
-  const updateFeedbackStatus = useMutation(api.feedback.updateFeedbackStatus);
-
   // Get project details for export
   const project = useQuery(
     api.projects.getProject,
@@ -66,6 +53,19 @@ export function FeedbackList() {
 
   const hasLinear = !!(linearIntegration?.hasApiKey && linearIntegration?.isActive);
   const hasNotion = !!(notionIntegration?.hasApiKey && notionIntegration?.isActive);
+
+  // Bulk-export engine (request assembly, response interpretation,
+  // per-item status bookkeeping) lives in the hook.
+  const {
+    startExport,
+    isExporting: isBulkExporting,
+    result: bulkExportResult,
+  } = useBulkExport({
+    project,
+    linearIntegration,
+    notionIntegration,
+    onExportComplete: () => setSelectedIds(new Set()),
+  });
 
   // Use searchQuery from dashboard context
   const effectiveSearchQuery = searchQuery || "";
@@ -121,46 +121,15 @@ export function FeedbackList() {
   // Use search results if searching, otherwise use the regular list
   const displayedFeedback = effectiveSearchQuery.length > 0 ? searchResults : feedbackList;
 
-  // Check if project has ANY feedback at all (across Inbox/Backlog/Resolved)
-  const anyInboxFeedback = useQuery(
-    api.feedback.listFeedback,
-    selectedProjectId
-      ? {
-          projectId: selectedProjectId,
-          sortBy: "createdAt",
-          sortOrder: "desc",
-          view: "inbox",
-        }
-      : "skip"
-  );
-  const anyBacklogFeedback = useQuery(
-    api.feedback.listFeedback,
-    selectedProjectId
-      ? {
-          projectId: selectedProjectId,
-          sortBy: "createdAt",
-          sortOrder: "desc",
-          view: "backlog",
-        }
-      : "skip"
-  );
-  const anyResolvedFeedback = useQuery(
-    api.feedback.listFeedback,
-    selectedProjectId
-      ? {
-          projectId: selectedProjectId,
-          sortBy: "createdAt",
-          sortOrder: "desc",
-          view: "resolved",
-        }
-      : "skip"
+  // Check if project has ANY feedback at all (across Inbox/Backlog/Resolved).
+  // One counts query replaces the three boolean-only listFeedback queries.
+  const viewCounts = useQuery(
+    api.feedback.getViewCounts,
+    selectedProjectId ? { projectId: selectedProjectId } : "skip"
   );
 
   const hasAnyFeedback =
-    (anyInboxFeedback?.length ?? 0) +
-      (anyBacklogFeedback?.length ?? 0) +
-      (anyResolvedFeedback?.length ?? 0) >
-    0;
+    (viewCounts?.inbox ?? 0) + (viewCounts?.backlog ?? 0) + (viewCounts?.resolved ?? 0) > 0;
 
   const handleSelectAll = useCallback(() => {
     if (!displayedFeedback) return;
@@ -198,223 +167,19 @@ export function FeedbackList() {
     });
   }, []);
 
-  // Bulk export handler
+  // Bulk export handler — selection resolution here, the engine in the hook
   const handleBulkExport = useCallback(
-    async (provider: "json" | "linear" | "notion") => {
-      if (!displayedFeedback || selectedIds.size === 0 || !project) return;
+    async (provider: BulkExportProvider) => {
+      if (!displayedFeedback || selectedIds.size === 0) return;
 
-      setIsBulkExporting(true);
-      setBulkExportResult(null);
+      const selectedFeedback = displayedFeedback.filter((f: FeedbackItem) =>
+        selectedIds.has(f._id)
+      );
 
-      try {
-        // Get selected feedback items
-        const selectedFeedback = displayedFeedback.filter((f: FeedbackItem) =>
-          selectedIds.has(f._id)
-        );
-
-        if (provider === "json") {
-          // Fetch ticket drafts for each feedback (if available)
-          const feedbackWithDrafts: Array<{
-            feedback: FeedbackForExport;
-            ticketDraft: TicketDraftForExport | null;
-          }> = [];
-
-          for (const fb of selectedFeedback) {
-            const feedbackForExport: FeedbackForExport = {
-              _id: fb._id,
-              type: fb.type,
-              title: fb.title,
-              description: fb.description,
-              priority: fb.priority,
-              status: fb.status,
-              tags: fb.tags || [],
-              screenshotUrl: fb.screenshotUrl,
-              recordingUrl: fb.recordingUrl,
-              submitterEmail: fb.submitterEmail,
-              submitterName: fb.submitterName,
-              createdAt: fb.createdAt,
-            };
-
-            feedbackWithDrafts.push({
-              feedback: feedbackForExport,
-              ticketDraft: null,
-            });
-          }
-
-          // Generate prd.json export
-          const prdExport = feedbackToPrdExport(
-            feedbackWithDrafts,
-            project.name,
-            project.description
-          );
-
-          const jsonContent = formatPrdExportJson(prdExport);
-          const filename = `${project.name.toLowerCase().replace(/\s+/g, "-")}-feedback-export.json`;
-
-          // Download the file
-          downloadJson(jsonContent, filename);
-
-          // Create export records for each feedback item
-          for (const { feedback } of feedbackWithDrafts) {
-            await createExport({
-              feedbackId: feedback._id,
-              provider: "json",
-              exportedData: { bulkExport: true, projectName: project.name },
-              status: "success",
-            });
-          }
-        } else if (provider === "linear" || provider === "notion") {
-          // For Linear/Notion, call the API for each selected item
-          const integration = provider === "linear" ? linearIntegration : notionIntegration;
-
-          if (!integration?.settings) {
-            throw new Error(
-              `${provider === "linear" ? "Linear" : "Notion"} integration not properly configured. Please configure it in Settings.`
-            );
-          }
-
-          // Get the default team/database from settings
-          const linearTeamId = provider === "linear" ? integration.settings.linearTeamId : undefined;
-          const notionDatabaseId = provider === "notion" ? integration.settings.notionDatabaseId : undefined;
-
-          if (provider === "linear" && !linearTeamId) {
-            throw new Error("No Linear team selected. Please configure Linear integration in Settings.");
-          }
-          if (provider === "notion" && !notionDatabaseId) {
-            throw new Error("No Notion database selected. Please configure Notion integration in Settings.");
-          }
-
-          let successCount = 0;
-          const errors: string[] = [];
-
-          for (const fb of selectedFeedback) {
-            try {
-              const feedbackPayload = {
-                title: fb.title,
-                description: fb.description,
-                type: fb.type,
-                priority: fb.priority,
-                screenshotUrl: fb.screenshotUrl,
-                recordingUrl: fb.recordingUrl,
-                metadata: fb.metadata,
-                submitterName: fb.submitterName,
-                submitterEmail: fb.submitterEmail,
-                tags: fb.tags,
-              };
-
-              const endpoint = provider === "linear" ? "/api/integrations/linear" : "/api/integrations/notion";
-
-              const requestBody: any = {
-                action: provider === "linear" ? "createIssue" : "createPage",
-                apiKey: "stored",
-                teamId: project.teamId,
-                feedback: feedbackPayload,
-              };
-
-              // Add provider-specific parameters
-              if (provider === "linear") {
-                requestBody.linearTeamId = linearTeamId;
-              } else if (provider === "notion") {
-                requestBody.databaseId = notionDatabaseId;
-              }
-
-              const response = await fetch(endpoint, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(requestBody),
-              });
-
-              const data = await response.json();
-
-              if (provider === "linear" && data.issue) {
-                await createExport({
-                  feedbackId: fb._id,
-                  provider: "linear",
-                  externalId: data.issue.id,
-                  externalUrl: data.issue.url,
-                  exportedData: { identifier: data.issue.identifier, title: data.issue.title },
-                  status: "success",
-                });
-                successCount++;
-              } else if (provider === "notion" && data.page) {
-                await createExport({
-                  feedbackId: fb._id,
-                  provider: "notion",
-                  externalId: data.page.id,
-                  externalUrl: data.page.url,
-                  exportedData: { title: data.page.title },
-                  status: "success",
-                });
-                successCount++;
-              } else {
-                errors.push(`${fb.title}: ${data.error || "Export failed"}`);
-              }
-            } catch (err) {
-              errors.push(`${fb.title}: ${err instanceof Error ? err.message : "Export failed"}`);
-            }
-          }
-
-          if (successCount === 0) {
-            throw new Error(errors.join("; "));
-          }
-
-          // Move successfully exported tickets to exported status
-          for (const fb of selectedFeedback) {
-            await updateFeedbackStatus({
-              feedbackId: fb._id,
-              status: "exported",
-            });
-          }
-
-          setBulkExportResult({
-            success: true,
-            count: successCount,
-            provider,
-            error: errors.length > 0 ? `${errors.length} failed` : undefined,
-          });
-
-          // Clear selection after successful export
-          setSelectedIds(new Set());
-          return;
-        }
-
-        // Move tickets to resolved status (for JSON export)
-        for (const fb of selectedFeedback) {
-          await updateFeedbackStatus({
-            feedbackId: fb._id,
-            status: "resolved",
-          });
-        }
-
-        setBulkExportResult({
-          success: true,
-          count: selectedFeedback.length,
-          provider: "json",
-        });
-
-        // Clear selection after successful export
-        setSelectedIds(new Set());
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Bulk export failed";
-        setBulkExportResult({
-          success: false,
-          count: 0,
-          error: errorMessage,
-        });
-      } finally {
-        setIsBulkExporting(false);
-      }
+      await startExport(provider, selectedFeedback);
     },
-    [displayedFeedback, selectedIds, project, createExport, updateFeedbackStatus, linearIntegration, notionIntegration]
+    [displayedFeedback, selectedIds, startExport]
   );
-
-  // Clear bulk export result after a delay
-  useEffect(() => {
-    if (bulkExportResult) {
-      const timer = setTimeout(() => setBulkExportResult(null), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [bulkExportResult]);
 
   const hasActiveFilters =
     filters.type !== null ||

@@ -38,9 +38,5 @@ export interface FeedbackItem {
   _searchMeta?: SearchMeta;
 }
 
-export interface BulkExportResult {
-  success: boolean;
-  count: number;
-  error?: string;
-  provider?: string;
-}
+// Relocated with the bulk-export engine; re-exported for consumers of this barrel.
+export type { BulkExportResult } from "@/lib/hooks/use-bulk-export";

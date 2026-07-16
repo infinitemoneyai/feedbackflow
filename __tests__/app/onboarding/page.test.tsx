@@ -1,235 +1,104 @@
+/**
+ * Tests for the onboarding page at its single seam: useOnboardingFlow.
+ *
+ * Mock surface is exactly two modules — lib/hooks/use-onboarding-flow and
+ * next/navigation. Child step components render for real (wrapped in a
+ * ConvexProvider so their useMutation hooks mount); no generated-api Symbol
+ * mocks, no convex/react mock, no child-component stubs.
+ *
+ * @see app/onboarding/page.tsx
+ */
+
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { ConvexProvider, ConvexReactClient } from "convex/react";
+import OnboardingPage from "@/app/onboarding/page";
+import type { OnboardingFlowState } from "@/lib/hooks/use-onboarding-flow";
 
-// Hoisted mocks — accessible inside vi.mock factories
-const { mockPush, mockUseQuery, mockUseMutation } = vi.hoisted(() => ({
-  mockPush: vi.fn(),
-  mockUseQuery: vi.fn(),
-  mockUseMutation: vi.fn(() => vi.fn()),
+const { mockUseOnboardingFlow, mockReplace } = vi.hoisted(() => ({
+  mockUseOnboardingFlow: vi.fn(),
+  mockReplace: vi.fn(),
 }));
 
-// Stable references to distinguish useQuery calls
-const { ONBOARDING_QUERY, LEGAL_QUERY } = vi.hoisted(() => ({
-  ONBOARDING_QUERY: Symbol("getOnboardingState"),
-  LEGAL_QUERY: Symbol("hasAcceptedLegalTerms"),
+vi.mock("@/lib/hooks/use-onboarding-flow", () => ({
+  useOnboardingFlow: () => mockUseOnboardingFlow(),
 }));
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: mockPush }),
+  useRouter: () => ({ replace: mockReplace }),
 }));
 
-vi.mock("convex/react", () => ({
-  useQuery: (...args: unknown[]) => mockUseQuery(...args),
-  useMutation: () => mockUseMutation(),
-}));
+// Real client (never connects — no subscriptions or mutation calls fire)
+// so the real child components' useMutation hooks can mount.
+const convex = new ConvexReactClient("https://test.convex.cloud");
 
-vi.mock("@/convex/_generated/api", () => ({
-  api: {
-    onboarding: {
-      getOnboardingState: ONBOARDING_QUERY,
-      startOnboarding: Symbol("startOnboarding"),
-      goToStep: Symbol("goToStep"),
-    },
-    users: {
-      hasAcceptedLegalTerms: LEGAL_QUERY,
-    },
-  },
-}));
-
-vi.mock("@/lib/hooks/use-store-user", () => ({
-  useStoreUser: () => ({
-    user: { id: "user_1" },
-    isLoaded: true,
-    isUserSynced: true,
-  }),
-}));
-
-// Mock child components to isolate redirect logic
-vi.mock("@/components/onboarding/onboarding-step-team", () => ({
-  OnboardingStepTeam: () => <div data-testid="step-team">Team Step</div>,
-}));
-vi.mock("@/components/onboarding/onboarding-step-walkthrough", () => ({
-  OnboardingStepWalkthrough: () => (
-    <div data-testid="step-walkthrough">Walkthrough</div>
-  ),
-}));
-vi.mock("@/components/onboarding/onboarding-step-project", () => ({
-  OnboardingStepProject: () => (
-    <div data-testid="step-project">Project Step</div>
-  ),
-}));
-vi.mock("@/components/onboarding/onboarding-progress", () => ({
-  OnboardingProgress: () => <div data-testid="progress">Progress</div>,
-}));
-vi.mock("@/components/auth/legal-acceptance-modal", () => ({
-  LegalAcceptanceModal: () => <div data-testid="legal-modal">Legal Modal</div>,
-}));
-
-import OnboardingPage from "@/app/onboarding/page";
-
-/**
- * Configure useQuery mock to return specific values based on which query is called.
- * Uses symbol references to distinguish getOnboardingState from hasAcceptedLegalTerms.
- */
-function setupQueries(
-  onboardingState: unknown,
-  hasAcceptedTerms: unknown
-): void {
-  mockUseQuery.mockImplementation((queryFn: unknown, args: unknown) => {
-    if (args === "skip") return undefined;
-    if (queryFn === ONBOARDING_QUERY) return onboardingState;
-    if (queryFn === LEGAL_QUERY) return hasAcceptedTerms;
-    return undefined;
-  });
+function renderPage(state: OnboardingFlowState) {
+  mockUseOnboardingFlow.mockReturnValue(state);
+  return render(
+    <ConvexProvider client={convex}>
+      <OnboardingPage />
+    </ConvexProvider>
+  );
 }
 
 describe("OnboardingPage", () => {
-  describe("redirect guards", () => {
-    it("redirects completed users to /dashboard", () => {
-      setupQueries(
-        {
-          step: undefined,
-          completedAt: 1234567890,
-          isComplete: true,
-          needsOnboarding: false,
-          data: undefined,
-        },
-        true
-      );
+  describe("loading", () => {
+    it("renders the content-shaped skeleton and does not redirect", () => {
+      renderPage({ status: "loading" });
 
-      render(<OnboardingPage />);
-
-      expect(mockPush).toHaveBeenCalledWith("/dashboard");
-      expect(screen.getByText("Redirecting...")).toBeDefined();
-    });
-
-    it("redirects step 4 users to /dashboard", () => {
-      setupQueries(
-        {
-          step: 4,
-          completedAt: undefined,
-          isComplete: false,
-          needsOnboarding: false,
-          data: undefined,
-        },
-        true
-      );
-
-      render(<OnboardingPage />);
-
-      expect(mockPush).toHaveBeenCalledWith("/dashboard");
-      expect(screen.getByText("Redirecting...")).toBeDefined();
-    });
-
-    it("redirects step 7 users to /dashboard", () => {
-      setupQueries(
-        {
-          step: 7,
-          completedAt: undefined,
-          isComplete: false,
-          needsOnboarding: false,
-          data: undefined,
-        },
-        true
-      );
-
-      render(<OnboardingPage />);
-
-      expect(mockPush).toHaveBeenCalledWith("/dashboard");
-      expect(screen.getByText("Redirecting...")).toBeDefined();
-    });
-
-    it("redirects to /sign-in when onboardingState is null (user not found)", () => {
-      setupQueries(null, true);
-
-      render(<OnboardingPage />);
-
-      expect(mockPush).toHaveBeenCalledWith("/sign-in");
-      expect(screen.getByText("Redirecting...")).toBeDefined();
+      expect(screen.getByTestId("onboarding-skeleton")).toBeDefined();
+      expect(mockReplace).not.toHaveBeenCalled();
     });
   });
 
-  describe("loading states", () => {
-    it("shows loading when onboardingState is undefined (still loading)", () => {
-      setupQueries(undefined, undefined);
+  describe("redirect", () => {
+    it("fires router.replace to the dashboard and shows the skeleton meanwhile", () => {
+      renderPage({ status: "redirect", to: "/dashboard" });
 
-      render(<OnboardingPage />);
-
-      expect(mockPush).not.toHaveBeenCalled();
-      expect(screen.getByText("Loading...")).toBeDefined();
+      expect(mockReplace).toHaveBeenCalledWith("/dashboard");
+      expect(screen.getByTestId("onboarding-skeleton")).toBeDefined();
     });
 
-    it("shows loading when only hasAcceptedTerms is undefined", () => {
-      setupQueries(
-        {
-          step: 1,
-          completedAt: undefined,
-          isComplete: false,
-          needsOnboarding: false,
-          data: undefined,
-        },
-        undefined
-      );
+    it("fires router.replace to sign-in", () => {
+      renderPage({ status: "redirect", to: "/sign-in" });
 
-      render(<OnboardingPage />);
-
-      expect(mockPush).not.toHaveBeenCalled();
-      expect(screen.getByText("Loading...")).toBeDefined();
+      expect(mockReplace).toHaveBeenCalledWith("/sign-in");
     });
   });
 
-  describe("normal onboarding flow", () => {
-    it("renders step 1 (team creation) for users in onboarding", () => {
-      setupQueries(
-        {
-          step: 1,
-          completedAt: undefined,
-          isComplete: false,
-          needsOnboarding: false,
-          data: undefined,
-        },
-        true
-      );
+  describe("legal gate", () => {
+    it("renders the legal acceptance modal", () => {
+      renderPage({ status: "legal", onAccept: vi.fn() });
 
-      render(<OnboardingPage />);
+      expect(screen.getByText("Accept Legal Terms")).toBeDefined();
+      expect(mockReplace).not.toHaveBeenCalled();
+    });
+  });
 
-      expect(mockPush).not.toHaveBeenCalled();
-      expect(screen.getByTestId("step-team")).toBeDefined();
+  describe("ready", () => {
+    it("renders the progress dots and the team step at step 1", () => {
+      renderPage({
+        status: "ready",
+        step: 1,
+        onStepClick: vi.fn(async () => {}),
+      });
+
+      expect(mockReplace).not.toHaveBeenCalled();
+      // 7 progress dots render as buttons
+      expect(screen.getAllByRole("button").length).toBeGreaterThanOrEqual(7);
+      expect(
+        screen.getByText("Let's set up your workspace")
+      ).toBeDefined();
     });
 
-    it("renders step 2 (walkthrough) for users on that step", () => {
-      setupQueries(
-        {
-          step: 2,
-          completedAt: undefined,
-          isComplete: false,
-          needsOnboarding: false,
-          data: undefined,
-        },
-        true
-      );
+    it("renders no skeleton once ready", () => {
+      renderPage({
+        status: "ready",
+        step: 1,
+        onStepClick: vi.fn(async () => {}),
+      });
 
-      render(<OnboardingPage />);
-
-      expect(mockPush).not.toHaveBeenCalled();
-      expect(screen.getByTestId("step-walkthrough")).toBeDefined();
-    });
-
-    it("does not redirect step 3 users", () => {
-      setupQueries(
-        {
-          step: 3,
-          completedAt: undefined,
-          isComplete: false,
-          needsOnboarding: false,
-          data: undefined,
-        },
-        true
-      );
-
-      render(<OnboardingPage />);
-
-      expect(mockPush).not.toHaveBeenCalled();
+      expect(screen.queryByTestId("onboarding-skeleton")).toBeNull();
     });
   });
 });
