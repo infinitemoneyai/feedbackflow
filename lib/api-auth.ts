@@ -1,71 +1,25 @@
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-
-// Initialize Convex client for API routes
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-
-export interface ApiAuthResult {
-  valid: boolean;
-  teamId?: Id<"teams">;
-  permissions?: string[];
-  error?: string;
-}
+import { checkApiRateLimit, type RateLimitResult } from "@/lib/rate-limit";
 
 /**
- * Validate a Bearer token from the Authorization header
+ * The REST API perimeter adapter. Every /api/v1 route runs through
+ * withApiKey — header parsing, key validation, rate limiting (Upstash via
+ * lib/rate-limit, in-memory-free), typed scope checks, last-used
+ * bookkeeping, and uniform error responses live here, once.
  */
-export async function validateBearerToken(
-  request: Request
-): Promise<ApiAuthResult> {
-  const authHeader = request.headers.get("Authorization");
 
-  if (!authHeader) {
-    return { valid: false, error: "Missing Authorization header" };
-  }
+export type ApiScope = "read:feedback" | "write:feedback" | "read:projects";
 
-  if (!authHeader.startsWith("Bearer ")) {
-    return { valid: false, error: "Invalid Authorization header format" };
-  }
-
-  const token = authHeader.slice(7); // Remove "Bearer " prefix
-
-  if (!token || !token.startsWith("ff_")) {
-    return { valid: false, error: "Invalid API key format" };
-  }
-
-  try {
-    // Use internal query to validate the key
-    // Note: We need to use a workaround since internalQuery can't be called directly from API routes
-    // In production, you'd use a Convex action or HTTP endpoint for this
-    const result = await convex.query(api.restApiKeys.validateApiKeyPublic, {
-      key: token,
-    });
-
-    if (!result.valid) {
-      return { valid: false, error: result.error };
-    }
-
-    return {
-      valid: true,
-      teamId: result.teamId,
-      permissions: result.permissions,
-    };
-  } catch (error) {
-    console.error("API key validation error:", error);
-    return { valid: false, error: "Failed to validate API key" };
-  }
+export interface ApiKeyContext {
+  teamId: Id<"teams">;
+  permissions: string[];
+  rateLimit: RateLimitResult;
 }
 
-/**
- * Check if the API key has the required permission
- */
-export function hasPermission(
-  permissions: string[] | undefined,
-  required: string
-): boolean {
-  if (!permissions) return false;
-  return permissions.includes(required);
+function getConvexClient(): ConvexHttpClient {
+  return new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL || "");
 }
 
 /**
@@ -76,21 +30,10 @@ export function apiError(
   status: number = 400,
   headers?: Record<string, string>
 ): Response {
-  const baseHeaders = {
-    "Content-Type": "application/json",
-    ...headers,
-  };
-
-  return new Response(
-    JSON.stringify({
-      error: message,
-      status,
-    }),
-    {
-      status,
-      headers: baseHeaders,
-    }
-  );
+  return new Response(JSON.stringify({ error: message, status }), {
+    status,
+    headers: { "Content-Type": "application/json", ...headers },
+  });
 }
 
 /**
@@ -101,74 +44,10 @@ export function apiSuccess<T>(
   status: number = 200,
   headers?: Record<string, string>
 ): Response {
-  const baseHeaders = {
-    "Content-Type": "application/json",
-    ...headers,
-  };
-
   return new Response(JSON.stringify(data), {
     status,
-    headers: baseHeaders,
+    headers: { "Content-Type": "application/json", ...headers },
   });
-}
-
-/**
- * Rate limit store for API endpoints
- */
-interface ApiRateLimitEntry {
-  count: number;
-  resetAt: number;
-}
-
-const apiRateLimitStore: Record<string, ApiRateLimitEntry> = {};
-
-/**
- * Check and increment API rate limit
- * 100 requests per minute per API key
- */
-export function checkApiRateLimit(keyPrefix: string): {
-  success: boolean;
-  limit: number;
-  remaining: number;
-  resetAt: number;
-} {
-  const key = `api:${keyPrefix}`;
-  const limit = 100;
-  const windowMs = 60 * 1000; // 1 minute
-  const now = Date.now();
-
-  const entry = apiRateLimitStore[key];
-
-  if (!entry || entry.resetAt < now) {
-    // New window
-    apiRateLimitStore[key] = {
-      count: 1,
-      resetAt: now + windowMs,
-    };
-    return {
-      success: true,
-      limit,
-      remaining: limit - 1,
-      resetAt: apiRateLimitStore[key].resetAt,
-    };
-  }
-
-  if (entry.count >= limit) {
-    return {
-      success: false,
-      limit,
-      remaining: 0,
-      resetAt: entry.resetAt,
-    };
-  }
-
-  entry.count++;
-  return {
-    success: true,
-    limit,
-    remaining: limit - entry.count,
-    resetAt: entry.resetAt,
-  };
 }
 
 /**
@@ -176,12 +55,77 @@ export function checkApiRateLimit(keyPrefix: string): {
  */
 export function addRateLimitHeaders(
   headers: Record<string, string>,
-  rateLimit: { limit: number; remaining: number; resetAt: number }
+  rateLimit: RateLimitResult
 ): Record<string, string> {
   return {
     ...headers,
     "X-RateLimit-Limit": rateLimit.limit.toString(),
     "X-RateLimit-Remaining": rateLimit.remaining.toString(),
-    "X-RateLimit-Reset": Math.ceil(rateLimit.resetAt / 1000).toString(),
+    "X-RateLimit-Reset": Math.ceil(rateLimit.reset / 1000).toString(),
   };
+}
+
+/**
+ * Authenticate a v1 REST request and run the handler behind the perimeter.
+ * Response contract (wire-compatible with the previous inlined blocks):
+ * 401 missing/malformed header or invalid key · 429 rate limited ·
+ * 403 insufficient scope · 500 on unexpected failure.
+ */
+export async function withApiKey(
+  request: Request,
+  scope: ApiScope,
+  handler: (auth: ApiKeyContext) => Promise<Response>
+): Promise<Response> {
+  const authHeader = request.headers.get("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return apiError("Missing or invalid Authorization header", 401);
+  }
+
+  const apiKey = authHeader.slice(7);
+  if (!apiKey.startsWith("ff_")) {
+    return apiError("Invalid API key format", 401);
+  }
+
+  const convex = getConvexClient();
+  try {
+    const validation = await convex.query(
+      api.restApiKeys.validateApiKeyPublic,
+      { key: apiKey }
+    );
+    if (!validation.valid) {
+      return apiError(validation.error || "Invalid API key", 401);
+    }
+
+    const rateLimit = await checkApiRateLimit(apiKey.slice(0, 8));
+    if (!rateLimit.success) {
+      return apiError("Rate limit exceeded", 429, {
+        "Retry-After": Math.ceil(
+          (rateLimit.reset - Date.now()) / 1000
+        ).toString(),
+        ...addRateLimitHeaders({}, rateLimit),
+      });
+    }
+
+    if (!validation.permissions?.includes(scope)) {
+      return apiError(`Insufficient permissions. Required: ${scope}`, 403);
+    }
+
+    // Last-used bookkeeping is best-effort
+    if (validation.keyId) {
+      convex
+        .mutation(api.restApiKeys.updateApiKeyLastUsed, {
+          keyId: validation.keyId,
+        })
+        .catch(() => {});
+    }
+
+    return await handler({
+      teamId: validation.teamId as Id<"teams">,
+      permissions: validation.permissions ?? [],
+      rateLimit,
+    });
+  } catch (error) {
+    console.error("API error:", error);
+    return apiError("Internal server error", 500);
+  }
 }
