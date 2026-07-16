@@ -1,6 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useSaveable } from "@/lib/hooks/use-saveable";
+import {
+  QueryBoundary,
+  SettingsSectionSkeleton,
+} from "@/components/ui/query-boundary";
 import { useQuery, useMutation } from "convex/react";
 import {
   HardDrive,
@@ -90,57 +95,62 @@ export function StorageConfigSection({ teamId }: StorageConfigSectionProps) {
 
   const [showSecretKey, setShowSecretKey] = useState(false);
   const [showPrivateKey, setShowPrivateKey] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
   const [testResult, setTestResult] = useState<{
     success: boolean;
     message: string;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Update form when config loads
-  useState(() => {
+  // Update form when config loads (was a useState call that never ran on
+  // load — saved config didn't populate the form). Sync-from-server via
+  // effect is the codebase's established pattern; the react-hooks rule
+  // flags it, pending the dashboard data-seam redesign.
+  useEffect(() => {
     if (storageConfig) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setProvider(storageConfig.provider as StorageProvider);
       setBucket(storageConfig.bucket);
       setRegion(storageConfig.region || "us-east-1");
       setEndpoint(storageConfig.endpoint || "");
     }
-  });
+  }, [storageConfig]);
+
+  const {
+    save: performSave,
+    isSaving,
+    saveSuccess,
+    error: saveError,
+  } = useSaveable(
+    useCallback(
+      async (input: Parameters<typeof saveConfigMutation>[0]) => {
+        await saveConfigMutation(input);
+        // Clear sensitive fields after save
+        setSecretAccessKey("");
+        setPrivateKey("");
+      },
+      [saveConfigMutation]
+    )
+  );
 
   const handleSave = useCallback(async () => {
-    setIsSaving(true);
     setError(null);
-    setSaveSuccess(false);
     setTestResult(null);
-
-    try {
-      await saveConfigMutation({
-        teamId,
-        provider,
-        bucket,
-        region: provider === "s3" || provider === "r2" ? region : undefined,
-        endpoint: provider === "r2" || endpoint ? endpoint : undefined,
-        accessKeyId:
-          provider === "s3" || provider === "r2" ? accessKeyId : undefined,
-        secretAccessKey:
-          provider === "s3" || provider === "r2" ? secretAccessKey : undefined,
-        clientEmail: provider === "gcs" ? clientEmail : undefined,
-        privateKey: provider === "gcs" ? privateKey : undefined,
-        projectId: provider === "gcs" ? projectId : undefined,
-      });
-      setSaveSuccess(true);
-      // Clear sensitive fields after save
-      setSecretAccessKey("");
-      setPrivateKey("");
-      setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save configuration");
-    } finally {
-      setIsSaving(false);
-    }
+    await performSave({
+      teamId,
+      provider,
+      bucket,
+      region: provider === "s3" || provider === "r2" ? region : undefined,
+      endpoint: provider === "r2" || endpoint ? endpoint : undefined,
+      accessKeyId:
+        provider === "s3" || provider === "r2" ? accessKeyId : undefined,
+      secretAccessKey:
+        provider === "s3" || provider === "r2" ? secretAccessKey : undefined,
+      clientEmail: provider === "gcs" ? clientEmail : undefined,
+      privateKey: provider === "gcs" ? privateKey : undefined,
+      projectId: provider === "gcs" ? projectId : undefined,
+    });
   }, [
     teamId,
     provider,
@@ -152,7 +162,7 @@ export function StorageConfigSection({ teamId }: StorageConfigSectionProps) {
     clientEmail,
     privateKey,
     projectId,
-    saveConfigMutation,
+    performSave,
   ]);
 
   const handleDelete = useCallback(async () => {
@@ -241,6 +251,11 @@ export function StorageConfigSection({ teamId }: StorageConfigSectionProps) {
   const selectedProvider = STORAGE_PROVIDERS.find((p) => p.id === provider);
 
   return (
+    <QueryBoundary
+      data={storageConfig}
+      skeleton={<SettingsSectionSkeleton rows={3} />}
+    >
+      {() => (
     <div className="space-y-6">
       {/* Header */}
       <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
@@ -536,10 +551,10 @@ export function StorageConfigSection({ teamId }: StorageConfigSectionProps) {
         )}
 
         {/* Error Message */}
-        {error && (
+        {(error || saveError) && (
           <div className="mt-4 flex items-center gap-2 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             <X className="h-4 w-4" />
-            {error}
+            {error || saveError}
           </div>
         )}
 
@@ -613,5 +628,7 @@ export function StorageConfigSection({ teamId }: StorageConfigSectionProps) {
         </div>
       </div>
     </div>
+      )}
+    </QueryBoundary>
   );
 }

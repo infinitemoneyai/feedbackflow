@@ -29,6 +29,11 @@ import {
   buildNextjsSnippet,
   buildReactSnippet,
 } from "@/lib/widget-snippet";
+import { useSaveable } from "@/lib/hooks/use-saveable";
+import {
+  QueryBoundary,
+  SettingsSectionSkeleton,
+} from "@/components/ui/query-boundary";
 
 interface WidgetCustomizationSectionProps {
   widgetId: Id<"widgets">;
@@ -65,11 +70,16 @@ export function WidgetCustomizationSection({
   const [textColor, setTextColor] = useState(DEFAULT_WIDGET_CONFIG.textColor);
   const [logoUrl, setLogoUrl] = useState<string | undefined>(undefined);
 
-  const [isSaving, setIsSaving] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const {
+    save: performSave,
+    isSaving,
+    saveSuccess,
+    error: saveError,
+  } = useSaveable(saveConfigMutation);
   const [codeCopied, setCodeCopied] = useState<string | null>(null);
   const [showFramework, setShowFramework] = useState<string | null>(null);
 
@@ -109,27 +119,16 @@ export function WidgetCustomizationSection({
   }, [config]);
 
   const handleSave = useCallback(async () => {
-    setIsSaving(true);
     setError(null);
-    setSaveSuccess(false);
-
-    try {
-      await saveConfigMutation({
-        widgetId,
-        position,
-        buttonText: buttonText || DEFAULT_WIDGET_CONFIG.buttonText,
-        primaryColor,
-        backgroundColor,
-        textColor,
-        logoUrl,
-      });
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save configuration");
-    } finally {
-      setIsSaving(false);
-    }
+    await performSave({
+      widgetId,
+      position,
+      buttonText: buttonText || DEFAULT_WIDGET_CONFIG.buttonText,
+      primaryColor,
+      backgroundColor,
+      textColor,
+      logoUrl,
+    });
   }, [
     widgetId,
     position,
@@ -138,7 +137,7 @@ export function WidgetCustomizationSection({
     backgroundColor,
     textColor,
     logoUrl,
-    saveConfigMutation,
+    performSave,
   ]);
 
   const handleReset = useCallback(async () => {
@@ -227,15 +226,9 @@ export function WidgetCustomizationSection({
     }
   }, [widgetId, removeLogoMutation]);
 
-  if (!config) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-6 w-6 animate-spin text-stone-400" />
-      </div>
-    );
-  }
-
   return (
+    <QueryBoundary data={config} skeleton={<SettingsSectionSkeleton rows={4} />}>
+      {() => (
     <div className="space-y-6">
       {/* Header - only show if not hidden */}
       {!hideHeader && (
@@ -461,10 +454,10 @@ export function WidgetCustomizationSection({
           </div>
 
           {/* Error Message */}
-          {error && (
+          {(error || saveError) && (
             <div className="flex items-center gap-2 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               <X className="h-4 w-4" />
-              {error}
+              {error || saveError}
             </div>
           )}
         </div>
@@ -627,6 +620,8 @@ export function WidgetCustomizationSection({
         </div>
       )}
     </div>
+      )}
+    </QueryBoundary>
   );
 }
 

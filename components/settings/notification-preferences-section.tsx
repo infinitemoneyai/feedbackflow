@@ -1,6 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSaveable } from "@/lib/hooks/use-saveable";
+import {
+  QueryBoundary,
+  SettingsSectionSkeleton,
+} from "@/components/ui/query-boundary";
 import { useQuery, useMutation } from "convex/react";
 import {
   Bell,
@@ -20,8 +25,7 @@ export function NotificationPreferencesSection() {
   const preferences = useQuery(api.notifications.getNotificationPreferences);
   const upsertPreferences = useMutation(api.notifications.upsertNotificationPreferences);
 
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
+  const { save, isSaving, saveSuccess } = useSaveable(upsertPreferences);
 
   // Local state for form
   const [emailEnabled, setEmailEnabled] = useState(true);
@@ -46,24 +50,13 @@ export function NotificationPreferencesSection() {
   }, [preferences]);
 
   const handleSave = useCallback(async () => {
-    setIsSaving(true);
-    setSaveSuccess(false);
-
-    try {
-      await upsertPreferences({
-        emailEnabled,
-        emailFrequency,
-        inAppEnabled,
-        events,
-      });
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (error) {
-      console.error("Failed to save preferences:", error);
-    } finally {
-      setIsSaving(false);
-    }
-  }, [emailEnabled, emailFrequency, inAppEnabled, events, upsertPreferences]);
+    await save({
+      emailEnabled,
+      emailFrequency,
+      inAppEnabled,
+      events,
+    });
+  }, [emailEnabled, emailFrequency, inAppEnabled, events, save]);
 
   const toggleEvent = (key: keyof typeof events) => {
     setEvents((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -102,17 +95,12 @@ export function NotificationPreferencesSection() {
     },
   ];
 
-  if (preferences === undefined) {
-    return (
-      <div className="rounded border-2 border-retro-black bg-white p-8 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="h-6 w-6 animate-spin text-stone-400" />
-        </div>
-      </div>
-    );
-  }
-
   return (
+    <QueryBoundary
+      data={preferences}
+      skeleton={<SettingsSectionSkeleton rows={4} />}
+    >
+      {() => (
     <div className="space-y-6">
       {/* Header */}
       <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
@@ -304,5 +292,7 @@ export function NotificationPreferencesSection() {
         </button>
       </div>
     </div>
+      )}
+    </QueryBoundary>
   );
 }
