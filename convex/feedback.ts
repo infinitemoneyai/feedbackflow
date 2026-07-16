@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getTeamMembership, requireTeamMember } from "./authz";
+import { evaluateFeedbackAllowance } from "./billing";
 
 /**
  * Get the next ticket number for a project
@@ -72,6 +73,34 @@ export const submitFromWidget = mutation({
       throw new Error("Project not found");
     }
 
+    // Enforce the plan limit atomically: the usage row read here is the
+    // same one incremented below, in one transaction — concurrent submits
+    // cannot race past the cap.
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+
+    const subscription = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_team", (q) => q.eq("teamId", project.teamId))
+      .first();
+
+    const existingUsage = await ctx.db
+      .query("usageTracking")
+      .withIndex("by_team", (q) => q.eq("teamId", project.teamId))
+      .filter((q) =>
+        q.and(q.eq(q.field("year"), year), q.eq(q.field("month"), month))
+      )
+      .first();
+
+    const allowance = evaluateFeedbackAllowance(
+      subscription,
+      existingUsage?.feedbackCount ?? 0
+    );
+    if (!allowance.allowed) {
+      throw new Error(`Usage limit exceeded: ${allowance.reason}`);
+    }
+
     // Get the next ticket number for this project
     const ticketNumber = await getNextTicketNumber(ctx, widget.projectId);
 
@@ -128,19 +157,7 @@ export const submitFromWidget = mutation({
       createdAt: Date.now(),
     });
 
-    // Update usage tracking for the team
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth() + 1;
-
-    const existingUsage = await ctx.db
-      .query("usageTracking")
-      .withIndex("by_team", (q) => q.eq("teamId", project.teamId))
-      .filter((q) =>
-        q.and(q.eq(q.field("year"), year), q.eq(q.field("month"), month))
-      )
-      .first();
-
+    // Update usage tracking for the team (same row read for the cap check)
     if (existingUsage) {
       await ctx.db.patch(existingUsage._id, {
         feedbackCount: existingUsage.feedbackCount + 1,
@@ -331,6 +348,64 @@ export const getWidgetByKey = query({
       projectId: widget.projectId,
       isActive: widget.isActive,
       siteUrl: widget.siteUrl,
+    };
+  },
+});
+
+/**
+ * Advisory pre-submission gate for the API perimeter: one query answering
+ * "would a submission for this widget be accepted right now?" so the route
+ * can return early 4xx responses and skip file uploads. ADVISORY ONLY —
+ * authoritative validation and cap enforcement happen atomically inside
+ * submitFromWidget.
+ */
+export const canAcceptSubmission = query({
+  args: { widgetKey: v.string() },
+  handler: async (ctx, args) => {
+    const widget = await ctx.db
+      .query("widgets")
+      .withIndex("by_widget_key", (q) => q.eq("widgetKey", args.widgetKey))
+      .first();
+    if (!widget) {
+      return { status: "invalid_key" as const };
+    }
+    if (!widget.isActive) {
+      return { status: "inactive" as const };
+    }
+
+    const project = await ctx.db.get(widget.projectId);
+    if (!project) {
+      return { status: "invalid_key" as const };
+    }
+
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+
+    const subscription = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_team", (q) => q.eq("teamId", project.teamId))
+      .first();
+    const usage = await ctx.db
+      .query("usageTracking")
+      .withIndex("by_team", (q) => q.eq("teamId", project.teamId))
+      .filter((q) =>
+        q.and(q.eq(q.field("year"), year), q.eq(q.field("month"), month))
+      )
+      .first();
+
+    const allowance = evaluateFeedbackAllowance(
+      subscription,
+      usage?.feedbackCount ?? 0
+    );
+
+    return {
+      status: allowance.allowed
+        ? ("ok" as const)
+        : ("limit_exceeded" as const),
+      allowance,
+      projectId: widget.projectId,
+      teamId: project.teamId,
     };
   },
 });
