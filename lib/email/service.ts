@@ -13,9 +13,16 @@ import {
   magicLinkEmail,
 } from "./templates";
 
-// Initialize Resend client
-// API key should be set via RESEND_API_KEY environment variable
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazily initialize the Resend client. Module-level construction would
+// throw during Convex's module analysis (no env there), and this module is
+// imported by Convex actions as well as Next.js code.
+let resendClient: Resend | null = null;
+function getResend(): Resend {
+  if (!resendClient) {
+    resendClient = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resendClient;
+}
 
 // Default sender address (configure in Resend dashboard)
 const FROM_EMAIL = process.env.EMAIL_FROM || "FeedbackFlow <noreply@feedbackflow.cc>";
@@ -130,7 +137,7 @@ export async function sendNotificationEmail(data: EmailNotificationData): Promis
   }
 
   try {
-    const result = await resend.emails.send({
+    const result = await getResend().emails.send({
       from: FROM_EMAIL,
       to: data.recipientEmail,
       subject: emailContent.subject,
@@ -184,7 +191,7 @@ export async function sendDigestEmail(data: DigestEmailData): Promise<{
   const emailContent = digestEmail(digestData);
 
   try {
-    const result = await resend.emails.send({
+    const result = await getResend().emails.send({
       from: FROM_EMAIL,
       to: data.recipientEmail,
       subject: emailContent.subject,
@@ -232,7 +239,7 @@ export async function sendMagicLinkEmail(data: {
   });
 
   try {
-    const result = await resend.emails.send({
+    const result = await getResend().emails.send({
       from: FROM_EMAIL,
       to: data.recipientEmail,
       subject: emailContent.subject,

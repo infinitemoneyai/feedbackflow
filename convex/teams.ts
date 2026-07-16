@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query, MutationCtx } from "./_generated/server";
+import { mutation, query, internalQuery, MutationCtx } from "./_generated/server";
 import { canAddSeat } from "./billing";
 import {
   getAuthUser,
@@ -450,7 +450,7 @@ export const getTeamMembers = query({
  * Get team members (public query for API routes)
  * Returns basic user info for notifications
  */
-export const getTeamMembersPublic = query({
+export const getTeamMembersForNotifications = internalQuery({
   args: { teamId: v.id("teams") },
   handler: async (ctx, args) => {
     // Get all memberships for the team

@@ -338,72 +338,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       metadata: feedbackMetadata,
     });
 
-    // Trigger background tasks (fire and forget)
-    // These run asynchronously after response is sent
-    try {
-      // Get project name for the notification payload
-      const projectInfo = await convex.query(api.projects.getProjectInternal, {
-        projectId: gate.projectId,
-      });
-
-      if (projectInfo) {
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
-        const internalKey = process.env.INTERNAL_API_KEY || "";
-
-        // Fire and forget - AI auto-analysis
-        fetch(`${baseUrl}/api/ai/auto-analyze`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-internal-key": internalKey,
-          },
-          body: JSON.stringify({
-            feedbackId: result.feedbackId,
-            teamId: projectInfo.teamId,
-            projectId: gate.projectId,
-          }),
-        }).catch((err) => {
-          console.warn("Auto-analysis trigger failed:", err);
-        });
-
-        // Fire and forget - Automation rules evaluation
-        fetch(`${baseUrl}/api/automation/trigger`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-internal-key": internalKey,
-          },
-          body: JSON.stringify({
-            feedbackId: result.feedbackId,
-            trigger: "new_feedback",
-          }),
-        }).catch((err) => {
-          console.warn("Automation rules trigger failed:", err);
-        });
-
-        // Fire and forget - Notify team admins of new feedback
-        fetch(`${baseUrl}/api/notifications/trigger-new-feedback`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-internal-key": internalKey,
-          },
-          body: JSON.stringify({
-            feedbackId: result.feedbackId,
-            feedbackTitle: title.trim(),
-            feedbackDescription: description?.trim(),
-            feedbackType: type,
-            projectId: gate.projectId,
-            projectName: projectInfo.name,
-            teamId: projectInfo.teamId,
-          }),
-        }).catch((err) => {
-          console.warn("New feedback notification trigger failed:", err);
-        });
-      }
-    } catch (err) {
-      console.warn("Failed to trigger background tasks:", err);
-    }
+    // Post-submission side effects (AI analysis, automation, notifications)
+    // are scheduled inside submitFromWidget via ctx.scheduler (ADR-0002).
 
     // Track feedback submitted event
     captureServerEvent(gate.teamId, "feedback_submitted", {

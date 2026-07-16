@@ -86,51 +86,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       reviewerEmail: reviewerEmail || undefined,
     });
 
-    // Fire-and-forget: trigger AI analysis, automations, and notifications
-    // (mirrors app/api/widget/submit/route.ts)
-    const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
-    const internalKey = process.env.INTERNAL_API_KEY || "";
-    const feedbackId = result.feedbackId;
-
-    fetch(`${baseUrl}/api/ai/auto-analyze`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-internal-key": internalKey,
-      },
-      body: JSON.stringify({ feedbackId, teamId, projectId }),
-    }).catch((err) => {
-      console.warn("Auto-analysis trigger failed:", err);
-    });
-
-    fetch(`${baseUrl}/api/automation/trigger`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-internal-key": internalKey,
-      },
-      body: JSON.stringify({ feedbackId, trigger: "new_feedback" }),
-    }).catch((err) => {
-      console.warn("Automation rules trigger failed:", err);
-    });
-
-    fetch(`${baseUrl}/api/notifications/trigger-new-feedback`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-internal-key": internalKey,
-      },
-      body: JSON.stringify({
-        feedbackId,
-        feedbackTitle: title,
-        feedbackType: type,
-        projectId,
-        teamId,
-      }),
-    }).catch((err) => {
-      console.warn("New feedback notification trigger failed:", err);
-    });
+    // Post-submission side effects (AI analysis, automation, notifications)
+    // are scheduled inside submitFromReview via ctx.scheduler (ADR-0002).
 
     return NextResponse.json({ success: true, ...result });
   } catch (error) {

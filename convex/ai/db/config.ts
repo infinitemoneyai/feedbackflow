@@ -3,7 +3,7 @@
  */
 
 import { v } from "convex/values";
-import { query } from "../../_generated/server";
+import { query, internalQuery } from "../../_generated/server";
 import { verifyTeamAccess } from "./helpers";
 
 /**
@@ -54,7 +54,7 @@ export const getTeamAiConfig = query({
 /**
  * Internal query to get decrypted API key for server-side use
  */
-export const getDecryptedApiKeyInternal = query({
+export const getDecryptedApiKeyInternal = internalQuery({
   args: {
     teamId: v.id("teams"),
     provider: v.union(v.literal("openai"), v.literal("anthropic")),

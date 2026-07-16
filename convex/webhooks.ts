@@ -327,7 +327,7 @@ export const getWebhookById = internalQuery({
  * Trigger a webhook for automation rules (public mutation for API)
  * This creates a log entry and the actual send is done via scheduled action
  */
-export const triggerWebhookForAutomation = mutation({
+export const triggerWebhookForAutomation = internalMutation({
   args: {
     webhookId: v.id("webhooks"),
     feedbackId: v.id("feedback"),
