@@ -9,11 +9,8 @@ import { getOfflineQueue } from "./offline-queue";
 import type { CaptureResult } from "./capture";
 import type { RecordingResult } from "./record";
 import { debug } from "./debug";
-import { TriggerButton } from "./components/TriggerButton";
-import { CornerIndicators } from "./components/CornerIndicators";
 import { Modal } from "./components/Modal";
-import { HoverDetection } from "./components/HoverDetection";
-import { StateManager } from "./components/StateManager";
+import { LauncherVisibility } from "./components/LauncherVisibility";
 
 /**
  * FeedbackFlow Widget Class
@@ -25,11 +22,8 @@ export class FeedbackFlowWidget {
   private root: HTMLElement | null = null;
   
   // Components
-  private triggerButton: TriggerButton;
-  private cornerIndicators: CornerIndicators;
+  private launcher: LauncherVisibility;
   private modal: Modal;
-  private hoverDetection: HoverDetection | null = null;
-  private stateManager: StateManager | null = null;
   
   // UI Components
   private screenshotUI: ScreenshotUI | null = null;
@@ -53,13 +47,11 @@ export class FeedbackFlowWidget {
     };
 
     // Initialize components
-    this.triggerButton = new TriggerButton(
+    this.launcher = new LauncherVisibility(
       this.config,
       () => this.open(),
-      () => this.minimize()
+      () => this.state.isOpen
     );
-
-    this.cornerIndicators = new CornerIndicators(() => this.restore());
 
     this.modal = new Modal(
       this.config,
@@ -80,37 +72,18 @@ export class FeedbackFlowWidget {
     // Create root container
     this.root = createWidgetRoot();
 
-    // Create and append trigger button
-    const buttonElement = this.triggerButton.create();
-    this.root.appendChild(buttonElement);
-
-    // Create and append corner indicators
-    const indicatorElements = this.cornerIndicators.create();
-    indicatorElements.forEach(indicator => this.root?.appendChild(indicator));
+    // Create and append the launcher (trigger button + corner indicators)
+    for (const element of this.launcher.create()) {
+      this.root.appendChild(element);
+    }
 
     // Create and append modal
     const modalElement = this.modal.create();
     this.root.appendChild(modalElement);
 
-    // Initialize state manager
-    this.stateManager = new StateManager(
-      this.triggerButton.getElement(),
-      this.cornerIndicators.getElements()
-    );
-
-    // Initialize hover detection
-    this.hoverDetection = new HoverDetection(
-      this.config,
-      this.triggerButton.getElement(),
-      () => this.stateManager?.getIsMinimized() ?? false,
-      () => this.state.isOpen
-    );
-
-    // Set up event listeners
+    // Set up event listeners and apply initial visibility state
     this.setupEventListeners();
-
-    // Apply initial state
-    this.stateManager.applyInitialState();
+    this.launcher.activate();
 
     // Initialize offline queue to process any pending submissions
     getOfflineQueue(this.config.apiUrl);
@@ -121,10 +94,7 @@ export class FeedbackFlowWidget {
    */
   private setupEventListeners(): void {
     // Set up component event listeners
-    this.triggerButton.setupEventListeners();
-    this.cornerIndicators.setupEventListeners();
     this.modal.setupEventListeners();
-    this.hoverDetection?.setup();
 
     // Escape key to close modal
     document.addEventListener("keydown", (e) => {
@@ -147,7 +117,7 @@ export class FeedbackFlowWidget {
 
     this.state.isOpen = true;
     this.modal.show();
-    this.triggerButton.getTriggerButton()?.setAttribute("aria-expanded", "true");
+    this.launcher.setExpanded(true);
 
     // Focus trap - focus first focusable element
     const firstFocusable = this.modal.getElement()?.querySelector(
@@ -164,24 +134,24 @@ export class FeedbackFlowWidget {
 
     this.state.isOpen = false;
     this.modal.hide();
-    this.triggerButton.getTriggerButton()?.setAttribute("aria-expanded", "false");
+    this.launcher.setExpanded(false);
 
     // Return focus to trigger button
-    this.triggerButton.getTriggerButton()?.focus();
+    this.launcher.focusTrigger();
   }
 
   /**
    * Minimize the widget
    */
   private minimize(): void {
-    this.stateManager?.minimize();
+    this.launcher.minimize();
   }
 
   /**
    * Restore the widget
    */
   private restore(): void {
-    this.stateManager?.restore();
+    this.launcher.restore();
   }
 
   /**
@@ -442,8 +412,7 @@ export class FeedbackFlowWidget {
     this.recordUI = null;
     this.submitUI?.destroy();
     this.submitUI = null;
-    this.hoverDetection?.destroy();
-    this.hoverDetection = null;
+    this.launcher.destroy();
     this.root?.remove();
     document.getElementById("ff-widget-styles")?.remove();
     document.getElementById("ff-screenshot-styles")?.remove();
