@@ -17,6 +17,11 @@ import {
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useAvailableModels } from "@/lib/use-available-models";
+import { useSaveable } from "@/lib/hooks/use-saveable";
+import {
+  QueryBoundary,
+  SettingsSectionSkeleton,
+} from "@/components/ui/query-boundary";
 
 interface AiConfigSectionProps {
   teamId: Id<"teams">;
@@ -37,6 +42,8 @@ export function AiConfigSection({ teamId }: AiConfigSectionProps) {
   const anthropicModels = useAvailableModels(teamId, "anthropic", !!anthropicKey?.isValid);
 
   return (
+    <QueryBoundary data={apiKeys} skeleton={<SettingsSectionSkeleton rows={2} />}>
+      {() => (
     <div className="space-y-6">
       {/* Header */}
       <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
@@ -109,6 +116,8 @@ export function AiConfigSection({ teamId }: AiConfigSectionProps) {
         </div>
       </div>
     </div>
+      )}
+    </QueryBoundary>
   );
 }
 
@@ -164,23 +173,61 @@ function ApiKeyCard({
   const [selectedModel, setSelectedModel] = useState(
     keyData?.model || models[0].id
   );
-  const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [testResult, setTestResult] = useState<{
     valid: boolean;
     error?: string;
   } | null>(null);
-  const [saveError, setSaveError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const {
+    save: performSaveKey,
+    isSaving,
+    error: saveError,
+    clearError,
+  } = useSaveable(
+    useCallback(async () => {
+      // First test the key
+      const testResponse = await fetch("/api/ai/test-key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider, apiKey }),
+      });
+
+      const testResult = await testResponse.json();
+
+      if (!testResult.valid) {
+        setTestResult({ valid: false, error: testResult.error });
+        throw new Error(testResult.error || "Invalid API key");
+      }
+
+      // Save the key with isValid: true since we just validated it
+      await onSave({
+        teamId,
+        provider,
+        apiKey,
+        model: selectedModel,
+        isValid: true,
+      });
+
+      setApiKey("");
+      setTestResult({ valid: true });
+    }, [apiKey, provider, teamId, selectedModel, onSave])
+  );
 
   const hasKey = !!keyData;
 
   // Clear errors when user types
-  const handleApiKeyChange = useCallback((value: string) => {
-    setApiKey(value);
-    setSaveError(null);
-    setTestResult(null);
-  }, []);
+  const handleApiKeyChange = useCallback(
+    (value: string) => {
+      setApiKey(value);
+      setError(null);
+      clearError();
+      setTestResult(null);
+    },
+    [clearError]
+  );
 
   const handleTestConnection = useCallback(async () => {
     // Can't test without a key
@@ -191,7 +238,8 @@ function ApiKeyCard({
 
     setIsTesting(true);
     setTestResult(null);
-    setSaveError(null);
+    setError(null);
+    clearError();
 
     try {
       const response = await fetch("/api/ai/test-key", {
@@ -213,56 +261,21 @@ function ApiKeyCard({
     } finally {
       setIsTesting(false);
     }
-  }, [apiKey, hasKey, provider]);
+  }, [apiKey, hasKey, provider, clearError]);
 
   const handleSaveKey = useCallback(async () => {
     if (!apiKey) return;
 
     // Validate key format
     if (!apiKey.startsWith(keyPrefix)) {
-      setSaveError(`Invalid key format. ${title} keys should start with "${keyPrefix}"`);
+      setError(`Invalid key format. ${title} keys should start with "${keyPrefix}"`);
       return;
     }
 
-    setIsSaving(true);
-    setSaveError(null);
+    setError(null);
     setTestResult(null);
-
-    try {
-      // First test the key
-      const testResponse = await fetch("/api/ai/test-key", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ provider, apiKey }),
-      });
-
-      const testResult = await testResponse.json();
-
-      if (!testResult.valid) {
-        setSaveError(testResult.error || "Invalid API key");
-        setTestResult({ valid: false, error: testResult.error });
-        return;
-      }
-
-      // Save the key with isValid: true since we just validated it
-      await onSave({
-        teamId,
-        provider,
-        apiKey,
-        model: selectedModel,
-        isValid: true,
-      });
-
-      setApiKey("");
-      setTestResult({ valid: true });
-    } catch (error) {
-      setSaveError(
-        error instanceof Error ? error.message : "Failed to save API key"
-      );
-    } finally {
-      setIsSaving(false);
-    }
-  }, [apiKey, keyPrefix, title, provider, teamId, selectedModel, onSave]);
+    await performSaveKey();
+  }, [apiKey, keyPrefix, title, performSaveKey]);
 
   const handleDeleteKey = useCallback(async () => {
     if (!confirm(`Are you sure you want to delete your ${title} API key?`)) {
@@ -408,11 +421,7 @@ function ApiKeyCard({
                   <input
                     type={showKey ? "text" : "password"}
                     value={apiKey}
-                    onChange={(e) => {
-                      setApiKey(e.target.value);
-                      setSaveError(null);
-                      setTestResult(null);
-                    }}
+                    onChange={(e) => handleApiKeyChange(e.target.value)}
                     placeholder={keyPlaceholder}
                     className="w-full rounded border-2 border-stone-200 bg-stone-50 px-4 py-2.5 pr-10 font-mono text-sm transition-colors focus:border-retro-black focus:bg-white focus:outline-none"
                   />
@@ -454,11 +463,7 @@ function ApiKeyCard({
                 <input
                   type={showKey ? "text" : "password"}
                   value={apiKey}
-                  onChange={(e) => {
-                    setApiKey(e.target.value);
-                    setSaveError(null);
-                    setTestResult(null);
-                  }}
+                  onChange={(e) => handleApiKeyChange(e.target.value)}
                   placeholder={keyPlaceholder}
                   className="w-full rounded border-2 border-stone-200 bg-stone-50 px-4 py-2.5 pr-10 font-mono text-sm transition-colors focus:border-retro-black focus:bg-white focus:outline-none"
                 />
@@ -550,7 +555,7 @@ function ApiKeyCard({
         )}
 
         {/* Test result / Error message */}
-        {(testResult || saveError) && (
+        {(testResult || error || saveError) && (
           <div
             className={`mt-4 flex items-center gap-2 rounded border px-4 py-3 text-sm ${
               testResult?.valid
@@ -566,7 +571,7 @@ function ApiKeyCard({
             ) : (
               <>
                 <X className="h-4 w-4" />
-                {saveError || testResult?.error || "Invalid API key"}
+                {error || saveError || testResult?.error || "Invalid API key"}
               </>
             )}
           </div>

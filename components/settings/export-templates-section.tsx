@@ -21,6 +21,11 @@ import {
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { useSaveable } from "@/lib/hooks/use-saveable";
+import {
+  QueryBoundary,
+  SettingsSectionSkeleton,
+} from "@/components/ui/query-boundary";
 
 interface ExportTemplatesSectionProps {
   projectId: Id<"projects">;
@@ -182,7 +187,6 @@ export function ExportTemplatesSection({ projectId }: ExportTemplatesSectionProp
   const [showPreview, setShowPreview] = useState(false);
   const [showVariables, setShowVariables] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -198,6 +202,21 @@ export function ExportTemplatesSection({ projectId }: ExportTemplatesSectionProp
   // Mutations
   const saveTemplateMutation = useMutation(api.exportTemplates.saveExportTemplate);
   const resetTemplateMutation = useMutation(api.exportTemplates.resetExportTemplate);
+
+  const {
+    save: performSave,
+    isSaving,
+    saveSuccess,
+    error: saveError,
+  } = useSaveable(
+    useCallback(
+      async (input: Parameters<typeof saveTemplateMutation>[0]) => {
+        await saveTemplateMutation(input);
+        setHasUnsavedChanges(false);
+      },
+      [saveTemplateMutation]
+    )
+  );
 
   // Update local state when template data changes
   useEffect(() => {
@@ -235,22 +254,14 @@ export function ExportTemplatesSection({ projectId }: ExportTemplatesSectionProp
 
   // Handle save
   const handleSave = useCallback(async () => {
-    setIsSaving(true);
-    try {
-      await saveTemplateMutation({
-        projectId,
-        provider: selectedProvider,
-        name: editedName,
-        template: editedTemplate,
-      });
-      showMessage("success", "Template saved successfully");
-      setHasUnsavedChanges(false);
-    } catch (err) {
-      showMessage("error", err instanceof Error ? err.message : "Failed to save template");
-    } finally {
-      setIsSaving(false);
-    }
-  }, [projectId, selectedProvider, editedName, editedTemplate, saveTemplateMutation, showMessage]);
+    setMessage(null);
+    await performSave({
+      projectId,
+      provider: selectedProvider,
+      name: editedName,
+      template: editedTemplate,
+    });
+  }, [projectId, selectedProvider, editedName, editedTemplate, performSave]);
 
   // Handle reset
   const handleReset = useCallback(async () => {
@@ -293,17 +304,24 @@ export function ExportTemplatesSection({ projectId }: ExportTemplatesSectionProp
     setShowPreview(false);
   }, [hasUnsavedChanges]);
 
-  if (!template || !variables) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-6 w-6 animate-spin text-stone-400" />
-      </div>
-    );
-  }
-
   const providerConfig = PROVIDER_CONFIG[selectedProvider];
 
+  // Local messages (reset/copy) take precedence; otherwise surface the save
+  // lifecycle from useSaveable in the same banner.
+  const banner = message
+    ? message
+    : saveError
+      ? { type: "error" as const, text: saveError }
+      : saveSuccess
+        ? { type: "success" as const, text: "Template saved successfully" }
+        : null;
+
   return (
+    <QueryBoundary
+      data={template && variables ? { template, variables } : undefined}
+      skeleton={<SettingsSectionSkeleton rows={2} />}
+    >
+      {({ template: loadedTemplate, variables: loadedVariables }) => (
     <div className="space-y-6">
       {/* Header */}
       <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
@@ -324,20 +342,20 @@ export function ExportTemplatesSection({ projectId }: ExportTemplatesSectionProp
       </div>
 
       {/* Messages */}
-      {message && (
+      {banner && (
         <div
           className={`flex items-center gap-2 rounded border p-3 text-sm ${
-            message.type === "success"
+            banner.type === "success"
               ? "border-green-200 bg-green-50 text-green-700"
               : "border-red-200 bg-red-50 text-red-700"
           }`}
         >
-          {message.type === "success" ? (
+          {banner.type === "success" ? (
             <Check className="h-4 w-4" />
           ) : (
             <X className="h-4 w-4" />
           )}
-          {message.text}
+          {banner.text}
         </div>
       )}
 
@@ -377,7 +395,7 @@ export function ExportTemplatesSection({ projectId }: ExportTemplatesSectionProp
               className="rounded border border-stone-200 bg-white px-3 py-1.5 text-sm font-medium focus:border-retro-black focus:outline-none"
               placeholder="Template name"
             />
-            {template.isDefault && (
+            {loadedTemplate.isDefault && (
               <span className="rounded bg-stone-200 px-2 py-0.5 text-xs text-stone-500">
                 Default
               </span>
@@ -435,7 +453,7 @@ export function ExportTemplatesSection({ projectId }: ExportTemplatesSectionProp
               Click a variable to copy it. Use <code className="rounded bg-white px-1">{"{{variable}}"}</code> in your template.
             </p>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {variables.map((variable: TemplateVariable) => (
+              {loadedVariables.map((variable: TemplateVariable) => (
                 <button
                   key={variable.name}
                   onClick={() => handleCopyVariable(variable.name)}
@@ -497,7 +515,7 @@ export function ExportTemplatesSection({ projectId }: ExportTemplatesSectionProp
         <div className="flex items-center justify-between border-t border-stone-200 bg-stone-50 px-4 py-3">
           <button
             onClick={handleReset}
-            disabled={isResetting || template.isDefault}
+            disabled={isResetting || loadedTemplate.isDefault}
             className="flex items-center gap-2 rounded border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-600 transition-colors hover:border-stone-400 disabled:opacity-50"
           >
             {isResetting ? (
@@ -530,5 +548,7 @@ export function ExportTemplatesSection({ projectId }: ExportTemplatesSectionProp
         </div>
       </div>
     </div>
+      )}
+    </QueryBoundary>
   );
 }

@@ -18,6 +18,10 @@ import { Id } from "@/convex/_generated/dataModel";
 import { PLANS } from "@/lib/stripe-config";
 import { format } from "date-fns";
 import { Analytics } from "@/lib/posthog-provider";
+import {
+  QueryBoundary,
+  SettingsSectionSkeleton,
+} from "@/components/ui/query-boundary";
 
 interface BillingSectionProps {
   teamId: Id<"teams">;
@@ -86,15 +90,12 @@ export function BillingSection({ teamId }: BillingSectionProps) {
     }
   };
 
-  if (!subscription) {
-    return (
-      <div className="flex items-center justify-center p-12">
-        <Loader2 className="h-6 w-6 animate-spin text-stone-400" />
-      </div>
-    );
-  }
-
   return (
+    <QueryBoundary
+      data={subscription ?? undefined}
+      skeleton={<SettingsSectionSkeleton rows={3} />}
+    >
+      {(loadedSubscription) => (
     <div className="space-y-6">
       {/* Header */}
       <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
@@ -148,7 +149,7 @@ export function BillingSection({ teamId }: BillingSectionProps) {
                       Canceling
                     </span>
                   )}
-                  {subscription.status === "past_due" && (
+                  {loadedSubscription.status === "past_due" && (
                     <span className="rounded border border-red-200 bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700">
                       Past Due
                     </span>
@@ -156,13 +157,13 @@ export function BillingSection({ teamId }: BillingSectionProps) {
                 </div>
                 <p className="text-sm text-stone-500">
                   {isPro
-                    ? `${subscription.seats} seat${subscription.seats > 1 ? "s" : ""} × $${PLANS.pro.pricePerSeat}/month`
+                    ? `${loadedSubscription.seats} seat${loadedSubscription.seats > 1 ? "s" : ""} × $${PLANS.pro.pricePerSeat}/month`
                     : "1 seat, 25 feedback/month"}
                 </p>
               </div>
             </div>
 
-            {isPro && subscription.stripeCustomerId ? (
+            {isPro && loadedSubscription.stripeCustomerId ? (
               <button
                 onClick={handleManageBilling}
                 disabled={loading === "portal"}
@@ -196,7 +197,7 @@ export function BillingSection({ teamId }: BillingSectionProps) {
           </div>
 
           {/* Period info for Pro */}
-          {isPro && subscription.currentPeriodEnd && (
+          {isPro && loadedSubscription.currentPeriodEnd && (
             <div className="mt-4 rounded border border-stone-200 bg-stone-50 p-3">
               <p className="text-sm text-stone-600">
                 {isCanceled ? (
@@ -205,7 +206,7 @@ export function BillingSection({ teamId }: BillingSectionProps) {
                     Your subscription will end on{" "}
                     <span className="font-medium">
                       {format(
-                        new Date(subscription.currentPeriodEnd),
+                        new Date(loadedSubscription.currentPeriodEnd),
                         "MMMM d, yyyy"
                       )}
                     </span>
@@ -216,7 +217,7 @@ export function BillingSection({ teamId }: BillingSectionProps) {
                     Next billing date:{" "}
                     <span className="font-medium">
                       {format(
-                        new Date(subscription.currentPeriodEnd),
+                        new Date(loadedSubscription.currentPeriodEnd),
                         "MMMM d, yyyy"
                       )}
                     </span>
@@ -295,7 +296,7 @@ export function BillingSection({ teamId }: BillingSectionProps) {
                     {usage?.memberCount ?? 0}
                   </span>
                   <span className="text-sm text-stone-500">
-                    / {subscription.seats} seats
+                    / {loadedSubscription.seats} seats
                   </span>
                 </div>
               ) : (
@@ -508,5 +509,7 @@ export function BillingSection({ teamId }: BillingSectionProps) {
         </div>
       )}
     </div>
+      )}
+    </QueryBoundary>
   );
 }
