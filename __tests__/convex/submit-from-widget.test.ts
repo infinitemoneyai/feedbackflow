@@ -168,6 +168,37 @@ describe("submitFromWidget atomic usage enforcement", () => {
     ).rejects.toThrow("Widget is not active");
   });
 
+  it("schedules exactly the three side-effect actions (ADR-0002)", async () => {
+    const t = convexTest(schema, modules);
+    await seed(t);
+
+    await t.mutation(api.feedback.submitFromWidget, submission());
+
+    const scheduled = await t.run(async (ctx) =>
+      ctx.db.system.query("_scheduled_functions").collect()
+    );
+    const names = scheduled.map((job) => job.name).sort();
+    expect(names).toEqual([
+      "sideEffects:autoAnalyze",
+      "sideEffects:notifyNewFeedback",
+      "sideEffects:runAutomation",
+    ]);
+  });
+
+  it("schedules nothing when the submission is rejected", async () => {
+    const t = convexTest(schema, modules);
+    await seed(t, { feedbackCount: FREE_PLAN_FEEDBACK_LIMIT });
+
+    await expect(
+      t.mutation(api.feedback.submitFromWidget, submission())
+    ).rejects.toThrow("Usage limit exceeded");
+
+    const scheduled = await t.run(async (ctx) =>
+      ctx.db.system.query("_scheduled_functions").collect()
+    );
+    expect(scheduled).toEqual([]);
+  });
+
   it("rejects an unknown widget key with unchanged wire message", async () => {
     const t = convexTest(schema, modules);
     await seed(t);

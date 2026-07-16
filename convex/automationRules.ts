@@ -420,61 +420,9 @@ export const hasNotionIntegration = query({
 // =============================================================================
 
 /**
- * Get enabled rules for a project (public query for API)
- */
-export const getEnabledRulesForProjectPublic = query({
-  args: {
-    projectId: v.id("projects"),
-    trigger: triggerValidator,
-  },
-  handler: async (ctx, args) => {
-    // No auth check - this is called from internal API
-    const rules = await ctx.db
-      .query("automationRules")
-      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("isEnabled"), true),
-          q.eq(q.field("trigger"), args.trigger)
-        )
-      )
-      .collect();
-
-    return rules;
-  },
-});
-
-/**
- * Log rule execution (public mutation for API)
- */
-export const logRuleExecutionPublic = mutation({
-  args: {
-    feedbackId: v.id("feedback"),
-    ruleName: v.string(),
-    action: v.string(),
-    status: v.union(v.literal("success"), v.literal("failed")),
-    error: v.optional(v.string()),
-    details: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    // No auth check - this is called from internal API
-    await ctx.db.insert("activityLog", {
-      feedbackId: args.feedbackId,
-      action: "automation_executed",
-      details: {
-        extra: `Rule "${args.ruleName}": ${args.action} - ${args.status}${args.error ? ` (${args.error})` : ""}${args.details ? ` - ${args.details}` : ""}`,
-      },
-      createdAt: Date.now(),
-    });
-
-    return { success: true };
-  },
-});
-
-/**
  * Assign feedback from automation (public mutation for API)
  */
-export const assignFeedbackFromAutomation = mutation({
+export const assignFeedbackFromAutomation = internalMutation({
   args: {
     feedbackId: v.id("feedback"),
     assigneeId: v.id("users"),
@@ -497,7 +445,7 @@ export const assignFeedbackFromAutomation = mutation({
 /**
  * Set priority from automation (public mutation for API)
  */
-export const setPriorityFromAutomation = mutation({
+export const setPriorityFromAutomation = internalMutation({
   args: {
     feedbackId: v.id("feedback"),
     priority: v.union(
@@ -525,7 +473,7 @@ export const setPriorityFromAutomation = mutation({
 /**
  * Add tag from automation (public mutation for API)
  */
-export const addTagFromAutomation = mutation({
+export const addTagFromAutomation = internalMutation({
   args: {
     feedbackId: v.id("feedback"),
     tag: v.string(),

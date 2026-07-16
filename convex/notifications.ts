@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query, internalMutation } from "./_generated/server";
+import { mutation, query, internalMutation, internalQuery } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { getAuthUser, requireUser } from "./authz";
 
@@ -46,7 +46,7 @@ export const getNotificationPreferences = query({
 /**
  * Get notification preferences by user ID (for internal use)
  */
-export const getPreferencesByUserId = query({
+export const getPreferencesByUserId = internalQuery({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
     return await ctx.db
@@ -201,114 +201,10 @@ export const createNotification = internalMutation({
 });
 
 /**
- * Create a notification record (public mutation for API routes)
- * This can be called from Next.js API routes
- */
-export const createNotificationPublic = mutation({
-  args: {
-    userId: v.id("users"),
-    type: v.union(
-      v.literal("new_feedback"),
-      v.literal("assignment"),
-      v.literal("comment"),
-      v.literal("mention"),
-      v.literal("export_complete"),
-      v.literal("export_failed")
-    ),
-    title: v.string(),
-    body: v.optional(v.string()),
-    feedbackId: v.optional(v.id("feedback")),
-  },
-  handler: async (ctx, args) => {
-    // Get user preferences
-    const prefs = await ctx.db
-      .query("notificationPreferences")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
-      .first();
-
-    // Check if user has this notification type enabled for in-app
-    const eventMap: Record<NotificationType, string> = {
-      new_feedback: "newFeedback",
-      assignment: "assignment",
-      comment: "comments",
-      mention: "mentions",
-      export_complete: "exports",
-      export_failed: "exports",
-    };
-
-    // Default to enabled if no preferences set
-    const shouldNotify =
-      !prefs ||
-      prefs.inAppEnabled !== false ||
-      (prefs.events && (prefs.events as any)[eventMap[args.type]] !== false);
-
-    if (!shouldNotify) {
-      return null;
-    }
-
-    // Create in-app notification
-    const id = await ctx.db.insert("notifications", {
-      userId: args.userId,
-      type: args.type,
-      title: args.title,
-      body: args.body,
-      feedbackId: args.feedbackId,
-      isRead: false,
-      createdAt: Date.now(),
-    });
-
-    return id;
-  },
-});
-
-/**
  * Queue a notification for email digest
  * Called when email frequency is daily/weekly
  */
 export const queueForDigest = internalMutation({
-  args: {
-    userId: v.id("users"),
-    notificationType: v.union(
-      v.literal("new_feedback"),
-      v.literal("assignment"),
-      v.literal("comment"),
-      v.literal("mention"),
-      v.literal("export_complete"),
-      v.literal("export_failed")
-    ),
-    feedbackId: v.optional(v.id("feedback")),
-    title: v.string(),
-    body: v.optional(v.string()),
-    projectName: v.optional(v.string()),
-    metadata: v.optional(
-      v.object({
-        feedbackTitle: v.optional(v.string()),
-        actorName: v.optional(v.string()),
-        commentPreview: v.optional(v.string()),
-      })
-    ),
-  },
-  handler: async (ctx, args) => {
-    const id = await ctx.db.insert("emailDigestQueue", {
-      userId: args.userId,
-      notificationType: args.notificationType,
-      feedbackId: args.feedbackId,
-      title: args.title,
-      body: args.body,
-      projectName: args.projectName,
-      metadata: args.metadata,
-      createdAt: Date.now(),
-      sentAt: undefined,
-    });
-    return id;
-  },
-});
-
-/**
- * Public mutation wrapper for queueForDigest
- * Called from API routes (no auth required as it's called from internal API)
- */
-export const queueForDigestPublic = mutation({
   args: {
     userId: v.id("users"),
     notificationType: v.union(

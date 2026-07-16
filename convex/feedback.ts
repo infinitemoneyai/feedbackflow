@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { getTeamMembership, requireTeamMember } from "./authz";
 import { evaluateFeedbackAllowance } from "./billing";
 
@@ -176,6 +177,25 @@ export const submitFromWidget = mutation({
       });
     }
 
+    // Dispatch post-submission side effects via the scheduler (ADR-0002)
+    await ctx.scheduler.runAfter(0, internal.sideEffects.autoAnalyze, {
+      feedbackId,
+      teamId: project.teamId,
+      projectId: widget.projectId,
+    });
+    await ctx.scheduler.runAfter(0, internal.sideEffects.runAutomation, {
+      feedbackId,
+      trigger: "new_feedback",
+    });
+    await ctx.scheduler.runAfter(0, internal.sideEffects.notifyNewFeedback, {
+      feedbackId,
+      feedbackTitle: args.title,
+      feedbackDescription: args.description,
+      feedbackType: args.type,
+      projectName: project.name,
+      teamId: project.teamId,
+    });
+
     // Generate feedback reference (e.g., FF-0001)
     const feedbackRef = `FF-${ticketNumber.toString().padStart(4, "0")}`;
 
@@ -316,6 +336,25 @@ export const submitFromReview = mutation({
         updatedAt: Date.now(),
       });
     }
+
+    // Dispatch post-submission side effects via the scheduler (ADR-0002)
+    await ctx.scheduler.runAfter(0, internal.sideEffects.autoAnalyze, {
+      feedbackId,
+      teamId: args.teamId,
+      projectId: args.projectId,
+    });
+    await ctx.scheduler.runAfter(0, internal.sideEffects.runAutomation, {
+      feedbackId,
+      trigger: "new_feedback",
+    });
+    await ctx.scheduler.runAfter(0, internal.sideEffects.notifyNewFeedback, {
+      feedbackId,
+      feedbackTitle: args.title,
+      feedbackDescription: args.description,
+      feedbackType: args.type,
+      projectName: project.name,
+      teamId: args.teamId,
+    });
 
     // Generate feedback reference
     const feedbackRef = `FF-${ticketNumber.toString().padStart(4, "0")}`;
