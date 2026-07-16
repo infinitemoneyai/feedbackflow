@@ -19,23 +19,24 @@ function getPositionStyles(position: WidgetPosition): string {
 }
 
 /**
- * Generate hover peek styles based on widget position
+ * Display Mode styles (see CONTEXT.md). Always-Visible is the default —
+ * the launcher rests on screen. Auto-Hide rests mostly off-screen and
+ * slides in on hover-peek or during the Entrance Reveal.
  */
-function getHoverPeekStyles(position: WidgetPosition): string {
+function getDisplayModeStyles(position: WidgetPosition): string {
   const isBottom = position.includes('bottom');
-  const isRight = position.includes('right');
-  
-  // Default hidden state - button slides slightly off screen
-  const hiddenTransform = isBottom 
-    ? 'translateY(60px)' 
+
+  const hiddenTransform = isBottom
+    ? 'translateY(60px)'
     : 'translateY(-60px)';
-  
+
   return `
-    .ff-button-container {
+    .ff-button-container.ff-auto-hide {
       transform: ${hiddenTransform};
     }
 
-    .ff-button-container.ff-hover-peek {
+    .ff-button-container.ff-auto-hide.ff-hover-peek,
+    .ff-button-container.ff-auto-hide.ff-entrance-reveal {
       transform: translateY(0);
     }
   `;
@@ -46,7 +47,7 @@ function getHoverPeekStyles(position: WidgetPosition): string {
  */
 export function generateStyles(config: WidgetConfig): string {
   const positionStyles = getPositionStyles(config.position);
-  const hoverPeekStyles = getHoverPeekStyles(config.position);
+  const displayModeStyles = getDisplayModeStyles(config.position);
 
   return `
     /* FeedbackFlow Widget Styles */
@@ -80,8 +81,8 @@ export function generateStyles(config: WidgetConfig): string {
       pointer-events: none;
     }
 
-    /* Hover peek effect - slides up when mouse is near */
-    ${hoverPeekStyles}
+    /* Display Mode: Auto-Hide resting state + hover-peek/Entrance Reveal */
+    ${displayModeStyles}
 
     /* Floating Button */
     .ff-trigger-button {
