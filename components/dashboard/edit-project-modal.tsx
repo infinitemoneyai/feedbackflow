@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { X, Loader2, Trash2 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { useSaveable } from "@/lib/hooks/use-saveable";
 import { cn } from "@/lib/utils";
 
 interface EditProjectModalProps {
@@ -30,13 +31,37 @@ export function EditProjectModal({
   const [siteUrl, setSiteUrl] = useState("");
   const [projectType, setProjectType] = useState<ProjectType>("web_app");
   const [description, setDescription] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const updateProject = useMutation(api.projects.updateProject);
   const deleteProject = useMutation(api.projects.deleteProject);
   const project = useQuery(api.projects.getProject, { projectId });
+
+  const {
+    save: performUpdate,
+    isSaving: isLoading,
+    error: saveError,
+    clearError,
+  } = useSaveable(
+    useCallback(
+      async (input: Parameters<typeof updateProject>[0]) => {
+        try {
+          await updateProject(input);
+
+          // Success - call callback
+          if (onSuccess) {
+            onSuccess();
+          }
+        } catch (err) {
+          throw err instanceof Error
+            ? err
+            : new Error("Failed to update project");
+        }
+      },
+      [updateProject, onSuccess]
+    )
+  );
 
   // Populate form when project data loads
   useEffect(() => {
@@ -53,32 +78,23 @@ export function EditProjectModal({
     e.preventDefault();
     if (!projectName.trim()) return;
 
-    setIsLoading(true);
     setError(null);
 
-    try {
-      // Ensure URL has protocol if provided
-      let formattedUrl = siteUrl.trim();
-      if (formattedUrl && !formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
-        formattedUrl = `https://${formattedUrl}`;
-      }
+    // Ensure URL has protocol if provided
+    let formattedUrl = siteUrl.trim();
+    if (formattedUrl && !formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
+      formattedUrl = `https://${formattedUrl}`;
+    }
 
-      await updateProject({
-        projectId,
-        name: projectName.trim(),
-        siteUrl: formattedUrl || undefined,
-        projectType,
-        description: description.trim() || undefined,
-      });
-
-      // Success - call callback and close
-      if (onSuccess) {
-        onSuccess();
-      }
+    const ok = await performUpdate({
+      projectId,
+      name: projectName.trim(),
+      siteUrl: formattedUrl || undefined,
+      projectType,
+      description: description.trim() || undefined,
+    });
+    if (ok) {
       handleClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update project");
-      setIsLoading(false);
     }
   };
 
@@ -91,6 +107,7 @@ export function EditProjectModal({
 
     setIsDeleting(true);
     setError(null);
+    clearError();
 
     try {
       await deleteProject({ projectId });
@@ -109,6 +126,7 @@ export function EditProjectModal({
   const handleClose = () => {
     if (!isLoading && !isDeleting) {
       setError(null);
+      clearError();
       onClose();
     }
   };
@@ -148,9 +166,9 @@ export function EditProjectModal({
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Error message */}
-          {error && (
+          {(error || saveError) && (
             <div className="rounded border-2 border-retro-red bg-retro-red/10 p-3 text-sm text-retro-red">
-              {error}
+              {error || saveError}
             </div>
           )}
 

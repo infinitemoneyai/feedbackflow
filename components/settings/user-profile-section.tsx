@@ -18,6 +18,11 @@ import {
   Link,
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
+import { useSaveable } from "@/lib/hooks/use-saveable";
+import {
+  QueryBoundary,
+  SettingsSectionSkeleton,
+} from "@/components/ui/query-boundary";
 
 export function UserProfileSection() {
   const { user: clerkUser, isLoaded: isClerkLoaded } = useUser();
@@ -32,7 +37,6 @@ export function UserProfileSection() {
   const [avatarUrl, setAvatarUrl] = useState("");
 
   // UI state
-  const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
@@ -65,23 +69,26 @@ export function UserProfileSection() {
     }
   }, [currentUser]);
 
-  const handleSaveProfile = useCallback(async () => {
-    setIsSaving(true);
-    setError(null);
-
-    try {
+  const {
+    save: performSaveProfile,
+    isSaving,
+    saveSuccess,
+    error: saveError,
+    clearError,
+  } = useSaveable(
+    useCallback(async () => {
       await updateProfile({
         name: name.trim() || undefined,
         avatar: avatarUrl.trim() || undefined,
       });
       setIsEditing(false);
-      showMessage("Profile updated successfully");
-    } catch (err) {
-      showMessage(err instanceof Error ? err.message : "Failed to update profile", true);
-    } finally {
-      setIsSaving(false);
-    }
-  }, [name, avatarUrl, updateProfile, showMessage]);
+    }, [name, avatarUrl, updateProfile])
+  );
+
+  const handleSaveProfile = useCallback(async () => {
+    setError(null);
+    await performSaveProfile();
+  }, [performSaveProfile]);
 
   const handleCancelEditing = useCallback(() => {
     setIsEditing(false);
@@ -90,7 +97,8 @@ export function UserProfileSection() {
       setAvatarUrl(currentUser.avatar || "");
     }
     setError(null);
-  }, [currentUser]);
+    clearError();
+  }, [currentUser, clearError]);
 
   const handleOpenClerkProfile = useCallback(() => {
     openUserProfile();
@@ -118,28 +126,26 @@ export function UserProfileSection() {
     }
   }, [deleteConfirmText, deleteUser, signOut, showMessage]);
 
-  if (!isClerkLoaded || currentUser === undefined) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-6 w-6 animate-spin text-stone-400" />
-      </div>
-    );
-  }
-
-  if (!clerkUser || !currentUser) {
-    return (
-      <div className="rounded border-2 border-stone-200 bg-white p-8 text-center">
-        <p className="text-stone-600">Unable to load profile</p>
-      </div>
-    );
-  }
-
-  // Get connected accounts from Clerk
-  const connectedAccounts = clerkUser.externalAccounts || [];
-  const primaryEmail = clerkUser.primaryEmailAddress?.emailAddress || currentUser.email;
-  const hasPasswordAuth = clerkUser.passwordEnabled;
-
   return (
+    <QueryBoundary
+      data={isClerkLoaded ? currentUser : undefined}
+      skeleton={<SettingsSectionSkeleton rows={4} />}
+    >
+      {(currentUser) => {
+        if (!clerkUser || !currentUser) {
+          return (
+            <div className="rounded border-2 border-stone-200 bg-white p-8 text-center">
+              <p className="text-stone-600">Unable to load profile</p>
+            </div>
+          );
+        }
+
+        // Get connected accounts from Clerk
+        const connectedAccounts = clerkUser.externalAccounts || [];
+        const primaryEmail = clerkUser.primaryEmailAddress?.emailAddress || currentUser.email;
+        const hasPasswordAuth = clerkUser.passwordEnabled;
+
+        return (
     <div className="space-y-6">
       {/* Header */}
       <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
@@ -159,16 +165,16 @@ export function UserProfileSection() {
       </div>
 
       {/* Success/Error Messages */}
-      {success && (
+      {(success || saveSuccess) && (
         <div className="flex items-center gap-2 rounded border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
           <Check className="h-4 w-4" />
-          {success}
+          {success || "Profile updated successfully"}
         </div>
       )}
-      {error && (
+      {(error || saveError) && (
         <div className="flex items-center gap-2 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           <X className="h-4 w-4" />
-          {error}
+          {error || saveError}
         </div>
       )}
 
@@ -552,5 +558,8 @@ export function UserProfileSection() {
         </div>
       </div>
     </div>
+        );
+      }}
+    </QueryBoundary>
   );
 }

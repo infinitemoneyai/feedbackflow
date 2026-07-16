@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { useSaveable } from "@/lib/hooks/use-saveable";
 import { cn } from "@/lib/utils";
 
 interface AIConversationSectionProps {
@@ -240,8 +241,6 @@ export function AIConversationSection({
   onCopyToTicketDraft,
 }: AIConversationSectionProps) {
   const [isExpanded, setIsExpanded] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Get AI configuration for the team
@@ -265,29 +264,41 @@ export function AIConversationSection({
     }
   }, [conversationHistory?.length]);
 
+  // Sending a message is a fire-once-await save shape: the response arrives
+  // via the conversation history query, not progressive streaming.
+  const {
+    save: performSend,
+    isSaving: isLoading,
+    error,
+  } = useSaveable(
+    useCallback(
+      async (message: string) => {
+        try {
+          const result = await sendMessage({
+            feedbackId,
+            teamId,
+            userMessage: message,
+          });
+
+          if (!result.success) {
+            throw new Error(result.error || "Failed to send message");
+          }
+        } catch (err) {
+          throw err instanceof Error
+            ? err
+            : new Error("Failed to send message");
+        }
+      },
+      [feedbackId, teamId, sendMessage]
+    )
+  );
+
   // Handle sending a message
   const handleSendMessage = useCallback(
     async (message: string) => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const result = await sendMessage({
-          feedbackId,
-          teamId,
-          userMessage: message,
-        });
-
-        if (!result.success) {
-          setError(result.error || "Failed to send message");
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to send message");
-      } finally {
-        setIsLoading(false);
-      }
+      await performSend(message);
     },
-    [feedbackId, teamId, sendMessage]
+    [performSend]
   );
 
   // Handle clearing conversation history

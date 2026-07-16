@@ -17,6 +17,11 @@ import {
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
+import { useSaveable } from "@/lib/hooks/use-saveable";
+import {
+  QueryBoundary,
+  SettingsSectionSkeleton,
+} from "@/components/ui/query-boundary";
 
 interface AutomationRulesSectionProps {
   teamId: Id<"teams">;
@@ -135,8 +140,12 @@ export function AutomationRulesSection({ teamId }: AutomationRulesSectionProps) 
 
   const [isAdding, setIsAdding] = useState(false);
   const [expandedRule, setExpandedRule] = useState<Id<"automationRules"> | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
+  const {
+    save: performCreate,
+    isSaving,
+    error: saveError,
+    clearError,
+  } = useSaveable(createRule);
 
   // New rule form state
   const [newName, setNewName] = useState("");
@@ -151,33 +160,26 @@ export function AutomationRulesSection({ teamId }: AutomationRulesSectionProps) 
     setNewConditions([]);
     setNewAction("set_priority");
     setNewActionConfig({});
-    setSaveError(null);
+    clearError();
   };
 
   const handleCreate = useCallback(async () => {
     if (!newName.trim() || !projectId) return;
 
-    setIsSaving(true);
-    setSaveError(null);
+    const created = await performCreate({
+      projectId,
+      name: newName.trim(),
+      trigger: newTrigger,
+      conditions: newConditions,
+      action: newAction,
+      actionConfig: newActionConfig,
+    });
 
-    try {
-      await createRule({
-        projectId,
-        name: newName.trim(),
-        trigger: newTrigger,
-        conditions: newConditions,
-        action: newAction,
-        actionConfig: newActionConfig,
-      });
-
+    if (created) {
       resetForm();
       setIsAdding(false);
-    } catch (error) {
-      setSaveError(error instanceof Error ? error.message : "Failed to create rule");
-    } finally {
-      setIsSaving(false);
     }
-  }, [newName, projectId, newTrigger, newConditions, newAction, newActionConfig, createRule]);
+  }, [newName, projectId, newTrigger, newConditions, newAction, newActionConfig, performCreate]);
 
   const handleToggleEnabled = async (ruleId: Id<"automationRules">, isEnabled: boolean) => {
     try {
@@ -228,26 +230,20 @@ export function AutomationRulesSection({ teamId }: AutomationRulesSectionProps) 
     }
   };
 
-  if (!projects) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-6 w-6 animate-spin text-stone-400" />
-      </div>
-    );
-  }
-
-  if (projects.length === 0) {
-    return (
-      <div className="rounded border-2 border-dashed border-stone-300 bg-stone-50 p-8 text-center">
-        <Zap className="mx-auto h-12 w-12 text-stone-300" />
-        <p className="mt-4 text-sm text-stone-500">
-          No projects found. Create a project first to configure automation rules.
-        </p>
-      </div>
-    );
-  }
-
   return (
+    <QueryBoundary
+      data={projects}
+      skeleton={<SettingsSectionSkeleton rows={2} />}
+    >
+      {(loadedProjects) =>
+        loadedProjects.length === 0 ? (
+          <div className="rounded border-2 border-dashed border-stone-300 bg-stone-50 p-8 text-center">
+            <Zap className="mx-auto h-12 w-12 text-stone-300" />
+            <p className="mt-4 text-sm text-stone-500">
+              No projects found. Create a project first to configure automation rules.
+            </p>
+          </div>
+        ) : (
     <div className="space-y-4">
       {/* Header Card */}
       <div className="rounded border-2 border-retro-black bg-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
@@ -286,7 +282,7 @@ export function AutomationRulesSection({ teamId }: AutomationRulesSectionProps) 
               onChange={(e) => setSelectedProjectId(e.target.value as Id<"projects">)}
               className="w-full rounded border-2 border-stone-200 bg-stone-50 px-4 py-2.5 text-sm transition-colors focus:border-retro-black focus:bg-white focus:outline-none"
             >
-              {projects.map((project: ProjectResult) => (
+              {loadedProjects.map((project: ProjectResult) => (
                 <option key={project._id} value={project._id}>
                   {project.name}
                 </option>
@@ -318,7 +314,7 @@ export function AutomationRulesSection({ teamId }: AutomationRulesSectionProps) 
                 value={newName}
                 onChange={(e) => {
                   setNewName(e.target.value);
-                  setSaveError(null);
+                  clearError();
                 }}
                 placeholder="e.g., Auto-export bugs to Linear"
                 className="w-full rounded border-2 border-stone-200 bg-stone-50 px-4 py-2.5 text-sm transition-colors focus:border-retro-black focus:bg-white focus:outline-none"
@@ -616,6 +612,9 @@ export function AutomationRulesSection({ teamId }: AutomationRulesSectionProps) 
         </div>
       )}
     </div>
+        )
+      }
+    </QueryBoundary>
   );
 }
 

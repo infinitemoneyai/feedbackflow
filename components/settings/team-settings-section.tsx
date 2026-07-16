@@ -22,6 +22,11 @@ import {
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { UpgradeModal } from "./upgrade-modal";
+import { useSaveable } from "@/lib/hooks/use-saveable";
+import {
+  QueryBoundary,
+  SettingsSectionSkeleton,
+} from "@/components/ui/query-boundary";
 
 interface TeamSettingsSectionProps {
   teamId: Id<"teams">;
@@ -49,7 +54,6 @@ export function TeamSettingsSection({ teamId }: TeamSettingsSectionProps) {
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
   // UI state
-  const [isSavingTeam, setIsSavingTeam] = useState(false);
   const [isInviting, setIsInviting] = useState(false);
   const [changingRoleFor, setChangingRoleFor] = useState<Id<"users"> | null>(null);
   const [removingMember, setRemovingMember] = useState<Id<"users"> | null>(null);
@@ -77,23 +81,26 @@ export function TeamSettingsSection({ teamId }: TeamSettingsSectionProps) {
     }
   }, [team]);
 
+  const {
+    save: performSaveTeam,
+    isSaving: isSavingTeam,
+    saveSuccess: teamSaveSuccess,
+    error: saveError,
+  } = useSaveable(
+    useCallback(async () => {
+      await updateTeamMutation({ teamId, name: teamName.trim() });
+      setIsEditingTeam(false);
+    }, [teamId, teamName, updateTeamMutation])
+  );
+
   const handleSaveTeam = useCallback(async () => {
     if (!teamName.trim()) {
       showMessage("Team name is required", true);
       return;
     }
 
-    setIsSavingTeam(true);
-    try {
-      await updateTeamMutation({ teamId, name: teamName.trim() });
-      setIsEditingTeam(false);
-      showMessage("Team updated successfully");
-    } catch (err) {
-      showMessage(err instanceof Error ? err.message : "Failed to update team", true);
-    } finally {
-      setIsSavingTeam(false);
-    }
-  }, [teamId, teamName, updateTeamMutation, showMessage]);
+    await performSaveTeam();
+  }, [teamName, performSaveTeam, showMessage]);
 
   const handleInvite = useCallback(async () => {
     if (!inviteEmail.trim()) {
@@ -221,18 +228,16 @@ export function TeamSettingsSection({ teamId }: TeamSettingsSectionProps) {
     }
   }, [teamId, team?.name, deleteConfirmText, deleteTeamMutation, showMessage]);
 
-  if (!team || !members) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-6 w-6 animate-spin text-stone-400" />
-      </div>
-    );
-  }
-
-  const isAdmin = team.currentUserRole === "admin";
-  const isOwner = team.isOwner;
-
   return (
+    <QueryBoundary
+      data={team && members ? { team, members } : undefined}
+      skeleton={<SettingsSectionSkeleton rows={4} />}
+    >
+      {({ team, members }) => {
+        const isAdmin = team.currentUserRole === "admin";
+        const isOwner = team.isOwner;
+
+        return (
     <>
       {/* Upgrade Modal */}
       <UpgradeModal
@@ -261,16 +266,16 @@ export function TeamSettingsSection({ teamId }: TeamSettingsSectionProps) {
       </div>
 
       {/* Success/Error Messages */}
-      {success && (
+      {(success || teamSaveSuccess) && (
         <div className="flex items-center gap-2 rounded border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
           <Check className="h-4 w-4" />
-          {success}
+          {success || "Team updated successfully"}
         </div>
       )}
-      {error && (
+      {(error || saveError) && (
         <div className="flex items-center gap-2 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           <X className="h-4 w-4" />
-          {error}
+          {error || saveError}
         </div>
       )}
 
@@ -623,5 +628,8 @@ export function TeamSettingsSection({ teamId }: TeamSettingsSectionProps) {
       )}
       </div>
     </>
+        );
+      }}
+    </QueryBoundary>
   );
 }
