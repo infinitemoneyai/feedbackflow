@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { api } from "@/convex/_generated/api";
-import { useStoreUser } from "@/lib/hooks/use-store-user";
+import { useOnboardingFlow } from "@/lib/hooks/use-onboarding-flow";
 import { OnboardingStepTeam } from "@/components/onboarding/onboarding-step-team";
 import { OnboardingStepWalkthrough } from "@/components/onboarding/onboarding-step-walkthrough";
 import { OnboardingStepProject } from "@/components/onboarding/onboarding-step-project";
@@ -12,118 +10,70 @@ import { OnboardingProgress } from "@/components/onboarding/onboarding-progress"
 import { LegalAcceptanceModal } from "@/components/auth/legal-acceptance-modal";
 import { Id } from "@/convex/_generated/dataModel";
 
-const TERMS_VERSION = "2026-01-26";
-const PRIVACY_VERSION = "2026-01-26";
+/**
+ * Content-shaped skeleton for the onboarding screen: progress dots plus a
+ * step-card placeholder (house rule: never a bare spinner).
+ */
+function OnboardingSkeleton(): ReactNode {
+  return (
+    <div
+      className="flex min-h-screen flex-col items-center justify-center p-4"
+      role="status"
+      aria-label="Loading onboarding"
+      data-testid="onboarding-skeleton"
+    >
+      <div className="flex items-center gap-2">
+        {Array.from({ length: 7 }, (_, index) => (
+          <div
+            key={index}
+            className="h-2.5 w-2.5 animate-pulse rounded-full bg-stone-200"
+          />
+        ))}
+      </div>
+      <div className="mt-8 w-full max-w-lg border-2 border-stone-200 bg-white p-8">
+        <div className="h-7 w-56 animate-pulse rounded bg-stone-200" />
+        <div className="mt-3 h-4 w-72 animate-pulse rounded bg-stone-100" />
+        <div className="mt-6 h-12 w-full animate-pulse rounded bg-stone-100" />
+        <div className="mt-4 h-12 w-full animate-pulse rounded bg-stone-100" />
+      </div>
+    </div>
+  );
+}
 
-export default function OnboardingPage() {
+export default function OnboardingPage(): ReactNode {
   const router = useRouter();
-  const { user, isLoaded, isUserSynced } = useStoreUser();
-  
-  // Only query onboarding state after user is synced to Convex
-  const onboardingState = useQuery(
-    api.onboarding.getOnboardingState,
-    user && isUserSynced ? {} : "skip"
-  );
-  const hasAcceptedTerms = useQuery(
-    api.users.hasAcceptedLegalTerms,
-    user && isUserSynced
-      ? { requiredTermsVersion: TERMS_VERSION, requiredPrivacyVersion: PRIVACY_VERSION }
-      : "skip"
-  );
-  const startOnboarding = useMutation(api.onboarding.startOnboarding);
-  const goToStep = useMutation(api.onboarding.goToStep);
-
+  const flow = useOnboardingFlow();
   const [teamId, setTeamId] = useState<Id<"teams"> | null>(null);
-  const [showLegalModal, setShowLegalModal] = useState(false);
 
-  const handleStepClick = async (targetStep: number) => {
-    await goToStep({ step: targetStep });
-  };
-
-  // Redirect to sign-in if not authenticated
+  const redirectTo = flow.status === "redirect" ? flow.to : null;
   useEffect(() => {
-    if (isLoaded && !user) {
-      router.push("/sign-in");
+    if (redirectTo) {
+      router.replace(redirectTo);
     }
-  }, [isLoaded, user, router]);
+  }, [redirectTo, router]);
 
-  useEffect(() => {
-    // Check if user needs to accept legal terms first
-    if (hasAcceptedTerms === false && !showLegalModal) {
-      setShowLegalModal(true);
-    }
-  }, [hasAcceptedTerms, showLegalModal]);
-
-  useEffect(() => {
-    // Start onboarding if user needs it (never started, no completedAt)
-    // Only start if they've accepted legal terms
-    if (onboardingState?.needsOnboarding && hasAcceptedTerms) {
-      startOnboarding();
-    }
-  }, [onboardingState, hasAcceptedTerms, startOnboarding]);
-
-  // Show loading while auth is loading or user is syncing
-  if (!isLoaded || (user && !isUserSynced)) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-pulse font-mono text-sm text-stone-500">Loading...</div>
-      </div>
-    );
+  if (flow.status === "loading" || flow.status === "redirect") {
+    return <OnboardingSkeleton />;
   }
 
-  // Show loading while onboarding state is loading
-  if (onboardingState === undefined || hasAcceptedTerms === undefined) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-pulse font-mono text-sm text-stone-500">Loading...</div>
-      </div>
-    );
+  if (flow.status === "legal") {
+    return <LegalAcceptanceModal onAccept={flow.onAccept} />;
   }
-
-  // If user record not found in Convex, redirect to sign-in
-  if (onboardingState === null) {
-    router.push("/sign-in");
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-pulse font-mono text-sm text-stone-500">Redirecting...</div>
-      </div>
-    );
-  }
-
-  // Redirect already-onboarded users to dashboard immediately
-  // This prevents step components from rendering for completed users
-  if (onboardingState.isComplete || (onboardingState.step && onboardingState.step >= 4)) {
-    router.push("/dashboard");
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-pulse font-mono text-sm text-stone-500">Redirecting...</div>
-      </div>
-    );
-  }
-
-  // Show legal acceptance modal if not accepted
-  if (showLegalModal && hasAcceptedTerms === false) {
-    return <LegalAcceptanceModal onAccept={() => setShowLegalModal(false)} />;
-  }
-
-  const currentStep = onboardingState.step ?? 1;
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4">
-      <OnboardingProgress 
-        currentStep={currentStep} 
-        totalSteps={7} 
-        onStepClick={handleStepClick}
+      <OnboardingProgress
+        currentStep={flow.step}
+        totalSteps={7}
+        onStepClick={flow.onStepClick}
       />
 
       <div className="mt-8 w-full max-w-lg">
-        {currentStep === 1 && (
+        {flow.step === 1 && (
           <OnboardingStepTeam onComplete={(id) => setTeamId(id)} />
         )}
-        {currentStep === 2 && <OnboardingStepWalkthrough />}
-        {currentStep === 3 && teamId && (
-          <OnboardingStepProject teamId={teamId} />
-        )}
+        {flow.step === 2 && <OnboardingStepWalkthrough />}
+        {flow.step === 3 && teamId && <OnboardingStepProject teamId={teamId} />}
       </div>
     </div>
   );
