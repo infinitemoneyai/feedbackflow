@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
+import { requireTeamMember, requireUser, TeamMemberResult } from "./authz";
 
 /**
  * GDPR Compliance Functions for Admin Operations
@@ -16,28 +17,16 @@ export const exportTeamData = query({
     teamId: v.id("teams"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return { success: false, error: "Unauthenticated" };
+    let auth: TeamMemberResult;
+    try {
+      auth = await requireTeamMember(ctx, args.teamId);
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unauthenticated",
+      };
     }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return { success: false, error: "User not found" };
-    }
-
-    // Check if user is admin of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), args.teamId))
-      .first();
-
-    if (!membership || membership.role !== "admin") {
+    if (auth.membership.role !== "admin") {
       return { success: false, error: "Only admins can export team data" };
     }
 
@@ -210,34 +199,13 @@ export const deleteProjectData = mutation({
       throw new Error("You must confirm the deletion request");
     }
 
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    // Get the project
     const project = await ctx.db.get(args.projectId);
     if (!project) {
       throw new Error("Project not found");
     }
 
-    // Check if user is admin of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), project.teamId))
-      .first();
-
-    if (!membership || membership.role !== "admin") {
+    const { membership } = await requireTeamMember(ctx, project.teamId);
+    if (membership.role !== "admin") {
       throw new Error("Only admins can delete project data");
     }
 
@@ -435,19 +403,7 @@ export const deleteTeamData = mutation({
       throw new Error("You must confirm the deletion request");
     }
 
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await requireUser(ctx);
 
     // Get the team
     const team = await ctx.db.get(args.teamId);

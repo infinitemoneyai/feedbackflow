@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query, internalQuery } from "./_generated/server";
 import { Doc } from "./_generated/dataModel";
+import { getTeamMembership, requireTeamMember } from "./authz";
 
 /**
  * Generate a secure random API key
@@ -67,29 +68,8 @@ export const createApiKey = mutation({
     expiresAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    // Get the current user
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    // Check if user is admin of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), args.teamId))
-      .first();
-
-    if (!membership || membership.role !== "admin") {
+    const { user, membership } = await requireTeamMember(ctx, args.teamId);
+    if (membership.role !== "admin") {
       throw new Error("Only admins can create API keys");
     }
 
@@ -128,29 +108,8 @@ export const listApiKeys = query({
     teamId: v.id("teams"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
-    // Get the current user
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return [];
-    }
-
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), args.teamId))
-      .first();
-
-    if (!membership) {
+    const member = await getTeamMembership(ctx, args.teamId);
+    if (!member) {
       return [];
     }
 
@@ -195,21 +154,6 @@ export const revokeApiKey = mutation({
     keyId: v.id("restApiKeys"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    // Get the current user
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     // Get the API key
     const apiKey = await ctx.db.get(args.keyId);
     if (!apiKey) {
@@ -217,13 +161,8 @@ export const revokeApiKey = mutation({
     }
 
     // Check if user is admin of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), apiKey.teamId))
-      .first();
-
-    if (!membership || membership.role !== "admin") {
+    const { membership } = await requireTeamMember(ctx, apiKey.teamId);
+    if (membership.role !== "admin") {
       throw new Error("Only admins can revoke API keys");
     }
 
@@ -242,21 +181,6 @@ export const deleteApiKey = mutation({
     keyId: v.id("restApiKeys"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    // Get the current user
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     // Get the API key
     const apiKey = await ctx.db.get(args.keyId);
     if (!apiKey) {
@@ -264,13 +188,8 @@ export const deleteApiKey = mutation({
     }
 
     // Check if user is admin of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), apiKey.teamId))
-      .first();
-
-    if (!membership || membership.role !== "admin") {
+    const { membership } = await requireTeamMember(ctx, apiKey.teamId);
+    if (membership.role !== "admin") {
       throw new Error("Only admins can delete API keys");
     }
 

@@ -148,24 +148,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Initialize Convex client
     const convex = getConvexClient();
 
-    // Validate widget exists and is active
-    const widgetInfo = await convex.query(api.feedback.getWidgetByKey, {
-      widgetKey,
-    });
-
-    if (!widgetInfo) {
-      return jsonResponse({ error: "Invalid widget key" }, 404);
-    }
-
-    if (!widgetInfo.isActive) {
-      return jsonResponse({ error: "Widget is not active" }, 403);
-    }
-
-    // Check widget daily rate limit (100 per day)
-    const dailyCount = await convex.query(api.feedback.getWidgetDailyCount, {
-      widgetKey,
-    });
-
+    // Widget daily rate limit (100 per day)
     const widgetRateLimit = await checkWidgetDailyRateLimit(widgetKey);
     if (!widgetRateLimit.success) {
       return jsonResponse(
@@ -184,36 +167,34 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    // Get project to find team ID for usage limit check
-    const project = await convex.query(api.projects.getProjectInternal, {
-      projectId: widgetInfo.projectId,
+    // Advisory gate: early 4xx and upload skipping. Authoritative
+    // validation + cap enforcement happen atomically in submitFromWidget.
+    const gate = await convex.query(api.feedback.canAcceptSubmission, {
+      widgetKey,
     });
 
-    if (!project) {
-      return jsonResponse({ error: "Project not found" }, 404);
+    if (gate.status === "invalid_key") {
+      return jsonResponse({ error: "Invalid widget key" }, 404);
     }
-
-    // Check team's monthly usage limit (Free: 25/month, Pro: unlimited)
-    const usageCheck = await convex.query(api.billing.checkCanSubmitFeedback, {
-      teamId: project.teamId,
-    });
-
-    if (!usageCheck.allowed) {
-      // Track usage limit exceeded event
-      captureServerEvent(project.teamId, "usage_limit_exceeded", {
-        plan: usageCheck.plan,
-        current_count: usageCheck.currentCount,
-        limit: usageCheck.limit,
-        project_id: widgetInfo.projectId,
+    if (gate.status === "inactive") {
+      return jsonResponse({ error: "Widget is not active" }, 403);
+    }
+    if (gate.status === "limit_exceeded") {
+      const allowance = gate.allowance;
+      captureServerEvent(gate.teamId, "usage_limit_exceeded", {
+        plan: allowance.plan,
+        current_count: allowance.currentCount,
+        limit: allowance.limit,
+        project_id: gate.projectId,
       });
       return jsonResponse(
         {
           error: "Usage limit exceeded",
-          message: usageCheck.reason,
-          plan: usageCheck.plan,
-          currentCount: usageCheck.currentCount,
-          limit: usageCheck.limit,
-          upgradeRequired: usageCheck.plan === "free",
+          message: allowance.reason,
+          plan: allowance.plan,
+          currentCount: allowance.currentCount,
+          limit: allowance.limit,
+          upgradeRequired: allowance.plan === "free",
         },
         402 // Payment Required
       );
@@ -357,77 +338,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       metadata: feedbackMetadata,
     });
 
-    // Trigger background tasks (fire and forget)
-    // These run asynchronously after response is sent
-    try {
-      // Get project to find team ID for auto-analysis
-      const projectInfo = await convex.query(api.projects.getProjectInternal, {
-        projectId: widgetInfo.projectId,
-      });
-
-      if (projectInfo) {
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
-        const internalKey = process.env.INTERNAL_API_KEY || "";
-
-        // Fire and forget - AI auto-analysis
-        fetch(`${baseUrl}/api/ai/auto-analyze`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-internal-key": internalKey,
-          },
-          body: JSON.stringify({
-            feedbackId: result.feedbackId,
-            teamId: projectInfo.teamId,
-            projectId: widgetInfo.projectId,
-          }),
-        }).catch((err) => {
-          console.warn("Auto-analysis trigger failed:", err);
-        });
-
-        // Fire and forget - Automation rules evaluation
-        fetch(`${baseUrl}/api/automation/trigger`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-internal-key": internalKey,
-          },
-          body: JSON.stringify({
-            feedbackId: result.feedbackId,
-            trigger: "new_feedback",
-          }),
-        }).catch((err) => {
-          console.warn("Automation rules trigger failed:", err);
-        });
-
-        // Fire and forget - Notify team admins of new feedback
-        fetch(`${baseUrl}/api/notifications/trigger-new-feedback`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-internal-key": internalKey,
-          },
-          body: JSON.stringify({
-            feedbackId: result.feedbackId,
-            feedbackTitle: title.trim(),
-            feedbackDescription: description?.trim(),
-            feedbackType: type,
-            projectId: widgetInfo.projectId,
-            projectName: projectInfo.name,
-            teamId: projectInfo.teamId,
-          }),
-        }).catch((err) => {
-          console.warn("New feedback notification trigger failed:", err);
-        });
-      }
-    } catch (err) {
-      console.warn("Failed to trigger background tasks:", err);
-    }
+    // Post-submission side effects (AI analysis, automation, notifications)
+    // are scheduled inside submitFromWidget via ctx.scheduler (ADR-0002).
 
     // Track feedback submitted event
-    captureServerEvent(project.teamId, "feedback_submitted", {
+    captureServerEvent(gate.teamId, "feedback_submitted", {
       feedback_type: type,
-      project_id: widgetInfo.projectId,
+      project_id: gate.projectId,
       has_screenshot: !!screenshotStorageId,
       has_recording: !!recordingStorageId,
       browser,
@@ -465,6 +382,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     if (errorMessage.includes("Widget is not active")) {
       return jsonResponse({ error: "Widget is not active" }, 403);
+    }
+
+    // Atomic enforcement inside submitFromWidget (e.g. the cap was crossed
+    // between the advisory gate and the mutation)
+    if (errorMessage.includes("Usage limit exceeded")) {
+      return jsonResponse(
+        {
+          error: "Usage limit exceeded",
+          message: errorMessage.replace("Usage limit exceeded: ", ""),
+          upgradeRequired: true,
+        },
+        402
+      );
     }
 
     return jsonResponse(

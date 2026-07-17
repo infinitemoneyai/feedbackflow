@@ -54,4 +54,9 @@ if (isDev) {
     console.warn(`⚠️  Warning: Widget exceeds 50KB target!`);
   } else {
   }
+
+  // The served bundle is generated here, at build time — never committed
+  // (the pre-2026-07 committed artifact drifted months behind widget/src).
+  fs.copyFileSync("widget/dist/feedbackflow.js", "public/widget.js");
+  console.log(`Widget built: ${minifiedSize} bytes (${gzippedSize} gzipped) → public/widget.js`);
 }

@@ -16,6 +16,11 @@ import {
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { useSaveable } from "@/lib/hooks/use-saveable";
+import {
+  QueryBoundary,
+  SettingsSectionSkeleton,
+} from "@/components/ui/query-boundary";
 
 interface RestApiKeysSectionProps {
   teamId: Id<"teams">;
@@ -83,8 +88,26 @@ export function RestApiKeysSection({ teamId }: RestApiKeysSectionProps) {
   ]);
   const [newKeyValue, setNewKeyValue] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const {
+    save: performCreateKey,
+    isSaving: isSubmitting,
+    error: saveError,
+    clearError,
+  } = useSaveable(
+    useCallback(async () => {
+      const result = await createApiKeyMutation({
+        teamId,
+        name: newKeyName.trim(),
+        permissions: selectedPermissions,
+      });
+
+      setNewKeyValue(result.key);
+      setNewKeyName("");
+      setSelectedPermissions(["read:feedback", "read:projects"]);
+    }, [teamId, newKeyName, selectedPermissions, createApiKeyMutation])
+  );
 
   const handleCreateKey = useCallback(async () => {
     if (!newKeyName.trim()) {
@@ -97,25 +120,9 @@ export function RestApiKeysSection({ teamId }: RestApiKeysSectionProps) {
       return;
     }
 
-    setIsSubmitting(true);
     setError(null);
-
-    try {
-      const result = await createApiKeyMutation({
-        teamId,
-        name: newKeyName.trim(),
-        permissions: selectedPermissions,
-      });
-
-      setNewKeyValue(result.key);
-      setNewKeyName("");
-      setSelectedPermissions(["read:feedback", "read:projects"]);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create API key");
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [newKeyName, selectedPermissions, teamId, createApiKeyMutation]);
+    await performCreateKey();
+  }, [newKeyName, selectedPermissions, performCreateKey]);
 
   const handleCopyKey = useCallback(async () => {
     if (newKeyValue) {
@@ -186,6 +193,8 @@ export function RestApiKeysSection({ teamId }: RestApiKeysSectionProps) {
   };
 
   return (
+    <QueryBoundary data={apiKeys} skeleton={<SettingsSectionSkeleton rows={3} />}>
+      {() => (
     <div className="space-y-6">
       {/* Header */}
       <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
@@ -272,6 +281,7 @@ export function RestApiKeysSection({ teamId }: RestApiKeysSectionProps) {
                 onChange={(e) => {
                   setNewKeyName(e.target.value);
                   setError(null);
+                  clearError();
                 }}
                 placeholder="e.g., Production Integration"
                 className="w-full rounded border-2 border-stone-200 bg-stone-50 px-4 py-2.5 text-sm transition-colors focus:border-retro-black focus:bg-white focus:outline-none"
@@ -316,10 +326,10 @@ export function RestApiKeysSection({ teamId }: RestApiKeysSectionProps) {
             </div>
 
             {/* Error */}
-            {error && (
+            {(error || saveError) && (
               <div className="flex items-center gap-2 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 <AlertTriangle className="h-4 w-4" />
-                {error}
+                {error || saveError}
               </div>
             )}
 
@@ -341,6 +351,7 @@ export function RestApiKeysSection({ teamId }: RestApiKeysSectionProps) {
                 onClick={() => {
                   setIsCreating(false);
                   setError(null);
+                  clearError();
                 }}
                 className="rounded border-2 border-stone-200 px-4 py-2.5 text-sm font-medium text-stone-600 hover:border-stone-300"
               >
@@ -454,5 +465,7 @@ export function RestApiKeysSection({ teamId }: RestApiKeysSectionProps) {
         </div>
       </div>
     </div>
+      )}
+    </QueryBoundary>
   );
 }

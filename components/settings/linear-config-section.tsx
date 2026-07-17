@@ -1,6 +1,11 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import { useSaveable } from "@/lib/hooks/use-saveable";
+import {
+  QueryBoundary,
+  SettingsSectionSkeleton,
+} from "@/components/ui/query-boundary";
 import { useQuery, useMutation } from "convex/react";
 import {
   Key,
@@ -49,7 +54,6 @@ export function LinearConfigSection({ teamId }: LinearConfigSectionProps) {
 
   const [apiKey, setApiKey] = useState("");
   const [showKey, setShowKey] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [testResult, setTestResult] = useState<{
@@ -57,7 +61,6 @@ export function LinearConfigSection({ teamId }: LinearConfigSectionProps) {
     organization?: string;
     error?: string;
   } | null>(null);
-  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Linear data
   const [linearTeams, setLinearTeams] = useState<LinearTeam[]>([]);
@@ -220,20 +223,22 @@ export function LinearConfigSection({ teamId }: LinearConfigSectionProps) {
   }, [apiKey, hasKey, fetchTeams]);
 
   // Save API key
-  const handleSaveKey = useCallback(async () => {
-    if (!apiKey) return;
+  const {
+    save: saveKey,
+    isSaving,
+    error: saveError,
+    clearError,
+  } = useSaveable(
+    useCallback(async () => {
+      // Validate key format (Linear keys start with "lin_api_")
+      if (!apiKey.startsWith("lin_api_")) {
+        throw new Error(
+          "Invalid key format. Linear API keys should start with 'lin_api_'"
+        );
+      }
 
-    // Validate key format (Linear keys start with "lin_api_")
-    if (!apiKey.startsWith("lin_api_")) {
-      setSaveError("Invalid key format. Linear API keys should start with 'lin_api_'");
-      return;
-    }
+      setTestResult(null);
 
-    setIsSaving(true);
-    setSaveError(null);
-    setTestResult(null);
-
-    try {
       // First test the key
       const testResponse = await fetch("/api/integrations/linear", {
         method: "POST",
@@ -244,9 +249,8 @@ export function LinearConfigSection({ teamId }: LinearConfigSectionProps) {
       const testResultData = await testResponse.json();
 
       if (!testResultData.valid) {
-        setSaveError(testResultData.error || "Invalid API key");
         setTestResult({ valid: false, error: testResultData.error });
-        return;
+        throw new Error(testResultData.error || "Invalid API key");
       }
 
       // Save the key
@@ -264,14 +268,13 @@ export function LinearConfigSection({ teamId }: LinearConfigSectionProps) {
 
       // Fetch teams after saving
       await fetchTeams(apiKey);
-    } catch (error) {
-      setSaveError(
-        error instanceof Error ? error.message : "Failed to save API key"
-      );
-    } finally {
-      setIsSaving(false);
-    }
-  }, [apiKey, teamId, selectedTeamId, selectedProjectId, selectedLabelIds, saveIntegration, fetchTeams]);
+    }, [apiKey, teamId, selectedTeamId, selectedProjectId, selectedLabelIds, saveIntegration, fetchTeams])
+  );
+
+  const handleSaveKey = useCallback(async () => {
+    if (!apiKey) return;
+    await saveKey();
+  }, [apiKey, saveKey]);
 
   // Update settings
   const handleUpdateSettings = useCallback(async () => {
@@ -339,6 +342,11 @@ export function LinearConfigSection({ teamId }: LinearConfigSectionProps) {
   };
 
   return (
+    <QueryBoundary
+      data={integration}
+      skeleton={<SettingsSectionSkeleton rows={3} />}
+    >
+      {() => (
     <div className="rounded border-2 border-retro-black bg-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
       {/* Header */}
       <div className="flex items-center justify-between border-b-2 border-retro-black bg-stone-50 px-6 py-4">
@@ -543,7 +551,7 @@ export function LinearConfigSection({ teamId }: LinearConfigSectionProps) {
                     value={apiKey}
                     onChange={(e) => {
                       setApiKey(e.target.value);
-                      setSaveError(null);
+                      clearError();
                       setTestResult(null);
                     }}
                     placeholder="lin_api_..."
@@ -589,7 +597,7 @@ export function LinearConfigSection({ teamId }: LinearConfigSectionProps) {
                   value={apiKey}
                   onChange={(e) => {
                     setApiKey(e.target.value);
-                    setSaveError(null);
+                    clearError();
                     setTestResult(null);
                   }}
                   placeholder="lin_api_..."
@@ -676,5 +684,7 @@ export function LinearConfigSection({ teamId }: LinearConfigSectionProps) {
         )}
       </div>
     </div>
+      )}
+    </QueryBoundary>
   );
 }

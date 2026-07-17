@@ -16,6 +16,10 @@
 /playwright/.cache
 /test-results
 
+# widget build output — generated at build time, never committed (ADR-0001 era drift fix)
+/widget/dist/
+/public/widget.js
+
 # next.js
 /.next/
 /out/

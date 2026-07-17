@@ -7,6 +7,7 @@ import {
   MutationCtx,
 } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
+import { getTeamMembership, requireTeamMember } from "./authz";
 
 // ============================================================================
 // Public Queries
@@ -18,29 +19,8 @@ import { Id } from "./_generated/dataModel";
 export const getSubscription = query({
   args: { teamId: v.id("teams") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return null;
-    }
-
-    // Get the user
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return null;
-    }
-
-    // Verify user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), args.teamId))
-      .first();
-
-    if (!membership) {
+    const member = await getTeamMembership(ctx, args.teamId);
+    if (!member) {
       return null;
     }
 
@@ -72,6 +52,72 @@ export const getSubscriptionPublic = query({
  * Check if a team can submit feedback (public, for widget API)
  * This is used by the API route to check limits before submission
  */
+export const FREE_PLAN_FEEDBACK_LIMIT = 25;
+
+export interface FeedbackAllowance {
+  allowed: boolean;
+  reason?: string;
+  plan: "free" | "pro";
+  currentCount: number;
+  limit: number | null;
+  percentUsed: number;
+  nearLimit?: boolean;
+}
+
+/**
+ * Pure plan-limit decision, shared by the advisory checkCanSubmitFeedback
+ * query and the atomic enforcement inside feedback.submitFromWidget.
+ */
+export function evaluateFeedbackAllowance(
+  subscription: { plan: string; status: string } | null,
+  currentCount: number
+): FeedbackAllowance {
+  if (!subscription) {
+    return {
+      allowed: false,
+      reason: "No subscription found for this team",
+      plan: "free",
+      currentCount: 0,
+      limit: FREE_PLAN_FEEDBACK_LIMIT,
+      percentUsed: 0,
+    };
+  }
+
+  // Pro plan has unlimited feedback
+  if (subscription.plan === "pro" && subscription.status === "active") {
+    return {
+      allowed: true,
+      plan: "pro",
+      currentCount,
+      limit: null,
+      percentUsed: 0,
+    };
+  }
+
+  const limit = FREE_PLAN_FEEDBACK_LIMIT;
+  const percentUsed = Math.round((currentCount / limit) * 100);
+
+  if (currentCount >= limit) {
+    return {
+      allowed: false,
+      reason: `Monthly feedback limit reached (${limit}). Upgrade to Pro for unlimited feedback.`,
+      plan: "free",
+      currentCount,
+      limit,
+      percentUsed: 100,
+    };
+  }
+
+  return {
+    allowed: true,
+    plan: "free",
+    currentCount,
+    limit,
+    percentUsed,
+    nearLimit: percentUsed >= 80,
+  };
+}
+
 export const checkCanSubmitFeedback = query({
   args: { teamId: v.id("teams") },
   handler: async (ctx, args) => {
@@ -80,41 +126,6 @@ export const checkCanSubmitFeedback = query({
       .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
       .first();
 
-    if (!subscription) {
-      return {
-        allowed: false,
-        reason: "No subscription found for this team",
-        plan: "free" as const,
-        currentCount: 0,
-        limit: 25,
-        percentUsed: 0,
-      };
-    }
-
-    // Pro plan has unlimited feedback
-    if (subscription.plan === "pro" && subscription.status === "active") {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = now.getMonth() + 1;
-
-      const usage = await ctx.db
-        .query("usageTracking")
-        .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
-        .filter((q) =>
-          q.and(q.eq(q.field("year"), year), q.eq(q.field("month"), month))
-        )
-        .first();
-
-      return {
-        allowed: true,
-        plan: "pro" as const,
-        currentCount: usage?.feedbackCount ?? 0,
-        limit: null,
-        percentUsed: 0,
-      };
-    }
-
-    // Free plan: check current month's feedback count
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth() + 1;
@@ -127,29 +138,7 @@ export const checkCanSubmitFeedback = query({
       )
       .first();
 
-    const currentCount = usage?.feedbackCount ?? 0;
-    const limit = 25;
-    const percentUsed = Math.round((currentCount / limit) * 100);
-
-    if (currentCount >= limit) {
-      return {
-        allowed: false,
-        reason: `Monthly feedback limit reached (${limit}). Upgrade to Pro for unlimited feedback.`,
-        plan: "free" as const,
-        currentCount,
-        limit,
-        percentUsed: 100,
-      };
-    }
-
-    return {
-      allowed: true,
-      plan: "free" as const,
-      currentCount,
-      limit,
-      percentUsed,
-      nearLimit: percentUsed >= 80,
-    };
+    return evaluateFeedbackAllowance(subscription, usage?.feedbackCount ?? 0);
   },
 });
 
@@ -159,29 +148,8 @@ export const checkCanSubmitFeedback = query({
 export const getUsage = query({
   args: { teamId: v.id("teams") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return null;
-    }
-
-    // Get the user
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return null;
-    }
-
-    // Verify user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), args.teamId))
-      .first();
-
-    if (!membership) {
+    const member = await getTeamMembership(ctx, args.teamId);
+    if (!member) {
       return null;
     }
 
@@ -227,29 +195,8 @@ export const updateStripeCustomerId = mutation({
     stripeCustomerId: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    // Get the user
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    // Verify user is an admin of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), args.teamId))
-      .first();
-
-    if (!membership || membership.role !== "admin") {
+    const { membership } = await requireTeamMember(ctx, args.teamId);
+    if (membership.role !== "admin") {
       throw new Error("Only admins can update billing");
     }
 

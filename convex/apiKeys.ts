@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query, internalMutation } from "./_generated/server";
+import { getTeamMembership, requireTeamMember } from "./authz";
 
 /**
  * Get the last 4 characters of an API key for display
@@ -52,31 +53,7 @@ export const saveApiKey = mutation({
     isValid: v.optional(v.boolean()), // Allow caller to specify if key was pre-validated
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    // Get the current user
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), args.teamId))
-      .first();
-
-    if (!membership) {
-      throw new Error("Not a member of this team");
-    }
+    const { user, membership } = await requireTeamMember(ctx, args.teamId);
 
     // Only admins can manage API keys
     if (membership.role !== "admin") {
@@ -146,29 +123,8 @@ export const deleteApiKey = mutation({
     provider: v.union(v.literal("openai"), v.literal("anthropic")),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    // Get the current user
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    // Check if user is admin of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), args.teamId))
-      .first();
-
-    if (!membership || membership.role !== "admin") {
+    const { membership } = await requireTeamMember(ctx, args.teamId);
+    if (membership.role !== "admin") {
       throw new Error("Only admins can delete API keys");
     }
 
@@ -196,29 +152,8 @@ export const getApiKeys = query({
     teamId: v.id("teams"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
-    // Get the current user
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return [];
-    }
-
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), args.teamId))
-      .first();
-
-    if (!membership) {
+    const member = await getTeamMembership(ctx, args.teamId);
+    if (!member) {
       return [];
     }
 
@@ -250,29 +185,8 @@ export const getAiConfig = query({
     teamId: v.id("teams"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return null;
-    }
-
-    // Get the current user
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return null;
-    }
-
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), args.teamId))
-      .first();
-
-    if (!membership) {
+    const member = await getTeamMembership(ctx, args.teamId);
+    if (!member) {
       return null;
     }
 
@@ -324,29 +238,8 @@ export const updateApiKeyModel = mutation({
     model: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    // Get the current user
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    // Check if user is admin of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), args.teamId))
-      .first();
-
-    if (!membership || membership.role !== "admin") {
+    const { membership } = await requireTeamMember(ctx, args.teamId);
+    if (membership.role !== "admin") {
       throw new Error("Only admins can update API key settings");
     }
 
@@ -380,29 +273,8 @@ export const getDecryptedApiKey = query({
     provider: v.union(v.literal("openai"), v.literal("anthropic")),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return null;
-    }
-
-    // Get the current user
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return null;
-    }
-
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), args.teamId))
-      .first();
-
-    if (!membership) {
+    const member = await getTeamMembership(ctx, args.teamId);
+    if (!member) {
       return null;
     }
 

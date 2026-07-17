@@ -22,7 +22,7 @@ export interface AnalyzeFeedbackParams {
  */
 export async function analyzeFeedback(ctx: ActionCtx, params: AnalyzeFeedbackParams) {
   // Fetch feedback data
-  const feedback = await ctx.runQuery(api.feedback.getFeedback, {
+  const feedback = await ctx.runQuery(api.feedback.getFeedbackInternal, {
     feedbackId: params.feedbackId,
   });
 

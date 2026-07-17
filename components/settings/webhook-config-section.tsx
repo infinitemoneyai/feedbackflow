@@ -1,6 +1,11 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useSaveable } from "@/lib/hooks/use-saveable";
+import {
+  QueryBoundary,
+  SettingsSectionSkeleton,
+} from "@/components/ui/query-boundary";
 import { useQuery, useMutation, useAction } from "convex/react";
 import {
   Webhook,
@@ -80,21 +85,18 @@ export function WebhookConfigSection({ teamId }: WebhookConfigSectionProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [newUrl, setNewUrl] = useState("");
   const [newEvents, setNewEvents] = useState<WebhookEvent[]>(["new_feedback"]);
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
   const [newSecret, setNewSecret] = useState<string | null>(null);
 
   // Expanded states
   const [expandedWebhook, setExpandedWebhook] = useState<Id<"webhooks"> | null>(null);
 
-  // Handle creating a new webhook
-  const handleCreate = useCallback(async () => {
-    if (!newUrl || newEvents.length === 0) return;
-
-    setIsSaving(true);
-    setSaveError(null);
-
-    try {
+  const {
+    save: performCreate,
+    isSaving,
+    error: saveError,
+    clearError,
+  } = useSaveable(
+    useCallback(async () => {
       const result = await createWebhook({
         teamId,
         url: newUrl,
@@ -105,12 +107,14 @@ export function WebhookConfigSection({ teamId }: WebhookConfigSectionProps) {
       setNewUrl("");
       setNewEvents(["new_feedback"]);
       setIsAdding(false);
-    } catch (error) {
-      setSaveError(error instanceof Error ? error.message : "Failed to create webhook");
-    } finally {
-      setIsSaving(false);
-    }
-  }, [newUrl, newEvents, teamId, createWebhook]);
+    }, [newUrl, newEvents, teamId, createWebhook])
+  );
+
+  // Handle creating a new webhook
+  const handleCreate = useCallback(async () => {
+    if (!newUrl || newEvents.length === 0) return;
+    await performCreate();
+  }, [newUrl, newEvents, performCreate]);
 
   // Toggle event selection
   const toggleEvent = (event: WebhookEvent) => {
@@ -122,6 +126,11 @@ export function WebhookConfigSection({ teamId }: WebhookConfigSectionProps) {
   };
 
   return (
+    <QueryBoundary
+      data={webhooks}
+      skeleton={<SettingsSectionSkeleton rows={2} />}
+    >
+      {() => (
     <div className="space-y-4">
       {/* Header Card */}
       <div className="rounded border-2 border-retro-black bg-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
@@ -210,7 +219,7 @@ export function WebhookConfigSection({ teamId }: WebhookConfigSectionProps) {
                 value={newUrl}
                 onChange={(e) => {
                   setNewUrl(e.target.value);
-                  setSaveError(null);
+                  clearError();
                 }}
                 placeholder="https://your-service.com/webhook"
                 className="w-full rounded border-2 border-stone-200 bg-stone-50 px-4 py-2.5 text-sm transition-colors focus:border-retro-black focus:bg-white focus:outline-none"
@@ -282,7 +291,7 @@ export function WebhookConfigSection({ teamId }: WebhookConfigSectionProps) {
                   setIsAdding(false);
                   setNewUrl("");
                   setNewEvents(["new_feedback"]);
-                  setSaveError(null);
+                  clearError();
                 }}
                 className="rounded border-2 border-stone-200 bg-white px-4 py-2.5 text-sm font-medium text-stone-600 transition-colors hover:border-stone-300"
               >
@@ -326,6 +335,8 @@ export function WebhookConfigSection({ teamId }: WebhookConfigSectionProps) {
         </div>
       )}
     </div>
+      )}
+    </QueryBoundary>
   );
 }
 

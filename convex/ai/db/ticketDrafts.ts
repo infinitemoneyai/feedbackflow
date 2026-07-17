@@ -10,6 +10,7 @@ import {
   logFeedbackActivity,
   getAuthenticatedUser,
 } from "./helpers";
+import { requireTeamMember } from "../../authz";
 
 /**
  * Store a ticket draft (internal mutation)
@@ -209,11 +210,6 @@ export const updateTicketDraft = mutation({
     actualBehavior: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
-    if (!user) {
-      throw new Error("Unauthenticated");
-    }
-
     const draft = await ctx.db.get(args.draftId);
     if (!draft) {
       throw new Error("Draft not found");
@@ -224,16 +220,7 @@ export const updateTicketDraft = mutation({
       throw new Error("Feedback not found");
     }
 
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), feedback.teamId))
-      .first();
-
-    if (!membership) {
-      throw new Error("Not a member of this team");
-    }
+    await requireTeamMember(ctx, feedback.teamId);
 
     const updates: Record<string, unknown> = {
       updatedAt: Date.now(),
@@ -260,11 +247,6 @@ export const deleteTicketDraft = mutation({
     draftId: v.id("ticketDrafts"),
   },
   handler: async (ctx, args) => {
-    const user = await getAuthenticatedUser(ctx);
-    if (!user) {
-      throw new Error("Unauthenticated");
-    }
-
     const draft = await ctx.db.get(args.draftId);
     if (!draft) {
       throw new Error("Draft not found");
@@ -275,16 +257,7 @@ export const deleteTicketDraft = mutation({
       throw new Error("Feedback not found");
     }
 
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), feedback.teamId))
-      .first();
-
-    if (!membership) {
-      throw new Error("Not a member of this team");
-    }
+    await requireTeamMember(ctx, feedback.teamId);
 
     await ctx.db.delete(args.draftId);
 

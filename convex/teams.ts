@@ -1,6 +1,12 @@
 import { v } from "convex/values";
-import { mutation, query, MutationCtx } from "./_generated/server";
+import { mutation, query, internalQuery, MutationCtx } from "./_generated/server";
 import { canAddSeat } from "./billing";
+import {
+  getAuthUser,
+  getTeamMembership,
+  requireTeamMember,
+  requireUser,
+} from "./authz";
 
 /**
  * Generate a URL-friendly slug from a team name
@@ -60,20 +66,7 @@ export const createTeam = mutation({
     name: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    // Get the user
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await requireUser(ctx);
 
     // Generate unique slug
     const slug = await generateUniqueSlug(ctx, args.name);
@@ -121,29 +114,8 @@ export const inviteToTeam = mutation({
     role: v.union(v.literal("admin"), v.literal("member")),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    // Get the user
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    // Check if user is admin of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), args.teamId))
-      .first();
-
-    if (!membership || membership.role !== "admin") {
+    const { user, membership } = await requireTeamMember(ctx, args.teamId);
+    if (membership.role !== "admin") {
       throw new Error("Only admins can invite members");
     }
 
@@ -211,20 +183,7 @@ export const acceptInvite = mutation({
     token: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    // Get the user
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = await requireUser(ctx);
 
     // Find the invite
     const invite = await ctx.db
@@ -294,29 +253,11 @@ export const updateMemberRole = mutation({
     role: v.union(v.literal("admin"), v.literal("member")),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    // Get the current user
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!currentUser) {
-      throw new Error("User not found");
-    }
-
-    // Check if current user is admin
-    const currentMembership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", currentUser._id))
-      .filter((q) => q.eq(q.field("teamId"), args.teamId))
-      .first();
-
-    if (!currentMembership || currentMembership.role !== "admin") {
+    const { membership: currentMembership } = await requireTeamMember(
+      ctx,
+      args.teamId
+    );
+    if (currentMembership.role !== "admin") {
       throw new Error("Only admins can change member roles");
     }
 
@@ -358,20 +299,7 @@ export const removeMember = mutation({
     userId: v.id("users"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    // Get the current user
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!currentUser) {
-      throw new Error("User not found");
-    }
+    const currentUser = await requireUser(ctx);
 
     // Get the team
     const team = await ctx.db.get(args.teamId);
@@ -384,15 +312,11 @@ export const removeMember = mutation({
       throw new Error("Cannot remove the team owner");
     }
 
-    // Check if current user is admin (or removing themselves)
-    const currentMembership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", currentUser._id))
-      .filter((q) => q.eq(q.field("teamId"), args.teamId))
-      .first();
+    // Current user may be admin, or removing themselves
+    const currentMember = await getTeamMembership(ctx, args.teamId);
 
     const isSelf = currentUser._id === args.userId;
-    const isAdmin = currentMembership?.role === "admin";
+    const isAdmin = currentMember?.membership.role === "admin";
 
     if (!isSelf && !isAdmin) {
       throw new Error("Only admins can remove members");
@@ -422,28 +346,8 @@ export const removeMember = mutation({
 export const getTeam = query({
   args: { teamId: v.id("teams") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return null;
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return null;
-    }
-
-    // Check if user is a member
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), args.teamId))
-      .first();
-
-    if (!membership) {
+    const member = await getTeamMembership(ctx, args.teamId);
+    if (!member) {
       return null; // Not a member, can't see team
     }
 
@@ -458,8 +362,8 @@ export const getTeam = query({
     return {
       ...team,
       owner,
-      currentUserRole: membership.role,
-      isOwner: team.ownerId === user._id,
+      currentUserRole: member.membership.role,
+      isOwner: team.ownerId === member.user._id,
     };
   },
 });
@@ -470,16 +374,7 @@ export const getTeam = query({
 export const getMyTeams = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
+    const user = await getAuthUser(ctx);
     if (!user) {
       return [];
     }
@@ -514,28 +409,8 @@ export const getMyTeams = query({
 export const getTeamMembers = query({
   args: { teamId: v.id("teams") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!currentUser) {
-      return [];
-    }
-
-    // Check if user is a member
-    const currentMembership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", currentUser._id))
-      .filter((q) => q.eq(q.field("teamId"), args.teamId))
-      .first();
-
-    if (!currentMembership) {
+    const currentMember = await getTeamMembership(ctx, args.teamId);
+    if (!currentMember) {
       return []; // Not a member, can't see members
     }
 
@@ -575,7 +450,7 @@ export const getTeamMembers = query({
  * Get team members (public query for API routes)
  * Returns basic user info for notifications
  */
-export const getTeamMembersPublic = query({
+export const getTeamMembersForNotifications = internalQuery({
   args: { teamId: v.id("teams") },
   handler: async (ctx, args) => {
     // Get all memberships for the team
@@ -609,28 +484,8 @@ export const getTeamMembersPublic = query({
 export const getTeamInvites = query({
   args: { teamId: v.id("teams") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!currentUser) {
-      return [];
-    }
-
-    // Check if user is admin
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", currentUser._id))
-      .filter((q) => q.eq(q.field("teamId"), args.teamId))
-      .first();
-
-    if (!membership || membership.role !== "admin") {
+    const member = await getTeamMembership(ctx, args.teamId);
+    if (!member || member.membership.role !== "admin") {
       return []; // Only admins can see invites
     }
 
@@ -664,34 +519,13 @@ export const cancelInvite = mutation({
     inviteId: v.id("teamInvites"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!currentUser) {
-      throw new Error("User not found");
-    }
-
-    // Get the invite
     const invite = await ctx.db.get(args.inviteId);
     if (!invite) {
       throw new Error("Invite not found");
     }
 
-    // Check if user is admin of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", currentUser._id))
-      .filter((q) => q.eq(q.field("teamId"), invite.teamId))
-      .first();
-
-    if (!membership || membership.role !== "admin") {
+    const { membership } = await requireTeamMember(ctx, invite.teamId);
+    if (membership.role !== "admin") {
       throw new Error("Only admins can cancel invites");
     }
 
@@ -711,28 +545,8 @@ export const updateTeam = mutation({
     name: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!currentUser) {
-      throw new Error("User not found");
-    }
-
-    // Check if user is admin
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", currentUser._id))
-      .filter((q) => q.eq(q.field("teamId"), args.teamId))
-      .first();
-
-    if (!membership || membership.role !== "admin") {
+    const { membership } = await requireTeamMember(ctx, args.teamId);
+    if (membership.role !== "admin") {
       throw new Error("Only admins can update team settings");
     }
 
@@ -765,19 +579,7 @@ export const deleteTeam = mutation({
     teamId: v.id("teams"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!currentUser) {
-      throw new Error("User not found");
-    }
+    const currentUser = await requireUser(ctx);
 
     // Get the team
     const team = await ctx.db.get(args.teamId);

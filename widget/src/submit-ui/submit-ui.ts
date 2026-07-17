@@ -11,10 +11,10 @@ import type { RecordingResult } from "../record";
 import {
   OfflineQueue,
   getOfflineQueue,
-  type SubmissionFormData,
   type SubmissionMetadata,
   type SubmissionResult,
 } from "../offline-queue";
+import { FeedbackTransport, type FeedbackPayload } from "../transport";
 import type { SubmitUICallbacks, FormState, SubmitState } from "./types";
 import { injectSubmitUIStyles } from "./styles";
 import { renderPreviewThumbnail } from "./preview-thumbnail";
@@ -47,6 +47,7 @@ export class SubmitUI {
   private errorMessage: string = "";
   private warningMessage: string = "";
   private offlineQueue: OfflineQueue;
+  private transport: FeedbackTransport;
 
   constructor(
     config: WidgetConfig,
@@ -59,6 +60,7 @@ export class SubmitUI {
     this.screenshot = screenshot;
     this.recording = recording;
     this.offlineQueue = getOfflineQueue(config.apiUrl);
+    this.transport = new FeedbackTransport(config.apiUrl || undefined);
   }
 
   /**
@@ -301,93 +303,43 @@ export class SubmitUI {
   }
 
   /**
-   * Submit feedback to API
+   * Build the payload once; live submission and retry enqueue share it.
    */
-  private async submitFeedback(): Promise<SubmissionResult> {
-    const metadata = this.getMetadata();
-    const apiUrl = this.config.apiUrl || "https://feedbackflow.cc/api/widget/submit";
-
-    const formData = new FormData();
-    formData.append("widgetKey", this.config.widgetKey);
-    formData.append("title", this.formState.title);
-    formData.append("description", this.formState.description);
-    formData.append("type", this.formState.type);
-    formData.append("metadata", JSON.stringify(metadata));
-
-    if (this.formState.email) {
-      formData.append("email", this.formState.email);
-    }
-    if (this.formState.name) {
-      formData.append("name", this.formState.name);
-    }
-
-    // Add screenshot if present
-    if (this.screenshot?.blob) {
-      formData.append("screenshot", this.screenshot.blob, "screenshot.jpg");
-    }
-
-    // Add recording if present
-    if (this.recording?.blob) {
-      const ext = this.recording.mimeType.includes("webm") ? "webm" : "mp4";
-      formData.append("recording", this.recording.blob, `recording.${ext}`);
-      // Send duration in seconds
-      formData.append("recordingDuration", (this.recording.duration / 1000).toString());
-    }
-
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => "Unknown error");
-      throw new Error(`HTTP ${response.status}: ${errorText}`);
-    }
-
-    const data = await response.json();
+  private buildPayload(): FeedbackPayload {
     return {
-      success: true,
-      feedbackId: data.feedbackId || data.id,
-      warning: data.warning,
+      widgetKey: this.config.widgetKey,
+      formData: {
+        title: this.formState.title,
+        description: this.formState.description,
+        type: this.formState.type,
+        email: this.formState.email || undefined,
+        name: this.formState.name || undefined,
+        metadata: this.getMetadata(),
+      },
+      screenshotBlob: this.screenshot?.blob,
+      screenshotDataUrl: this.screenshot?.dataUrl,
+      recordingBlob: this.recording?.blob,
+      recordingMimeType: this.recording?.mimeType,
+      recordingDurationMs: this.recording?.duration,
     };
   }
 
   /**
-   * Queue submission for offline retry
+   * Submit feedback through the shared transport
+   */
+  private async submitFeedback(): Promise<SubmissionResult> {
+    const result = await this.transport.submit(this.buildPayload());
+    if (!result.success) {
+      throw new Error(result.error || "Submission failed");
+    }
+    return result;
+  }
+
+  /**
+   * Queue submission for offline retry — the queue's one enqueue path
    */
   private async queueForRetry(): Promise<void> {
-    const metadata = this.getMetadata();
-    const formData: SubmissionFormData = {
-      title: this.formState.title,
-      description: this.formState.description,
-      type: this.formState.type,
-      email: this.formState.email || undefined,
-      name: this.formState.name || undefined,
-      metadata,
-    };
-
-    // Convert recording to base64 if present
-    let recordingBase64: string | undefined;
-    if (this.recording?.blob) {
-      recordingBase64 = await OfflineQueue.blobToBase64(this.recording.blob);
-    }
-
-    // Add to queue
-    const queue = this.offlineQueue.getQueue();
-    const submission = {
-      id: `ff_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-      widgetKey: this.config.widgetKey,
-      formData,
-      screenshotDataUrl: this.screenshot?.dataUrl,
-      recordingBlob: recordingBase64,
-      recordingMimeType: this.recording?.mimeType,
-      timestamp: Date.now(),
-      retryCount: 0,
-      nextRetryAt: Date.now(),
-    };
-    queue.push(submission);
-    localStorage.setItem("ff_submission_queue", JSON.stringify(queue));
-
+    await this.offlineQueue.enqueue(this.buildPayload());
     debug.log("Feedback queued for retry");
   }
 

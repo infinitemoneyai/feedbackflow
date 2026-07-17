@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query, MutationCtx } from "./_generated/server";
+import { getTeamMembership, requireTeamMember } from "./authz";
 
 /**
  * Generate a unique widget key
@@ -60,31 +61,7 @@ export const createProject = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    // Get the user
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), args.teamId))
-      .first();
-
-    if (!membership) {
-      throw new Error("You are not a member of this team");
-    }
+    await requireTeamMember(ctx, args.teamId);
 
     // Generate or validate project code
     let code = args.code?.toUpperCase().trim() || generateProjectCode(args.name);
@@ -166,28 +143,8 @@ export const createProject = mutation({
 export const getProjects = query({
   args: { teamId: v.id("teams") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return [];
-    }
-
-    // Check if user is a member
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), args.teamId))
-      .first();
-
-    if (!membership) {
+    const member = await getTeamMembership(ctx, args.teamId);
+    if (!member) {
       return [];
     }
 
@@ -226,33 +183,13 @@ export const getProjects = query({
 export const getProject = query({
   args: { projectId: v.id("projects") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return null;
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return null;
-    }
-
     const project = await ctx.db.get(args.projectId);
     if (!project) {
       return null;
     }
 
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), project.teamId))
-      .first();
-
-    if (!membership) {
+    const member = await getTeamMembership(ctx, project.teamId);
+    if (!member) {
       return null;
     }
 
@@ -303,35 +240,12 @@ export const updateProject = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     const project = await ctx.db.get(args.projectId);
     if (!project) {
       throw new Error("Project not found");
     }
 
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), project.teamId))
-      .first();
-
-    if (!membership) {
-      throw new Error("You are not a member of this team");
-    }
+    const { membership } = await requireTeamMember(ctx, project.teamId);
 
     // Only admins can update projects
     if (membership.role !== "admin") {
@@ -365,33 +279,13 @@ export const deleteProject = mutation({
     projectId: v.id("projects"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     const project = await ctx.db.get(args.projectId);
     if (!project) {
       throw new Error("Project not found");
     }
 
-    // Check if user is admin of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), project.teamId))
-      .first();
-
-    if (!membership || membership.role !== "admin") {
+    const { membership } = await requireTeamMember(ctx, project.teamId);
+    if (membership.role !== "admin") {
       throw new Error("Only admins can delete projects");
     }
 
@@ -436,33 +330,13 @@ export const deleteProject = mutation({
 export const getWidgets = query({
   args: { projectId: v.id("projects") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      return [];
-    }
-
     const project = await ctx.db.get(args.projectId);
     if (!project) {
       return [];
     }
 
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), project.teamId))
-      .first();
-
-    if (!membership) {
+    const member = await getTeamMembership(ctx, project.teamId);
+    if (!member) {
       return [];
     }
 
@@ -499,35 +373,12 @@ export const createWidget = mutation({
     siteUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     const project = await ctx.db.get(args.projectId);
     if (!project) {
       throw new Error("Project not found");
     }
 
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), project.teamId))
-      .first();
-
-    if (!membership) {
-      throw new Error("You are not a member of this team");
-    }
+    await requireTeamMember(ctx, project.teamId);
 
     const widgetKey = generateWidgetKey();
     const widgetId = await ctx.db.insert("widgets", {
@@ -552,20 +403,6 @@ export const updateWidget = mutation({
     isActive: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     const widget = await ctx.db.get(args.widgetId);
     if (!widget) {
       throw new Error("Widget not found");
@@ -576,16 +413,7 @@ export const updateWidget = mutation({
       throw new Error("Project not found");
     }
 
-    // Check if user is a member of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), project.teamId))
-      .first();
-
-    if (!membership) {
-      throw new Error("You are not a member of this team");
-    }
+    await requireTeamMember(ctx, project.teamId);
 
     // Build update object
     const updates: Record<string, unknown> = {};
@@ -606,20 +434,6 @@ export const regenerateWidgetKey = mutation({
     widgetId: v.id("widgets"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthenticated");
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
-      .first();
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     const widget = await ctx.db.get(args.widgetId);
     if (!widget) {
       throw new Error("Widget not found");
@@ -630,14 +444,8 @@ export const regenerateWidgetKey = mutation({
       throw new Error("Project not found");
     }
 
-    // Check if user is admin of the team
-    const membership = await ctx.db
-      .query("teamMembers")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .filter((q) => q.eq(q.field("teamId"), project.teamId))
-      .first();
-
-    if (!membership || membership.role !== "admin") {
+    const { membership } = await requireTeamMember(ctx, project.teamId);
+    if (membership.role !== "admin") {
       throw new Error("Only admins can regenerate widget keys");
     }
 

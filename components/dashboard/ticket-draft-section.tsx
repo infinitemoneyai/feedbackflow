@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { useSaveable } from "@/lib/hooks/use-saveable";
 import { cn } from "@/lib/utils";
 
 interface TicketDraftSectionProps {
@@ -175,7 +176,6 @@ export function TicketDraftSection({
 }: TicketDraftSectionProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -200,6 +200,12 @@ export function TicketDraftSection({
   // Mutations
   const updateDraft = useMutation(api.ai.updateTicketDraft);
   const deleteDraft = useMutation(api.ai.deleteTicketDraft);
+
+  const {
+    save: saveDraftEdits,
+    isSaving,
+    error: saveError,
+  } = useSaveable(updateDraft);
 
   // Initialize editable state when draft loads
   useEffect(() => {
@@ -247,24 +253,19 @@ export function TicketDraftSection({
   const handleSaveEdits = useCallback(async () => {
     if (!draft) return;
 
-    setIsSaving(true);
-    try {
-      await updateDraft({
-        draftId: draft._id,
-        title: editedTitle,
-        description: editedDescription,
-        acceptanceCriteria: editedAcceptanceCriteria,
-        reproSteps: editedReproSteps.length > 0 ? editedReproSteps : undefined,
-        expectedBehavior: editedExpectedBehavior || undefined,
-        actualBehavior: editedActualBehavior || undefined,
-      });
+    const ok = await saveDraftEdits({
+      draftId: draft._id,
+      title: editedTitle,
+      description: editedDescription,
+      acceptanceCriteria: editedAcceptanceCriteria,
+      reproSteps: editedReproSteps.length > 0 ? editedReproSteps : undefined,
+      expectedBehavior: editedExpectedBehavior || undefined,
+      actualBehavior: editedActualBehavior || undefined,
+    });
+    if (ok) {
       setIsEditing(false);
-    } catch (error) {
-      console.error("Failed to save draft:", error);
-    } finally {
-      setIsSaving(false);
     }
-  }, [draft, editedTitle, editedDescription, editedAcceptanceCriteria, editedReproSteps, editedExpectedBehavior, editedActualBehavior, updateDraft]);
+  }, [draft, editedTitle, editedDescription, editedAcceptanceCriteria, editedReproSteps, editedExpectedBehavior, editedActualBehavior, saveDraftEdits]);
 
   // Handle cancel edit
   const handleCancelEdit = () => {
@@ -366,10 +367,10 @@ export function TicketDraftSection({
       {isExpanded && (
         <div className="border-t border-retro-lavender/30 p-4">
           {/* Error message */}
-          {generateError && (
+          {(generateError || saveError) && (
             <div className="mb-4 flex items-center gap-2 rounded border border-retro-red/20 bg-retro-red/10 px-3 py-2 text-sm text-retro-red">
               <AlertCircle className="h-4 w-4 flex-shrink-0" />
-              {generateError}
+              {generateError || saveError}
             </div>
           )}
 

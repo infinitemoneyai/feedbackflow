@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useMutation } from "convex/react";
 import { X, Loader2 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { useSaveable } from "@/lib/hooks/use-saveable";
 import { Analytics } from "@/lib/posthog-provider";
 
 interface CreateProjectModalProps {
@@ -53,11 +54,35 @@ export function CreateProjectModal({
   const [siteUrl, setSiteUrl] = useState("");
   const [projectType, setProjectType] = useState<ProjectType>("web_app");
   const [description, setDescription] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [codeManuallyEdited, setCodeManuallyEdited] = useState(false);
 
   const createProject = useMutation(api.projects.createProject);
+
+  const {
+    save: performCreate,
+    isSaving: isLoading,
+    error,
+    clearError,
+  } = useSaveable(
+    useCallback(
+      async (input: Parameters<typeof createProject>[0]) => {
+        try {
+          const result = await createProject(input);
+
+          // Success - call callback
+          Analytics.projectCreated(projectType);
+          if (onSuccess && result.projectId) {
+            onSuccess(result.projectId);
+          }
+        } catch (err) {
+          throw err instanceof Error
+            ? err
+            : new Error("Failed to create project");
+        }
+      },
+      [createProject, projectType, onSuccess]
+    )
+  );
 
   // Auto-generate code from name if not manually edited
   useEffect(() => {
@@ -71,34 +96,22 @@ export function CreateProjectModal({
     e.preventDefault();
     if (!projectName.trim()) return;
 
-    setIsLoading(true);
-    setError(null);
+    // Ensure URL has protocol if provided
+    let formattedUrl = siteUrl.trim();
+    if (formattedUrl && !formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
+      formattedUrl = `https://${formattedUrl}`;
+    }
 
-    try {
-      // Ensure URL has protocol if provided
-      let formattedUrl = siteUrl.trim();
-      if (formattedUrl && !formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
-        formattedUrl = `https://${formattedUrl}`;
-      }
-
-      const result = await createProject({
-        teamId,
-        name: projectName.trim(),
-        code: projectCode.trim() || undefined,
-        siteUrl: formattedUrl || undefined,
-        projectType,
-        description: description.trim() || undefined,
-      });
-
-      // Success - call callback and close
-      Analytics.projectCreated(projectType);
-      if (onSuccess && result.projectId) {
-        onSuccess(result.projectId);
-      }
+    const ok = await performCreate({
+      teamId,
+      name: projectName.trim(),
+      code: projectCode.trim() || undefined,
+      siteUrl: formattedUrl || undefined,
+      projectType,
+      description: description.trim() || undefined,
+    });
+    if (ok) {
       handleClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create project");
-      setIsLoading(false);
     }
   };
 
@@ -109,7 +122,7 @@ export function CreateProjectModal({
       setSiteUrl("");
       setProjectType("web_app");
       setDescription("");
-      setError(null);
+      clearError();
       setCodeManuallyEdited(false);
       onClose();
     }

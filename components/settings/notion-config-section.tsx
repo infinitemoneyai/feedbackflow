@@ -1,6 +1,11 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import { useSaveable } from "@/lib/hooks/use-saveable";
+import {
+  QueryBoundary,
+  SettingsSectionSkeleton,
+} from "@/components/ui/query-boundary";
 import { useQuery, useMutation } from "convex/react";
 import {
   Key,
@@ -38,7 +43,6 @@ export function NotionConfigSection({ teamId }: NotionConfigSectionProps) {
 
   const [apiKey, setApiKey] = useState("");
   const [showKey, setShowKey] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [testResult, setTestResult] = useState<{
@@ -46,7 +50,6 @@ export function NotionConfigSection({ teamId }: NotionConfigSectionProps) {
     botName?: string;
     error?: string;
   } | null>(null);
-  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Notion data
   const [notionDatabases, setNotionDatabases] = useState<NotionDatabase[]>([]);
@@ -133,22 +136,22 @@ export function NotionConfigSection({ teamId }: NotionConfigSectionProps) {
   }, [apiKey, hasKey, fetchDatabases]);
 
   // Save API key
-  const handleSaveKey = useCallback(async () => {
-    if (!apiKey) return;
+  const {
+    save: saveKey,
+    isSaving,
+    error: saveError,
+    clearError,
+  } = useSaveable(
+    useCallback(async () => {
+      // Validate key format (Notion internal integration keys start with "secret_" or "ntn_")
+      if (!apiKey.startsWith("secret_") && !apiKey.startsWith("ntn_")) {
+        throw new Error(
+          "Invalid key format. Notion API keys should start with 'secret_' or 'ntn_'"
+        );
+      }
 
-    // Validate key format (Notion internal integration keys start with "secret_" or "ntn_")
-    if (!apiKey.startsWith("secret_") && !apiKey.startsWith("ntn_")) {
-      setSaveError(
-        "Invalid key format. Notion API keys should start with 'secret_' or 'ntn_'"
-      );
-      return;
-    }
+      setTestResult(null);
 
-    setIsSaving(true);
-    setSaveError(null);
-    setTestResult(null);
-
-    try {
       // First test the key
       const testResponse = await fetch("/api/integrations/notion", {
         method: "POST",
@@ -159,9 +162,8 @@ export function NotionConfigSection({ teamId }: NotionConfigSectionProps) {
       const testResultData = await testResponse.json();
 
       if (!testResultData.valid) {
-        setSaveError(testResultData.error || "Invalid API key");
         setTestResult({ valid: false, error: testResultData.error });
-        return;
+        throw new Error(testResultData.error || "Invalid API key");
       }
 
       // Save the key
@@ -177,14 +179,13 @@ export function NotionConfigSection({ teamId }: NotionConfigSectionProps) {
 
       // Fetch databases after saving
       await fetchDatabases(apiKey);
-    } catch (error) {
-      setSaveError(
-        error instanceof Error ? error.message : "Failed to save API key"
-      );
-    } finally {
-      setIsSaving(false);
-    }
-  }, [apiKey, teamId, selectedDatabaseId, saveIntegration, fetchDatabases]);
+    }, [apiKey, teamId, selectedDatabaseId, saveIntegration, fetchDatabases])
+  );
+
+  const handleSaveKey = useCallback(async () => {
+    if (!apiKey) return;
+    await saveKey();
+  }, [apiKey, saveKey]);
 
   // Update settings
   const handleUpdateSettings = useCallback(async () => {
@@ -238,6 +239,11 @@ export function NotionConfigSection({ teamId }: NotionConfigSectionProps) {
   );
 
   return (
+    <QueryBoundary
+      data={integration}
+      skeleton={<SettingsSectionSkeleton rows={3} />}
+    >
+      {() => (
     <div className="rounded border-2 border-retro-black bg-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
       {/* Header */}
       <div className="flex items-center justify-between border-b-2 border-retro-black bg-stone-50 px-6 py-4">
@@ -362,7 +368,7 @@ export function NotionConfigSection({ teamId }: NotionConfigSectionProps) {
                     value={apiKey}
                     onChange={(e) => {
                       setApiKey(e.target.value);
-                      setSaveError(null);
+                      clearError();
                       setTestResult(null);
                     }}
                     placeholder="secret_..."
@@ -408,7 +414,7 @@ export function NotionConfigSection({ teamId }: NotionConfigSectionProps) {
                   value={apiKey}
                   onChange={(e) => {
                     setApiKey(e.target.value);
-                    setSaveError(null);
+                    clearError();
                     setTestResult(null);
                   }}
                   placeholder="secret_..."
@@ -498,5 +504,7 @@ export function NotionConfigSection({ teamId }: NotionConfigSectionProps) {
         )}
       </div>
     </div>
+      )}
+    </QueryBoundary>
   );
 }

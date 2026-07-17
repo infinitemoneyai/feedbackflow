@@ -9,8 +9,9 @@ import { api, internal } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { sendDigestEmail, type NotificationType } from "@/lib/email";
 
-// Internal key for securing internal API calls
-const INTERNAL_KEY = process.env.INTERNAL_API_KEY || "feedbackflow-internal-key";
+// Internal key for securing internal API calls — no fallback: an unset env
+// var must fail closed, never authenticate with a committed default
+const INTERNAL_KEY = process.env.INTERNAL_API_KEY;
 // Cron secret for Vercel cron jobs
 const CRON_SECRET = process.env.CRON_SECRET;
 
@@ -27,7 +28,7 @@ export async function POST(request: Request): Promise<Response> {
     const internalKey = request.headers.get("x-internal-key");
 
     const isAuthorized =
-      internalKey === INTERNAL_KEY ||
+      (INTERNAL_KEY && internalKey === INTERNAL_KEY) ||
       (CRON_SECRET && authHeader === `Bearer ${CRON_SECRET}`);
 
     if (!isAuthorized) {

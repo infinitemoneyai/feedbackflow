@@ -33,6 +33,7 @@ import type * as ai_utils from "../ai/utils.js";
 import type * as aiActions from "../aiActions.js";
 import type * as analytics from "../analytics.js";
 import type * as apiKeys from "../apiKeys.js";
+import type * as authz from "../authz.js";
 import type * as automationActions from "../automationActions.js";
 import type * as automationRules from "../automationRules.js";
 import type * as billing from "../billing.js";
@@ -46,6 +47,7 @@ import type * as projects from "../projects.js";
 import type * as restApiKeys from "../restApiKeys.js";
 import type * as reviewLinks from "../reviewLinks.js";
 import type * as reviewers from "../reviewers.js";
+import type * as sideEffects from "../sideEffects.js";
 import type * as storageConfig from "../storageConfig.js";
 import type * as submitterPortal from "../submitterPortal.js";
 import type * as teams from "../teams.js";
@@ -53,6 +55,7 @@ import type * as users from "../users.js";
 import type * as webhookActions from "../webhookActions.js";
 import type * as webhooks from "../webhooks.js";
 import type * as widgetConfig from "../widgetConfig.js";
+import type * as widgetConfigShape from "../widgetConfigShape.js";
 
 import type {
   ApiFromModules,
@@ -86,6 +89,7 @@ declare const fullApi: ApiFromModules<{
   aiActions: typeof aiActions;
   analytics: typeof analytics;
   apiKeys: typeof apiKeys;
+  authz: typeof authz;
   automationActions: typeof automationActions;
   automationRules: typeof automationRules;
   billing: typeof billing;
@@ -99,6 +103,7 @@ declare const fullApi: ApiFromModules<{
   restApiKeys: typeof restApiKeys;
   reviewLinks: typeof reviewLinks;
   reviewers: typeof reviewers;
+  sideEffects: typeof sideEffects;
   storageConfig: typeof storageConfig;
   submitterPortal: typeof submitterPortal;
   teams: typeof teams;
@@ -106,6 +111,7 @@ declare const fullApi: ApiFromModules<{
   webhookActions: typeof webhookActions;
   webhooks: typeof webhooks;
   widgetConfig: typeof widgetConfig;
+  widgetConfigShape: typeof widgetConfigShape;
 }>;
 
 /**

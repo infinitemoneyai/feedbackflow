@@ -20,6 +20,21 @@ import {
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import {
+  DEFAULT_WIDGET_CONFIG,
+  type WidgetDisplayMode,
+  type WidgetPosition,
+} from "@/convex/widgetConfigShape";
+import {
+  buildHtmlSnippet,
+  buildNextjsSnippet,
+  buildReactSnippet,
+} from "@/lib/widget-snippet";
+import { useSaveable } from "@/lib/hooks/use-saveable";
+import {
+  QueryBoundary,
+  SettingsSectionSkeleton,
+} from "@/components/ui/query-boundary";
 
 interface WidgetCustomizationSectionProps {
   widgetId: Id<"widgets">;
@@ -28,20 +43,30 @@ interface WidgetCustomizationSectionProps {
   hideHeader?: boolean;
 }
 
-type Position = "bottom-right" | "bottom-left" | "top-right" | "top-left";
+const DISPLAY_MODES: {
+  value: WidgetDisplayMode;
+  label: string;
+  description: string;
+}[] = [
+  {
+    value: "always-visible",
+    label: "Always Visible",
+    description: "The launcher stays fully visible in its corner",
+  },
+  {
+    value: "auto-hide",
+    label: "Auto-Hide",
+    description:
+      "Rests off-screen and slides in when the cursor nears its corner; plays an entrance reveal on the first page view of a session",
+  },
+];
 
-const POSITIONS: { value: Position; label: string }[] = [
+const POSITIONS: { value: WidgetPosition; label: string }[] = [
   { value: "bottom-right", label: "Bottom Right" },
   { value: "bottom-left", label: "Bottom Left" },
   { value: "top-right", label: "Top Right" },
   { value: "top-left", label: "Top Left" },
 ];
-
-const DEFAULT_COLORS = {
-  primaryColor: "#1a1a1a",
-  backgroundColor: "#ffffff",
-  textColor: "#1a1a1a",
-};
 
 export function WidgetCustomizationSection({
   widgetId,
@@ -57,18 +82,26 @@ export function WidgetCustomizationSection({
   const removeLogoMutation = useMutation(api.widgetConfig.removeLogo);
 
   // Local state for form fields
-  const [position, setPosition] = useState<Position>("bottom-right");
-  const [buttonText, setButtonText] = useState("Send Feedback");
-  const [primaryColor, setPrimaryColor] = useState(DEFAULT_COLORS.primaryColor);
-  const [backgroundColor, setBackgroundColor] = useState(DEFAULT_COLORS.backgroundColor);
-  const [textColor, setTextColor] = useState(DEFAULT_COLORS.textColor);
+  const [position, setPosition] = useState<WidgetPosition>(DEFAULT_WIDGET_CONFIG.position);
+  const [displayMode, setDisplayMode] = useState<WidgetDisplayMode>(
+    DEFAULT_WIDGET_CONFIG.displayMode
+  );
+  const [buttonText, setButtonText] = useState(DEFAULT_WIDGET_CONFIG.buttonText);
+  const [primaryColor, setPrimaryColor] = useState(DEFAULT_WIDGET_CONFIG.primaryColor);
+  const [backgroundColor, setBackgroundColor] = useState(DEFAULT_WIDGET_CONFIG.backgroundColor);
+  const [textColor, setTextColor] = useState(DEFAULT_WIDGET_CONFIG.textColor);
   const [logoUrl, setLogoUrl] = useState<string | undefined>(undefined);
 
-  const [isSaving, setIsSaving] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const {
+    save: performSave,
+    isSaving,
+    saveSuccess,
+    error: saveError,
+  } = useSaveable(saveConfigMutation);
   const [codeCopied, setCodeCopied] = useState<string | null>(null);
   const [showFramework, setShowFramework] = useState<string | null>(null);
 
@@ -81,62 +114,12 @@ export function WidgetCustomizationSection({
     ? `${window.location.origin}/api/widget/submit`
     : '';
 
-  const installationCode = widgetKey
-    ? `<script
-  src="${widgetUrl}"
-  data-widget-key="${widgetKey}"
-  data-position="${position}"
-  data-api-url="${apiUrl}"
-  async
-></script>`
-    : "";
-
-  const nextjsSnippet = widgetKey
-    ? `// In your layout.tsx
-import Script from 'next/script'
-
-export default function RootLayout({ children }) {
-  return (
-    <html>
-      <body>
-        {children}
-        <Script
-          src="${widgetUrl}"
-          data-widget-key="${widgetKey}"
-          data-position="${position}"
-          data-api-url="${apiUrl}"
-          strategy="lazyOnload"
-        />
-      </body>
-    </html>
-  )
-}`
-    : "";
-
-  const reactSnippet = widgetKey
-    ? `// In your App component
-import { useEffect } from 'react';
-
-function App() {
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = '${widgetUrl}';
-    script.dataset.widgetKey = '${widgetKey}';
-    script.dataset.position = '${position}';
-    script.dataset.apiUrl = '${apiUrl}';
-    script.async = true;
-    document.body.appendChild(script);
-    
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
-  
-  return (
-    // Your app content
-  );
-}`
-    : "";
+  const snippetInput = widgetKey
+    ? { widgetKey, widgetUrl, apiUrl }
+    : null;
+  const installationCode = snippetInput ? buildHtmlSnippet(snippetInput) : "";
+  const nextjsSnippet = snippetInput ? buildNextjsSnippet(snippetInput) : "";
+  const reactSnippet = snippetInput ? buildReactSnippet(snippetInput) : "";
 
   const handleCopyCode = useCallback(async (text: string, id: string) => {
     if (!text) return;
@@ -148,46 +131,38 @@ function App() {
   // Sync local state with fetched config
   useEffect(() => {
     if (config) {
-      setPosition(config.position || "bottom-right");
-      setButtonText(config.buttonText || "Send Feedback");
-      setPrimaryColor(config.primaryColor || DEFAULT_COLORS.primaryColor);
-      setBackgroundColor(config.backgroundColor || DEFAULT_COLORS.backgroundColor);
-      setTextColor(config.textColor || DEFAULT_COLORS.textColor);
+      setPosition(config.position || DEFAULT_WIDGET_CONFIG.position);
+      setDisplayMode(config.displayMode || DEFAULT_WIDGET_CONFIG.displayMode);
+      setButtonText(config.buttonText || DEFAULT_WIDGET_CONFIG.buttonText);
+      setPrimaryColor(config.primaryColor || DEFAULT_WIDGET_CONFIG.primaryColor);
+      setBackgroundColor(config.backgroundColor || DEFAULT_WIDGET_CONFIG.backgroundColor);
+      setTextColor(config.textColor || DEFAULT_WIDGET_CONFIG.textColor);
       setLogoUrl(config.logoUrl);
     }
   }, [config]);
 
   const handleSave = useCallback(async () => {
-    setIsSaving(true);
     setError(null);
-    setSaveSuccess(false);
-
-    try {
-      await saveConfigMutation({
-        widgetId,
-        position,
-        buttonText: buttonText || "Send Feedback",
-        primaryColor,
-        backgroundColor,
-        textColor,
-        logoUrl,
-      });
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save configuration");
-    } finally {
-      setIsSaving(false);
-    }
+    await performSave({
+      widgetId,
+      position,
+      displayMode,
+      buttonText: buttonText || DEFAULT_WIDGET_CONFIG.buttonText,
+      primaryColor,
+      backgroundColor,
+      textColor,
+      logoUrl,
+    });
   }, [
     widgetId,
     position,
+    displayMode,
     buttonText,
     primaryColor,
     backgroundColor,
     textColor,
     logoUrl,
-    saveConfigMutation,
+    performSave,
   ]);
 
   const handleReset = useCallback(async () => {
@@ -201,11 +176,12 @@ function App() {
     try {
       await resetConfigMutation({ widgetId });
       // Reset local state
-      setPosition("bottom-right");
-      setButtonText("Send Feedback");
-      setPrimaryColor(DEFAULT_COLORS.primaryColor);
-      setBackgroundColor(DEFAULT_COLORS.backgroundColor);
-      setTextColor(DEFAULT_COLORS.textColor);
+      setPosition(DEFAULT_WIDGET_CONFIG.position);
+      setDisplayMode(DEFAULT_WIDGET_CONFIG.displayMode);
+      setButtonText(DEFAULT_WIDGET_CONFIG.buttonText);
+      setPrimaryColor(DEFAULT_WIDGET_CONFIG.primaryColor);
+      setBackgroundColor(DEFAULT_WIDGET_CONFIG.backgroundColor);
+      setTextColor(DEFAULT_WIDGET_CONFIG.textColor);
       setLogoUrl(undefined);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to reset configuration");
@@ -276,15 +252,9 @@ function App() {
     }
   }, [widgetId, removeLogoMutation]);
 
-  if (!config) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-6 w-6 animate-spin text-stone-400" />
-      </div>
-    );
-  }
-
   return (
+    <QueryBoundary data={config} skeleton={<SettingsSectionSkeleton rows={4} />}>
+      {() => (
     <div className="space-y-6">
       {/* Header - only show if not hidden */}
       {!hideHeader && (
@@ -333,6 +303,32 @@ function App() {
             </div>
           </div>
 
+          {/* Display Mode */}
+          <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
+            <h3 className="mb-4 font-semibold text-retro-black">Display Mode</h3>
+            <div className="space-y-3">
+              {DISPLAY_MODES.map((mode) => (
+                <button
+                  key={mode.value}
+                  onClick={() => setDisplayMode(mode.value)}
+                  aria-pressed={displayMode === mode.value}
+                  className={`w-full rounded border-2 px-4 py-3 text-left transition-all ${
+                    displayMode === mode.value
+                      ? "border-retro-black bg-retro-yellow/20 shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]"
+                      : "border-stone-200 bg-white hover:border-stone-300"
+                  }`}
+                >
+                  <span className="block text-sm font-medium text-retro-black">
+                    {mode.label}
+                  </span>
+                  <span className="mt-1 block text-xs text-stone-500">
+                    {mode.description}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Button Text */}
           <div className="rounded border-2 border-retro-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
             <h3 className="mb-4 font-semibold text-retro-black">Button Text</h3>
@@ -340,7 +336,7 @@ function App() {
               type="text"
               value={buttonText}
               onChange={(e) => setButtonText(e.target.value)}
-              placeholder="Send Feedback"
+              placeholder={DEFAULT_WIDGET_CONFIG.buttonText}
               maxLength={30}
               className="w-full rounded border-2 border-stone-200 bg-stone-50 px-4 py-2.5 text-sm transition-colors focus:border-retro-black focus:bg-white focus:outline-none"
             />
@@ -510,10 +506,10 @@ function App() {
           </div>
 
           {/* Error Message */}
-          {error && (
+          {(error || saveError) && (
             <div className="flex items-center gap-2 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               <X className="h-4 w-4" />
-              {error}
+              {error || saveError}
             </div>
           )}
         </div>
@@ -524,6 +520,7 @@ function App() {
             <h3 className="mb-4 font-semibold text-retro-black">Live Preview</h3>
             <WidgetPreview
               position={position}
+              displayMode={displayMode}
               buttonText={buttonText}
               primaryColor={primaryColor}
               backgroundColor={backgroundColor}
@@ -676,11 +673,14 @@ function App() {
         </div>
       )}
     </div>
+      )}
+    </QueryBoundary>
   );
 }
 
 interface WidgetPreviewProps {
-  position: Position;
+  position: WidgetPosition;
+  displayMode: WidgetDisplayMode;
   buttonText: string;
   primaryColor: string;
   backgroundColor: string;
@@ -690,6 +690,7 @@ interface WidgetPreviewProps {
 
 function WidgetPreview({
   position,
+  displayMode,
   buttonText,
   primaryColor,
   backgroundColor,
@@ -699,7 +700,7 @@ function WidgetPreview({
   const [showModal, setShowModal] = useState(false);
 
   // Determine position styles for the button
-  const positionStyles: Record<Position, string> = {
+  const positionStyles: Record<WidgetPosition, string> = {
     "bottom-right": "bottom-4 right-4",
     "bottom-left": "bottom-4 left-4",
     "top-right": "top-4 right-4",
@@ -722,10 +723,24 @@ function WidgetPreview({
         </div>
       </div>
 
-      {/* Widget Button */}
+      {/* Widget Button — Auto-Hide previews as resting mostly off-screen */}
+      {displayMode === "auto-hide" && (
+        <div
+          className={`absolute ${
+            position.includes("bottom") ? "bottom-16" : "top-16"
+          } ${position.includes("right") ? "right-4" : "left-4"} rounded bg-stone-800/80 px-2 py-1 text-[10px] text-white`}
+        >
+          Auto-Hide: slides in when the cursor nears the corner
+        </div>
+      )}
       <button
         onClick={() => setShowModal(true)}
-        className={`absolute ${positionStyles[position]} flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium shadow-lg transition-transform hover:scale-105`}
+        data-display-mode={displayMode}
+        className={`absolute ${positionStyles[position]} flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium shadow-lg transition-all hover:scale-105 ${
+          displayMode === "auto-hide"
+            ? `${position.includes("bottom") ? "translate-y-9" : "-translate-y-9"} opacity-80 hover:translate-y-0 hover:opacity-100`
+            : ""
+        }`}
         style={{ backgroundColor: primaryColor, color: backgroundColor }}
       >
         {logoUrl ? (
@@ -733,7 +748,7 @@ function WidgetPreview({
         ) : (
           <MessageSquare className="h-4 w-4" />
         )}
-        <span>{buttonText || "Send Feedback"}</span>
+        <span>{buttonText || DEFAULT_WIDGET_CONFIG.buttonText}</span>
       </button>
 
       {/* Widget Modal */}
@@ -753,7 +768,7 @@ function WidgetPreview({
                   <img src={logoUrl} alt="" className="h-6 w-6 rounded-full object-cover" />
                 )}
                 <span className="font-medium" style={{ color: backgroundColor }}>
-                  {buttonText || "Send Feedback"}
+                  {buttonText || DEFAULT_WIDGET_CONFIG.buttonText}
                 </span>
               </div>
               <button

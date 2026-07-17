@@ -5,6 +5,10 @@ import { useQuery, useMutation } from "convex/react";
 import { FileJson, Download, Trash2, Loader2, X } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import {
+  QueryBoundary,
+  SettingsSectionSkeleton,
+} from "@/components/ui/query-boundary";
 
 interface JsonExportQueueSectionProps {
   teamId: Id<"teams">;
@@ -81,6 +85,11 @@ export function JsonExportQueueSection({ teamId }: JsonExportQueueSectionProps) 
   const queueCount = queueItems?.length || 0;
 
   return (
+    <QueryBoundary
+      data={queueItems}
+      skeleton={<SettingsSectionSkeleton rows={1} />}
+    >
+      {() => (
     <div className="rounded border-2 border-retro-black bg-white shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
       {/* Header */}
       <div className="flex items-center justify-between border-b-2 border-retro-black bg-stone-50 px-6 py-4">
@@ -177,5 +186,7 @@ export function JsonExportQueueSection({ teamId }: JsonExportQueueSectionProps) 
         )}
       </div>
     </div>
+      )}
+    </QueryBoundary>
   );
 }
