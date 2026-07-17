@@ -22,6 +22,27 @@ export function buildHtmlSnippet(input: WidgetSnippetInput): string {
 ></script>`;
 }
 
+export function buildAgentInstallPrompt(input: WidgetSnippetInput): string {
+  return `Install the FeedbackFlow feedback widget on this site.
+
+1. Detect the framework this project uses (Next.js App Router or Pages Router, plain React, Vue, static HTML, etc.).
+
+2. Add the widget script the idiomatic way for that framework:
+   - Next.js: use next/script with strategy="lazyOnload" in the root layout
+   - Plain React or other SPA frameworks: inject the script tag once at app mount
+   - Static HTML: add the script tag just before </body>
+
+3. This is the exact snippet — use these exact attribute values, do not invent or change any:
+
+${buildHtmlSnippet(input)}
+
+4. Do not add any other data-* attributes or configuration. The widget's appearance and behavior are controlled from the FeedbackFlow dashboard, not the embed code.
+
+5. Verify: start the dev server, open the site, and confirm a floating feedback button appears in a corner of the page.
+
+When done, tell me to click the feedback button and submit my first piece of feedback — it will appear in my FeedbackFlow Inbox.`;
+}
+
 export function buildNextjsSnippet(input: WidgetSnippetInput): string {
   return `// In your layout.tsx
 import Script from 'next/script'
