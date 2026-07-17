@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { internalQuery, mutation, query } from "./_generated/server";
 import { getAuthUser, getTeamMembership, requireTeamMember } from "./authz";
 
 /**
@@ -212,6 +212,33 @@ export const getLinearApiKey = query({
 /**
  * Get decrypted Linear API key for API route use (with auth check)
  */
+/**
+ * Integration config + decrypted key for automation side effects (no user
+ * context — scheduled actions authenticate by being internal).
+ */
+export const getIntegrationForAutomation = internalQuery({
+  args: {
+    teamId: v.id("teams"),
+    provider: v.union(v.literal("linear"), v.literal("notion")),
+  },
+  handler: async (ctx, args) => {
+    const integration = await ctx.db
+      .query("integrations")
+      .withIndex("by_team", (q) => q.eq("teamId", args.teamId))
+      .filter((q) => q.eq(q.field("provider"), args.provider))
+      .first();
+
+    if (!integration || !integration.accessToken) {
+      return null;
+    }
+
+    return {
+      decryptedKey: decryptKey(integration.accessToken),
+      settings: integration.settings,
+    };
+  },
+});
+
 export const getLinearIntegrationForApi = query({
   args: {
     teamId: v.id("teams"),
