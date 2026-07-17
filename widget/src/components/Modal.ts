@@ -65,10 +65,25 @@ export class Modal {
       [createElementFromHTML(icons.close)]
     );
 
-    return createElement("div", { className: "ff-modal-header" }, [
+    const titleGroup: (Node | string)[] = [];
+    if (this.config.logoUrl) {
+      // Logo failing to load just disappears — the title carries the header
+      const logo = createElement("img", {
+        className: "ff-modal-logo",
+        src: this.config.logoUrl,
+        alt: "",
+      });
+      logo.addEventListener("error", () => logo.remove());
+      titleGroup.push(logo);
+    }
+    titleGroup.push(
       createElement("h2", { className: "ff-modal-title", id: "ff-modal-title" }, [
         "Share Feedback",
-      ]),
+      ])
+    );
+
+    return createElement("div", { className: "ff-modal-header" }, [
+      createElement("div", { className: "ff-modal-title-group" }, titleGroup),
       closeButton,
     ]);
   }
