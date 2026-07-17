@@ -7,6 +7,7 @@
 
 import { describe, it, expect } from "vitest";
 import {
+  buildAgentInstallPrompt,
   buildHtmlSnippet,
   buildNextjsSnippet,
   buildReactSnippet,
@@ -18,7 +19,12 @@ const INPUT = {
   apiUrl: "https://feedbackflow.cc/api/widget/submit",
 };
 
-const ALL_BUILDERS = [buildHtmlSnippet, buildNextjsSnippet, buildReactSnippet];
+const ALL_BUILDERS = [
+  buildHtmlSnippet,
+  buildNextjsSnippet,
+  buildReactSnippet,
+  buildAgentInstallPrompt,
+];
 
 describe("widget embed snippets", () => {
   it("html snippet carries the key, api url, and script src", () => {
@@ -42,6 +48,23 @@ describe("widget embed snippets", () => {
 
     expect(snippet).toContain("script.dataset.widgetKey = 'wk_abc123'");
     expect(snippet).toContain("script.dataset.apiUrl = 'https://feedbackflow.cc/api/widget/submit'");
+  });
+
+  it("agent install prompt embeds the exact html snippet with real values", () => {
+    const prompt = buildAgentInstallPrompt(INPUT);
+
+    expect(prompt).toContain(buildHtmlSnippet(INPUT));
+    expect(prompt).not.toMatch(/YOUR_WIDGET_KEY|<widget-key>|placeholder/i);
+  });
+
+  it("agent install prompt covers framework detection, the guardrail, and a verify-only ending", () => {
+    const prompt = buildAgentInstallPrompt(INPUT);
+
+    expect(prompt).toMatch(/detect the framework/i);
+    expect(prompt).toMatch(/do not add any other data-\* attributes/i);
+    expect(prompt).toMatch(/confirm a floating feedback button/i);
+    // Verify-only: the agent must never submit feedback itself
+    expect(prompt).not.toMatch(/curl|POST|fetch\(/);
   });
 
   it("no snippet bakes appearance settings (ADR-0001)", () => {

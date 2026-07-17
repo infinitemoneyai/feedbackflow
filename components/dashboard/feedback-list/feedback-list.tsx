@@ -131,6 +131,13 @@ export function FeedbackList() {
   const hasAnyFeedback =
     (viewCounts?.inbox ?? 0) + (viewCounts?.backlog ?? 0) + (viewCounts?.resolved ?? 0) > 0;
 
+  // Widget key for the empty state's Agent Install Prompt — only fetched
+  // while the install CTA can actually show (project has no feedback yet).
+  const widgets = useQuery(
+    api.projects.getWidgets,
+    selectedProjectId && !hasAnyFeedback ? { projectId: selectedProjectId } : "skip"
+  );
+
   const handleSelectAll = useCallback(() => {
     if (!displayedFeedback) return;
 
@@ -261,6 +268,8 @@ export function FeedbackList() {
           currentView={currentView as "inbox" | "backlog" | "resolved"}
           searchQuery={effectiveSearchQuery}
           hasAnyFeedback={hasAnyFeedback}
+          widgetKey={widgets?.[0]?.widgetKey}
+          widgetKeyLoading={!hasAnyFeedback && widgets === undefined}
         />
       ) : (
         <div className="space-y-3">
