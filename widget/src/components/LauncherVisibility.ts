@@ -33,7 +33,7 @@ export class LauncherVisibility {
   private readonly MINIMIZED_KEY = "ff-widget-minimized";
   private readonly REVEAL_KEY = "ff-entrance-reveal-shown";
   private readonly HOVER_ZONE_PX = 150;
-  static readonly ENTRANCE_REVEAL_MS = 2000;
+  static readonly ENTRANCE_REVEAL_MS = 2500;
 
   constructor(
     private config: WidgetConfig,
@@ -67,7 +67,7 @@ export class LauncherVisibility {
         type: "button",
       },
       [
-        createElementFromHTML(icons.feedback),
+        this.createLauncherIcon(),
         this.config.buttonText,
         this.minimizeButton,
       ]
@@ -167,6 +167,26 @@ export class LauncherVisibility {
   }
 
   // -- internal ------------------------------------------------------------
+
+  /**
+   * The configured Logo replaces the default feedback icon; if the image
+   * fails to load, the default icon takes its place so the Launcher never
+   * shows a broken image on a host page.
+   */
+  private createLauncherIcon(): HTMLElement {
+    if (!this.config.logoUrl) {
+      return createElementFromHTML(icons.feedback);
+    }
+    const logo = createElement("img", {
+      className: "ff-launcher-logo",
+      src: this.config.logoUrl,
+      alt: "",
+    });
+    logo.addEventListener("error", () => {
+      logo.replaceWith(createElementFromHTML(icons.feedback));
+    });
+    return logo;
+  }
 
   private applyMinimizedClasses(): void {
     this.buttonContainer?.classList.add("ff-minimized");
