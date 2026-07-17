@@ -1,9 +1,14 @@
+"use node";
+
 /**
  * Post-submission side effects — AI auto-analysis, automation rules, and
  * new-feedback notifications — dispatched from feedback.submitFromWidget /
  * submitFromReview via ctx.scheduler (see ADR-0002: side effects go through
  * the scheduler, not self-HTTP). These internal actions replace the
  * internal-key API routes that previously received self-HTTP calls.
+ *
+ * "use node": the Notion SDK requires Node's crypto, so these actions run
+ * in Convex's Node runtime (this file exports only actions, as required).
  */
 
 import { v } from "convex/values";
