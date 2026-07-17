@@ -118,6 +118,14 @@ export function generateStyles(config: WidgetConfig): string {
       flex-shrink: 0;
     }
 
+    .ff-launcher-logo {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
     /* Minimize Button (inside trigger button) */
     .ff-minimize-button {
       position: absolute;
@@ -247,6 +255,20 @@ export function generateStyles(config: WidgetConfig): string {
       padding: 16px 20px;
       border-bottom: 2px solid ${config.primaryColor};
       background-color: #F3C952;
+    }
+
+    .ff-modal-title-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ff-modal-logo {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
     }
 
     .ff-modal-title {
