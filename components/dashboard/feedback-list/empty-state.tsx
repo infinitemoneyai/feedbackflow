@@ -1,16 +1,53 @@
 "use client";
 
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Bug, Lightbulb, Check } from "lucide-react";
 import { Icon } from "@/components/ui/icon";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Toast } from "@/components/dashboard/ticket-detail/modals";
+import { buildAgentInstallPrompt } from "@/lib/widget-snippet";
 
 interface EmptyStateProps {
   currentView: "inbox" | "backlog" | "resolved";
   searchQuery: string;
   hasAnyFeedback: boolean;
+  /** Widget key for the Agent Install Prompt; undefined while the widget query loads. */
+  widgetKey?: string;
+  widgetKeyLoading?: boolean;
 }
 
-export function EmptyState({ currentView, searchQuery, hasAnyFeedback }: EmptyStateProps) {
+export function EmptyState({
+  currentView,
+  searchQuery,
+  hasAnyFeedback,
+  widgetKey,
+  widgetKeyLoading,
+}: EmptyStateProps) {
+  const [toast, setToast] = useState<{ kind: "success" | "error"; message: string } | null>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
+  const handleCopyAgentPrompt = useCallback(async () => {
+    if (!widgetKey) return;
+    const prompt = buildAgentInstallPrompt({
+      widgetKey,
+      widgetUrl: `${window.location.origin}/widget.js`,
+      apiUrl: `${window.location.origin}/api/widget/submit`,
+    });
+    try {
+      await navigator.clipboard.writeText(prompt);
+      setToast({ kind: "success", message: "Prompt copied — paste it into your coding agent." });
+    } catch (error) {
+      console.error("Failed to copy Agent Install Prompt", error);
+      setToast({ kind: "error", message: "Couldn't copy the prompt. Try again." });
+    }
+  }, [widgetKey]);
+
   const getIcon = () => {
     if (currentView === "inbox") return <Bug className="h-8 w-8 text-stone-400" />;
     if (currentView === "backlog") return <Lightbulb className="h-8 w-8 text-stone-400" />;
@@ -32,7 +69,7 @@ export function EmptyState({ currentView, searchQuery, hasAnyFeedback }: EmptySt
   };
 
   return (
-    <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-stone-300 bg-white p-12 text-center">
+    <div className="relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-stone-300 bg-white p-12 text-center">
       <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border-2 border-stone-200 bg-stone-50">
         {getIcon()}
       </div>
@@ -61,9 +98,23 @@ export function EmptyState({ currentView, searchQuery, hasAnyFeedback }: EmptySt
             </p>
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
+              {widgetKeyLoading ? (
+                <Skeleton className="h-[38px] w-72 rounded-none border-2 border-stone-200" />
+              ) : (
+                widgetKey && (
+                  <button
+                    onClick={handleCopyAgentPrompt}
+                    className="inline-flex items-center gap-2 border-2 border-retro-black bg-retro-blue px-4 py-2 text-sm font-medium text-white shadow-[3px_3px_0px_0px_rgba(26,26,26,1)] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]"
+                  >
+                    <Icon name="solar:magic-stick-3-linear" size={16} />
+                    Install with Cursor / Claude Code / Agents
+                  </button>
+                )
+              )}
+
               <Link
                 href="/settings?tab=widget"
-                className="inline-flex items-center gap-2 border-2 border-retro-black bg-retro-blue px-4 py-2 text-sm font-medium text-white shadow-[3px_3px_0px_0px_rgba(26,26,26,1)] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]"
+                className="inline-flex items-center gap-2 border-2 border-retro-black bg-white px-4 py-2 text-sm font-medium text-retro-black shadow-[3px_3px_0px_0px_rgba(26,26,26,1)] transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]"
               >
                 <Icon name="solar:code-square-linear" size={16} />
                 Get install snippet
@@ -79,6 +130,8 @@ export function EmptyState({ currentView, searchQuery, hasAnyFeedback }: EmptySt
           </div>
         </div>
       )}
+
+      {toast && <Toast kind={toast.kind} message={toast.message} />}
     </div>
   );
 }
