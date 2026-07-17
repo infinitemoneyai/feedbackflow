@@ -1,9 +1,14 @@
+"use node";
+
 /**
  * Post-submission side effects — AI auto-analysis, automation rules, and
  * new-feedback notifications — dispatched from feedback.submitFromWidget /
  * submitFromReview via ctx.scheduler (see ADR-0002: side effects go through
  * the scheduler, not self-HTTP). These internal actions replace the
  * internal-key API routes that previously received self-HTTP calls.
+ *
+ * "use node": the Notion SDK requires Node's crypto, so these actions run
+ * in Convex's Node runtime (this file exports only actions, as required).
  */
 
 import { v } from "convex/values";
@@ -11,6 +16,12 @@ import { internalAction, type ActionCtx } from "./_generated/server";
 import { api, internal } from "./_generated/api";
 import { Id, Doc } from "./_generated/dataModel";
 import { sendNotificationEmail } from "../lib/email";
+import {
+  createLinearIssue,
+  formatFeedbackForLinear,
+  mapPriorityToLinear,
+} from "../lib/integrations/linear";
+import { createNotionPage } from "../lib/integrations/notion";
 
 // =============================================================================
 // AI auto-analysis
@@ -123,50 +134,60 @@ async function executeRuleAction(
   rule: Doc<"automationRules">
 ): Promise<{ details?: string }> {
   switch (rule.action) {
-    case "export_linear":
-    case "export_notion": {
-      // Integration exports still go through the app's integration routes
-      // (their Linear/Notion orchestration lives in lib/integrations behind
-      // user-facing routes). Deliberately out of scope for ADR-0002's first
-      // pass — see the Arch program spec (#7).
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
-      const internalKey = process.env.INTERNAL_API_KEY;
-      if (!baseUrl || !internalKey) {
-        throw new Error(
-          "NEXT_PUBLIC_APP_URL and INTERNAL_API_KEY must be set in the Convex deployment for integration exports"
-        );
+    case "export_linear": {
+      // Direct adapter call (ADR-0002 follow-through): scheduled actions
+      // have no Clerk session, so the user-facing integration routes are
+      // not reachable from here — and no self-HTTP means no shared secret.
+      const integration = await ctx.runQuery(
+        internal.integrations.getIntegrationForAutomation,
+        { teamId: feedback.teamId, provider: "linear" }
+      );
+      if (!integration?.decryptedKey) {
+        throw new Error("Linear integration is not configured");
       }
-      const provider = rule.action === "export_linear" ? "linear" : "notion";
-      const response = await fetch(`${baseUrl}/api/integrations/${provider}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-internal-key": internalKey,
-        },
-        body: JSON.stringify({
-          action: provider === "linear" ? "createIssue" : "createPage",
-          feedbackId: feedback._id,
-          teamId: feedback.teamId,
-          automated: true,
-        }),
+      const linearTeamId = integration.settings?.linearTeamId;
+      if (!linearTeamId) {
+        throw new Error("No Linear team configured for this integration");
+      }
+      const issue = await createLinearIssue(integration.decryptedKey, {
+        teamId: linearTeamId,
+        title: feedback.title,
+        description: formatFeedbackForLinear(feedback),
+        priority: mapPriorityToLinear(feedback.priority),
+        projectId: integration.settings?.linearProjectId || undefined,
+        labelIds: integration.settings?.linearLabelIds || undefined,
       });
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(
-          (data as { error?: string }).error ||
-            `${provider} export failed: ${response.status}`
-        );
-      }
-      const data = (await response.json()) as {
-        issueId?: string;
-        pageId?: string;
-        url?: string;
-      };
       return {
-        details: `Exported to ${provider === "linear" ? "Linear" : "Notion"}: ${
-          data.issueId || data.pageId || data.url
-        }`,
+        details: `Exported to Linear: ${issue.identifier || issue.url}`,
       };
+    }
+
+    case "export_notion": {
+      const integration = await ctx.runQuery(
+        internal.integrations.getIntegrationForAutomation,
+        { teamId: feedback.teamId, provider: "notion" }
+      );
+      if (!integration?.decryptedKey) {
+        throw new Error("Notion integration is not configured");
+      }
+      const databaseId = integration.settings?.notionDatabaseId;
+      if (!databaseId) {
+        throw new Error("No Notion database configured for this integration");
+      }
+      const page = await createNotionPage(integration.decryptedKey, {
+        databaseId,
+        title: feedback.title,
+        description: feedback.description || "",
+        type: feedback.type,
+        priority: feedback.priority,
+        tags: feedback.tags || [],
+        screenshotUrl: feedback.screenshotUrl,
+        recordingUrl: feedback.recordingUrl,
+        metadata: feedback.metadata,
+        submitterName: feedback.submitterName,
+        submitterEmail: feedback.submitterEmail,
+      });
+      return { details: `Exported to Notion: ${page.url || page.id}` };
     }
 
     case "send_webhook": {
